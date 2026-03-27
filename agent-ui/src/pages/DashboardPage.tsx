@@ -44,6 +44,7 @@ import {
   type FollowUpItem,
   type PipelineStage,
 } from '../api/dashboard'
+import { activitiesApi as activitiesApiClient } from '../api/activities'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -593,12 +594,20 @@ function QuickActionsSection() {
 // ─── Recent Activities (agent's own) ─────────────────────────────────────────
 
 function RecentActivitiesSection() {
-  const activities = [
-    { id: '1', desc: 'Called', target: 'Ahmed Hassan about Villa in New Cairo', time: '25 min ago', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/30', icon: Phone },
-    { id: '2', desc: 'Sent follow-up email to', target: 'Sara El-Masry', time: '1 hour ago', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/30', icon: ClipboardList },
-    { id: '3', desc: 'Added new client', target: 'Youssef Amin', time: '3 hours ago', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/30', icon: UserPlus },
-    { id: '4', desc: 'Logged property viewing with', target: 'Mohamed Farid', time: '5 hours ago', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/30', icon: Building2 },
-  ]
+  const navigate = useNavigate()
+  const { user } = useAuth()
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['agent-recent-activities', user?.id],
+    queryFn: () =>
+      user?.id
+        ? activitiesApiClient.byUser(user.id, { pageSize: 5 })
+        : activitiesApiClient.recent(5),
+    staleTime: 30_000,
+    enabled: true,
+  })
+
+  const activities = data?.data ?? (Array.isArray(data) ? (data as unknown[]) : [])
 
   return (
     <SectionShell>
@@ -606,35 +615,53 @@ function RecentActivitiesSection() {
         icon={Activity}
         title="Recent Activities"
         trailing={
-          <button className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+          <button
+            onClick={() => navigate('/activities')}
+            className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+          >
             View all
           </button>
         }
       />
-      <div className="relative">
-        <div className="absolute left-[15px] top-2 bottom-2 w-px bg-gray-200 dark:bg-gray-700" />
-        <div className="space-y-4">
-          {activities.map((a) => {
-            const Icon = a.icon
-            return (
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 size={20} className="animate-spin text-indigo-400" />
+        </div>
+      ) : activities.length === 0 ? (
+        <p className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">
+          No recent activities yet.
+        </p>
+      ) : (
+        <div className="relative">
+          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-gray-200 dark:bg-gray-700" />
+          <div className="space-y-4">
+            {(activities as import('../types').Activity[]).map((a) => (
               <div key={a.id} className="flex items-start gap-3 relative">
-                <div className={cn('rounded-full p-1.5 z-10', a.bg)}>
-                  <Icon size={14} className={a.color} />
+                <div className="rounded-full p-1.5 z-10 bg-indigo-50 dark:bg-indigo-900/30">
+                  <Activity size={14} className="text-indigo-600 dark:text-indigo-400" />
                 </div>
                 <div className="flex-1 min-w-0 pt-0.5">
                   <p className="text-sm text-gray-700 dark:text-gray-300">
-                    {a.desc}{' '}
                     <span className="font-medium text-gray-900 dark:text-gray-100">
-                      {a.target}
-                    </span>
+                      {a.entityType}
+                    </span>{' '}
+                    {a.description}
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{a.time}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    {new Date(a.createdAt).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
                 </div>
               </div>
-            )
-          })}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </SectionShell>
   )
 }
