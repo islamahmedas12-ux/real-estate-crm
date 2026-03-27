@@ -25,7 +25,7 @@ function AuthContextBridge({ children }: { children: React.ReactNode }) {
         id: authmeUser.sub ?? '',
         email: authmeUser.email ?? '',
         name: authmeUser.name ?? authmeUser.preferred_username ?? '',
-        role: (authmeUser as Record<string, unknown>)['role'] as string ?? 'admin',
+        role: ((authmeUser as Record<string, unknown>)['role'] as 'admin' | 'agent' | 'manager') ?? 'admin',
       }
     : null
 
