@@ -49,7 +49,8 @@ RUN npm prune --omit=dev
 ENV NODE_ENV=production
 EXPOSE 3000
 
-RUN chown -R node:node /app
+RUN mkdir -p /app/uploads/images /app/uploads/docs /app/uploads/temp && \
+    chown -R node:node /app
 USER node
 
 CMD ["node", "dist/src/main"]
