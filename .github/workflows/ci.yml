@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [dev, qa, uat, prod, master]
   push:
-    branches: [main]
+    branches: [dev, qa, uat, prod, master]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -16,7 +16,7 @@ env:
 jobs:
   # ── Backend: Lint, Type-check, Test, Build ─────────────────────────────
   backend:
-    name: Backend
+    name: CI / Backend (lint, typecheck, test, build)
     runs-on: ubuntu-latest
 
     services:
@@ -71,7 +71,7 @@ jobs:
 
   # ── Admin UI ───────────────────────────────────────────────────────────
   admin-ui:
-    name: Admin UI
+    name: CI / Frontend Admin UI
     runs-on: ubuntu-latest
 
     defaults:
@@ -98,7 +98,7 @@ jobs:
 
   # ── Agent UI ───────────────────────────────────────────────────────────
   agent-ui:
-    name: Agent UI
+    name: CI / Frontend Agent UI
     runs-on: ubuntu-latest
 
     defaults:
@@ -125,7 +125,7 @@ jobs:
 
   # ── Flutter Mobile ─────────────────────────────────────────────────────
   mobile:
-    name: Flutter Mobile
+    name: CI / Mobile (Flutter)
     runs-on: ubuntu-latest
 
     defaults:
