@@ -8,6 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import type { Job, Queue } from 'bull';
+import { Prisma } from '@prisma/client';
 import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import * as Handlebars from 'handlebars';
@@ -112,7 +113,9 @@ export class EmailService implements OnModuleInit {
         to,
         subject,
         template,
-        context: context as Record<string, unknown>,
+        context: context && typeof context === 'object' 
+          ? (context as unknown as Prisma.InputJsonValue)
+          : null,
         status: EmailStatus.QUEUED,
       },
     });
