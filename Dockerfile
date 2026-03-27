@@ -52,4 +52,4 @@ EXPOSE 3000
 RUN chown -R node:node /app
 USER node
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
