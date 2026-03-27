@@ -47,7 +47,7 @@ export interface CreateContractPayload {
   notes?: string
 }
 
-export interface UpdateContractPayload extends Partial<CreateContractPayload> {}
+export type UpdateContractPayload = Partial<CreateContractPayload>
 
 export interface ContractFilter {
   page?: number

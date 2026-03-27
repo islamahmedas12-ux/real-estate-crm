@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../api/client'
+import { loadStoredAuth } from '../utils/auth'
 import type { User, LoginCredentials, LoginResponse } from '../types'
 
 interface AuthContextValue {
@@ -13,17 +14,6 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
-
-function loadStoredAuth(): { user: User | null; token: string | null } {
-  try {
-    const token = localStorage.getItem('access_token')
-    const userRaw = localStorage.getItem('user')
-    const user: User | null = userRaw ? JSON.parse(userRaw) : null
-    return { token, user }
-  } catch {
-    return { token: null, user: null }
-  }
-}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)

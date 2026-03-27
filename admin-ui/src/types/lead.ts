@@ -46,7 +46,7 @@ export interface CreateLeadPayload {
   nextFollowUp?: string
 }
 
-export interface UpdateLeadPayload extends Partial<CreateLeadPayload> {}
+export type UpdateLeadPayload = Partial<CreateLeadPayload>
 
 export interface LeadFilter {
   page?: number

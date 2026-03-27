@@ -604,10 +604,10 @@ function RecentActivitiesSection() {
         ? activitiesApiClient.byUser(user.id, { pageSize: 5 })
         : activitiesApiClient.recent(5),
     staleTime: 30_000,
-    enabled: true,
+    enabled: !!user?.id,
   })
 
-  const activities = data?.data ?? (Array.isArray(data) ? (data as unknown[]) : [])
+  const activities = Array.isArray(data?.data) ? data.data : []
 
   return (
     <SectionShell>

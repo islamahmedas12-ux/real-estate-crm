@@ -65,7 +65,7 @@ export interface CreateClientPayload {
   notes?: string
 }
 
-export interface UpdateClientPayload extends Partial<CreateClientPayload> {}
+export type UpdateClientPayload = Partial<CreateClientPayload>
 
 export interface ClientFilter {
   page?: number

@@ -13,7 +13,7 @@ import { LoadingSpinner } from './ui/LoadingSpinner'
 import { EmptyState } from './ui/EmptyState'
 import { Badge } from './ui/Badge'
 import { cn } from '../utils'
-import type { Activity, ActivityEntityType, PaginatedResponse } from '../types'
+import type { Activity, ActivityEntityType } from '../types'
 
 // ─── helpers ──────────────────────────────────────────────────────
 
@@ -113,8 +113,7 @@ export function ActivityLog({ entityType, entityId, limit = 20, className }: Act
       if (entityType && entityId) {
         return activitiesApi.byEntity(entityType, entityId, { pageSize: limit })
       }
-      const items = await activitiesApi.recent(limit)
-      return { data: items, total: items.length, page: 1, pageSize: limit, totalPages: 1 } as PaginatedResponse<Activity>
+      return activitiesApi.recent(limit)
     },
   })
 
