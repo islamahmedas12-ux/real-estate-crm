@@ -92,14 +92,14 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.DEV_SERVER_SSH_KEY }}
           SSH_HOST: ${{ secrets.DEV_SERVER_HOST }}
-          SSH_USER: ${{ secrets.DEV_SERVER_USER }}
+          SSH_USER: islam
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
           
-          ssh -i ~/.ssh/deploy_key $SSH_USER@$SSH_HOST << 'EOF'
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
           cd /apps/real-estate-crm
           docker-compose pull
           docker-compose up -d
