@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from './auth/guards/roles.guard.js';
 import { ClientsModule } from './clients/clients.module.js';
 import { PropertiesModule } from './properties/properties.module.js';
 import { ContractsModule } from './contracts/contracts.module.js';
@@ -53,6 +54,12 @@ import { HealthModule } from './health/health.module.js';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    // Global role-based access control — enforces @Roles() decorators.
+    // Must be registered after JwtAuthGuard so request.user is already set.
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })

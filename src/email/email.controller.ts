@@ -96,13 +96,13 @@ export class EmailController {
   @ApiResponse({ status: 200, description: 'Email preferences' })
   async getPreferences(@CurrentUser() user: AuthenticatedUser) {
     let prefs = await this.prisma.emailPreference.findUnique({
-      where: { userId: user.sub },
+      where: { userId: user.id },
     });
 
     if (!prefs) {
       // Create default preferences
       prefs = await this.prisma.emailPreference.create({
-        data: { userId: user.sub },
+        data: { userId: user.id },
       });
     }
 
@@ -117,9 +117,9 @@ export class EmailController {
     @Body() dto: UpdatePreferencesDto,
   ) {
     return this.prisma.emailPreference.upsert({
-      where: { userId: user.sub },
+      where: { userId: user.id },
       update: dto,
-      create: { userId: user.sub, ...dto },
+      create: { userId: user.id, ...dto },
     });
   }
 

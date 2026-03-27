@@ -35,7 +35,7 @@ export class InvoicesService {
   }
 
   private assertOwnership(invoice: { contract: { agentId: string | null } }, user: AuthenticatedUser) {
-    if (this.isAgent(user) && invoice.contract.agentId !== user.sub) {
+    if (this.isAgent(user) && invoice.contract.agentId !== user.id) {
       throw new ForbiddenException('You can only access invoices for your own contracts');
     }
   }
@@ -71,7 +71,7 @@ export class InvoicesService {
     }
 
     // Agents can only create invoices for their own contracts
-    if (this.isAgent(user) && contract.agentId !== user.sub) {
+    if (this.isAgent(user) && contract.agentId !== user.id) {
       throw new ForbiddenException('You can only create invoices for your own contracts');
     }
 
@@ -106,7 +106,7 @@ export class InvoicesService {
 
     // Agents can only see invoices for their own contracts
     if (this.isAgent(user)) {
-      where.contract = { agentId: user.sub };
+      where.contract = { agentId: user.id };
     }
 
     if (filter.status) where.status = filter.status;
@@ -184,7 +184,7 @@ export class InvoicesService {
     }
 
     // Agents can only view invoices for their own contracts
-    if (this.isAgent(user) && invoice.contract.agentId !== user.sub) {
+    if (this.isAgent(user) && invoice.contract.agentId !== user.id) {
       throw new ForbiddenException('You can only view invoices for your own contracts');
     }
 
@@ -265,7 +265,7 @@ export class InvoicesService {
     };
 
     if (this.isAgent(user)) {
-      where.contract = { agentId: user.sub };
+      where.contract = { agentId: user.id };
     }
 
     return this.prisma.invoice.findMany({
@@ -295,7 +295,7 @@ export class InvoicesService {
     };
 
     if (user && this.isAgent(user)) {
-      where.contract = { agentId: user.sub };
+      where.contract = { agentId: user.id };
     }
 
     return this.prisma.invoice.findMany({
@@ -319,7 +319,7 @@ export class InvoicesService {
 
     const agentFilter: Prisma.InvoiceWhereInput = {};
     if (this.isAgent(user)) {
-      agentFilter.contract = { agentId: user.sub };
+      agentFilter.contract = { agentId: user.id };
     }
 
     const [

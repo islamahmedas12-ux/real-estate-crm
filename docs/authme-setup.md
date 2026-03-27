@@ -1,42 +1,50 @@
 # Authme IAM Setup Guide
 
-This document describes the steps required to configure the Authme (Keycloak-compatible)
-IAM server so that the Real Estate CRM backend can authenticate users via JWT.
+This document describes how to deploy and configure the Authme (Keycloak-compatible)
+IAM server for the Real Estate CRM across all environments.
 
 ---
 
-## 1. Realm Setup
+## 1. Deploy AuthMe with Docker
 
+AuthMe is included in the dev compose file (`docker-compose.dev-full.yml`).
+To run it standalone:
+
+```bash
+docker run -d \
+  --name authme \
+  -p 3001:3001 \
+  -e DB_HOST=localhost \
+  -e DB_PORT=5432 \
+  -e DB_USER=authme \
+  -e DB_PASSWORD=authme \
+  -e DB_NAME=authme \
+  islamawad/authme
+```
+
+AuthMe admin console: `http://localhost:3001/admin`
+
+For production, use a managed PostgreSQL instance and set strong credentials.
+
+---
+
+## 2. Realm Setup
+
+Create a realm per environment. The realm name must match `AUTHME_REALM` in `.env`.
+
+| Environment | Realm Name        | Access Token Lifespan |
+|-------------|-------------------|-----------------------|
+| dev         | `real-estate-dev` | 30 minutes            |
+| qa          | `real-estate-qa`  | 15 minutes            |
+| uat         | `real-estate-uat` | 15 minutes            |
+| prod        | `real-estate`     | 15 minutes            |
+
+Steps:
 1. Log in to the Authme admin console.
-2. Create a new realm (or use an existing one) — the realm name must match the
-   `AUTHME_REALM` environment variable (e.g. `real-estate-crm`).
-3. Set **Access Token Lifespan** to a suitable value (e.g. `15 minutes`).
-4. Enable **Standard Flow** and **Direct Access Grants** as required.
-
----
-
-## 2. Client Configuration
-
-Create a **backend/confidential** client for the CRM API:
-
-| Field | Value |
-|---|---|
-| Client ID | Value of `AUTHME_CLIENT_ID` env var (e.g. `crm-api`) |
-| Client Protocol | `openid-connect` |
-| Access Type | `confidential` |
-| Service Account | Enabled (for token introspection if needed) |
-| Valid Redirect URIs | `*` (restrict in production) |
-
-Copy the **client secret** to the `AUTHME_CLIENT_SECRET` environment variable.
-
-### Portal clients (public)
-
-Create two additional public clients — one for each frontend portal:
-
-| Client ID | Valid Redirect URIs | Web Origins |
-|---|---|---|
-| `crm-admin-portal` | Value of `ADMIN_PORTAL_URL` + `/*` | Value of `ADMIN_PORTAL_URL` |
-| `crm-agent-portal` | Value of `AGENT_PORTAL_URL` + `/*` | Value of `AGENT_PORTAL_URL` |
+2. Click **Create Realm**.
+3. Set the realm name from the table above.
+4. Under **Tokens**, set **Access Token Lifespan** accordingly.
+5. Enable **Standard Flow** and **Direct Access Grants**.
 
 ---
 
@@ -44,19 +52,119 @@ Create two additional public clients — one for each frontend portal:
 
 Create the following **realm-level** roles:
 
-| Role Name | Description |
-|---|---|
-| `crm-admin` | Full system access — maps to `UserRole.ADMIN` |
-| `crm-manager` | Branch/team manager access — maps to `UserRole.MANAGER` |
-| `crm-agent` | Field agent access — maps to `UserRole.AGENT` |
+| Role Name     | Description                                        | Maps to           |
+|---------------|----------------------------------------------------|--------------------|
+| `crm-admin`   | Full system access                                 | `UserRole.ADMIN`   |
+| `crm-manager` | Branch/team manager — manage agents, view reports  | `UserRole.MANAGER` |
+| `crm-agent`   | Field agent — own leads, clients, properties only  | `UserRole.AGENT`   |
 
 The JWT strategy in `src/auth/strategies/jwt.strategy.ts` reads `realm_access.roles`
-from the token and maps them to the application `UserRole` enum using the following
-priority order: `crm-admin` > `crm-manager` > `crm-agent` > default `AGENT`.
+from the token and maps using priority: `crm-admin` > `crm-manager` > `crm-agent` > default `AGENT`.
 
 ---
 
-## 4. Assigning Roles to Users
+## 4. Client Configuration
+
+Create four OAuth2/OIDC clients in each realm:
+
+### 4.1 admin-portal (Public)
+
+| Field              | Value                                 |
+|--------------------|---------------------------------------|
+| Client ID          | `admin-portal`                        |
+| Client Protocol    | `openid-connect`                      |
+| Access Type        | Public                                |
+| Standard Flow      | Enabled                               |
+| Valid Redirect URIs| See [Redirect URIs table](#5-redirect-uris-per-environment) |
+| Web Origins (CORS) | See [CORS table](#6-cors-configuration-per-environment)     |
+
+### 4.2 agent-portal (Public)
+
+| Field              | Value                                 |
+|--------------------|---------------------------------------|
+| Client ID          | `agent-portal`                        |
+| Client Protocol    | `openid-connect`                      |
+| Access Type        | Public                                |
+| Standard Flow      | Enabled                               |
+| Valid Redirect URIs| See [Redirect URIs table](#5-redirect-uris-per-environment) |
+| Web Origins (CORS) | See [CORS table](#6-cors-configuration-per-environment)     |
+
+### 4.3 mobile (Public)
+
+| Field              | Value                                 |
+|--------------------|---------------------------------------|
+| Client ID          | `mobile`                              |
+| Client Protocol    | `openid-connect`                      |
+| Access Type        | Public                                |
+| Standard Flow      | Enabled                               |
+| Valid Redirect URIs| `com.realestatecrm.app://callback`    |
+
+### 4.4 crm-backend (Confidential)
+
+| Field              | Value                                 |
+|--------------------|---------------------------------------|
+| Client ID          | `crm-backend`                         |
+| Client Protocol    | `openid-connect`                      |
+| Access Type        | Confidential                          |
+| Service Account    | Enabled                               |
+| Direct Access      | Enabled (for testing/dev)             |
+
+After creation, go to **Credentials** tab to copy the client secret → set as `AUTHME_CLIENT_SECRET`.
+
+---
+
+## 5. Redirect URIs per Environment
+
+### admin-portal
+
+| Environment | Valid Redirect URIs                          |
+|-------------|----------------------------------------------|
+| dev         | `http://localhost:5173/*`                    |
+| qa          | `https://qa.realstate-crm.homes/admin/*`     |
+| uat         | `https://uat.realstate-crm.homes/admin/*`    |
+| prod        | `https://realstate-crm.homes/admin/*`        |
+
+### agent-portal
+
+| Environment | Valid Redirect URIs                          |
+|-------------|----------------------------------------------|
+| dev         | `http://localhost:5174/*`                    |
+| qa          | `https://qa.realstate-crm.homes/agent/*`     |
+| uat         | `https://uat.realstate-crm.homes/agent/*`    |
+| prod        | `https://realstate-crm.homes/agent/*`        |
+
+### mobile
+
+All environments: `com.realestatecrm.app://callback`
+
+---
+
+## 6. CORS Configuration per Environment
+
+| Environment | Web Origins                                            |
+|-------------|--------------------------------------------------------|
+| dev         | `http://localhost:5173`, `http://localhost:5174`        |
+| qa          | `https://qa.realstate-crm.homes`                       |
+| uat         | `https://uat.realstate-crm.homes`                      |
+| prod        | `https://realstate-crm.homes`                          |
+
+---
+
+## 7. How to Get Client Secrets from AuthMe Admin Console
+
+1. Log in to the AuthMe admin console (`http://localhost:3001/admin`)
+2. Select the target realm (e.g., `real-estate-dev`)
+3. Navigate to **Clients** → click `crm-backend`
+4. Click the **Credentials** tab
+5. Copy the **Client Secret** value
+6. Set it in `.env`:
+   ```
+   AUTHME_CLIENT_SECRET=<paste-secret-here>
+   ```
+
+---
+
+## 8. Assigning Roles to Users
 
 1. Navigate to **Users** in the realm.
 2. Select a user → **Role Mappings** tab.
@@ -64,10 +172,10 @@ priority order: `crm-admin` > `crm-manager` > `crm-agent` > default `AGENT`.
 
 ---
 
-## 5. Token Mapper — expose roles in `realm_access`
+## 9. Token Mapper — expose roles in `realm_access`
 
-Authme/Keycloak includes `realm_access.roles` in the token by default.  If roles are
-absent, add a protocol mapper:
+Authme/Keycloak includes `realm_access.roles` in the token by default. If roles are
+absent from tokens, add a protocol mapper:
 
 1. Go to the client → **Mappers** tab → **Add Mapper** → **User Realm Role**.
 2. Set **Token Claim Name** to `realm_access.roles`.
@@ -76,44 +184,39 @@ absent, add a protocol mapper:
 
 ---
 
-## 6. Environment Variables
+## 10. Environment Variables
 
-Set the following variables in `.env` (or your deployment secrets manager):
+Set these in `.env` (or your deployment secrets manager):
 
-```dotenv
-# Authme IAM
-AUTHME_URL=https://authme.example.com          # base URL, no trailing slash
-AUTHME_REALM=real-estate-crm                   # realm name
-AUTHME_CLIENT_ID=crm-api                       # API client ID
-AUTHME_CLIENT_SECRET=<secret>                  # API client secret
+| Variable               | Description                      | Dev Value                       |
+|------------------------|----------------------------------|---------------------------------|
+| `AUTHME_URL`           | AuthMe server base URL           | `http://authme:3001`            |
+| `AUTHME_REALM`         | Realm name                       | `real-estate-dev`               |
+| `AUTHME_CLIENT_ID`     | Backend client ID                | `crm-backend`                   |
+| `AUTHME_CLIENT_SECRET` | Backend client secret            | (from AuthMe admin console)     |
+| `ADMIN_PORTAL_URL`     | Admin UI URL (for CORS)          | `http://localhost:5173`         |
+| `AGENT_PORTAL_URL`     | Agent UI URL (for CORS)          | `http://localhost:5174`         |
 
-# Portal URLs (used for CORS)
-ADMIN_PORTAL_URL=https://admin.crm.example.com
-AGENT_PORTAL_URL=https://agent.crm.example.com
-```
-
-The JWKS endpoint is automatically derived as:
+The JWKS endpoint is automatically derived:
 ```
 {AUTHME_URL}/realms/{AUTHME_REALM}/protocol/openid-connect/certs
 ```
 
 ---
 
-## 7. How Authentication Works
+## 11. How Authentication Works
 
 1. The user logs in via the admin/agent portal using the Authme OIDC flow.
 2. The portal receives an **access token** (JWT) from Authme.
 3. The portal includes the token in every API request as `Authorization: Bearer <token>`.
-4. The NestJS backend validates the token against the JWKS endpoint.
+4. The NestJS backend validates the token against the JWKS endpoint (RS256, no static secret).
 5. On validation success, `AuthService.syncUser()` upserts the user record in the
-   local PostgreSQL database (creating it on first login, updating name/role/lastLoginAt
-   on subsequent requests).
-6. The `request.user` object is populated with the `AuthenticatedUser` shape and is
-   available in all controllers via the `@CurrentUser()` decorator.
+   local PostgreSQL database (creating on first login, updating name/role/lastLoginAt).
+6. `request.user` is populated with `AuthenticatedUser` — available via `@CurrentUser()`.
 
 ---
 
-## 8. Role-Based Access Control
+## 12. Role-Based Access Control
 
 Routes can be restricted to specific roles using the `@Roles()` decorator:
 
@@ -126,14 +229,13 @@ import { UserRole } from '@prisma/client';
 remove(@Param('id') id: string) { ... }
 ```
 
-The `RolesGuard` is registered globally but does not restrict routes unless
-`@Roles()` metadata is present.
+The `RolesGuard` is registered globally but only restricts routes with `@Roles()` metadata.
 
 ---
 
-## 9. Public Routes
+## 13. Public Routes
 
-Routes that should be accessible without authentication must be decorated with `@Public()`:
+Routes accessible without authentication use `@Public()`:
 
 ```typescript
 import { Public } from '../auth/decorators/public.decorator';
@@ -143,5 +245,23 @@ import { Public } from '../auth/decorators/public.decorator';
 health() { return { status: 'ok' }; }
 ```
 
-The Swagger UI at `/api/docs` is served without authentication by default (the Swagger
-setup endpoint is not part of the NestJS routing layer and bypasses the guard).
+---
+
+## 14. Testing Auth Locally
+
+Get a test token using Resource Owner Password flow (dev only):
+
+```bash
+curl -X POST http://localhost:3001/realms/real-estate-dev/protocol/openid-connect/token \
+  -d "grant_type=password" \
+  -d "client_id=crm-backend" \
+  -d "client_secret=YOUR_CLIENT_SECRET" \
+  -d "username=testuser@example.com" \
+  -d "password=testpassword"
+```
+
+Use the returned `access_token`:
+
+```bash
+curl -H "Authorization: Bearer <access_token>" http://localhost:3000/api/health
+```

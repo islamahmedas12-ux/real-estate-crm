@@ -51,7 +51,7 @@ export class ClientsController {
     const isAdminOrManager = user.roles?.some((r) =>
       ['admin', 'manager'].includes(r),
     ) ?? false;
-    return this.clientsService.findAll(filter, user.sub, isAdminOrManager);
+    return this.clientsService.findAll(filter, user.id, isAdminOrManager);
   }
 
   @Get('stats')
@@ -60,7 +60,7 @@ export class ClientsController {
     const isAdminOrManager = user.roles?.some((r) =>
       ['admin', 'manager'].includes(r),
     ) ?? false;
-    return this.clientsService.getStats(user.sub, isAdminOrManager);
+    return this.clientsService.getStats(user.id, isAdminOrManager);
   }
 
   @Get(':id')

@@ -97,7 +97,7 @@ export class EmailScheduler {
 
     const invoices = await this.prisma.invoice.findMany({
       where: {
-        status: { in: ['PENDING', 'OVERDUE'] },
+        status: { in: ['PENDING'] },
         dueDate: { lte: threeDaysFromNow },
       },
       include: {

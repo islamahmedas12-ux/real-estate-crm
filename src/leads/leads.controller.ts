@@ -45,7 +45,7 @@ export class LeadsController {
     @Body() dto: CreateLeadDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.leadsService.create(dto, user.sub);
+    return this.leadsService.create(dto, user.id);
   }
 
   @Get()
@@ -57,7 +57,7 @@ export class LeadsController {
     const isAdminOrManager = user.roles?.some((r) =>
       ['admin', 'manager'].includes(r),
     ) ?? false;
-    return this.leadsService.findAll(filter, user.sub, isAdminOrManager);
+    return this.leadsService.findAll(filter, user.id, isAdminOrManager);
   }
 
   @Get('pipeline')
@@ -71,7 +71,7 @@ export class LeadsController {
       ['admin', 'manager'].includes(r),
     ) ?? false;
     const limit = limitPerStatus ? Math.min(Math.max(parseInt(limitPerStatus, 10) || 50, 1), 200) : 50;
-    return this.leadsService.getPipeline(user.sub, isAdminOrManager, limit);
+    return this.leadsService.getPipeline(user.id, isAdminOrManager, limit);
   }
 
   @Get('stats')
@@ -80,7 +80,7 @@ export class LeadsController {
     const isAdminOrManager = user.roles?.some((r) =>
       ['admin', 'manager'].includes(r),
     ) ?? false;
-    return this.leadsService.getStats(user.sub, isAdminOrManager);
+    return this.leadsService.getStats(user.id, isAdminOrManager);
   }
 
   @Get(':id')
@@ -125,7 +125,7 @@ export class LeadsController {
     @Body() dto: ChangeLeadStatusDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.leadsService.changeStatus(id, dto, user.sub);
+    return this.leadsService.changeStatus(id, dto, user.id);
   }
 
   @Patch(':id/assign')
@@ -151,7 +151,7 @@ export class LeadsController {
     @Body() dto: CreateLeadActivityDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.leadsService.addActivity(id, dto, user.sub);
+    return this.leadsService.addActivity(id, dto, user.id);
   }
 
   @Get(':id/activities')

@@ -53,7 +53,7 @@ export class PropertiesController {
     const isAdminOrManager = user?.roles?.some((r) =>
       ['admin', 'manager'].includes(r),
     ) ?? false;
-    return this.propertiesService.findAll(filter, user?.sub, isAdminOrManager);
+    return this.propertiesService.findAll(filter, user?.id, isAdminOrManager);
   }
 
   @Get('search')
@@ -70,7 +70,7 @@ export class PropertiesController {
       dto.q,
       dto.cursor,
       dto.take,
-      user?.sub,
+      user?.id,
       isAdminOrManager,
     );
   }
@@ -81,7 +81,7 @@ export class PropertiesController {
     const isAdminOrManager = user?.roles?.some((r) =>
       ['admin', 'manager'].includes(r),
     ) ?? false;
-    return this.propertiesService.getStats(user?.sub, isAdminOrManager);
+    return this.propertiesService.getStats(user?.id, isAdminOrManager);
   }
 
   @Get(':id')

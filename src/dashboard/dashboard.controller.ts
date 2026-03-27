@@ -92,7 +92,7 @@ export class DashboardController {
   @ApiOperation({ summary: 'Agent overview — my properties, clients, leads, tasks' })
   @ApiResponse({ status: 200, description: 'Agent overview statistics' })
   getAgentOverview(@CurrentUser() user: AuthenticatedUser) {
-    return this.dashboardService.getAgentOverview(user.sub);
+    return this.dashboardService.getAgentOverview(user.id);
   }
 
   @Get('agent/leads')
@@ -100,7 +100,7 @@ export class DashboardController {
   @ApiOperation({ summary: 'Agent lead pipeline' })
   @ApiResponse({ status: 200, description: 'Agent lead pipeline' })
   getAgentLeads(@CurrentUser() user: AuthenticatedUser) {
-    return this.dashboardService.getAgentLeads(user.sub);
+    return this.dashboardService.getAgentLeads(user.id);
   }
 
   @Get('agent/follow-ups')
@@ -108,7 +108,7 @@ export class DashboardController {
   @ApiOperation({ summary: 'Upcoming and overdue follow-ups' })
   @ApiResponse({ status: 200, description: 'Follow-up lists' })
   getAgentFollowUps(@CurrentUser() user: AuthenticatedUser) {
-    return this.dashboardService.getAgentFollowUps(user.sub);
+    return this.dashboardService.getAgentFollowUps(user.id);
   }
 
   @Get('agent/performance')
@@ -116,6 +116,6 @@ export class DashboardController {
   @ApiOperation({ summary: 'Agent performance — this month vs last month' })
   @ApiResponse({ status: 200, description: 'Performance comparison' })
   getAgentPerformance(@CurrentUser() user: AuthenticatedUser) {
-    return this.dashboardService.getAgentPerformance(user.sub);
+    return this.dashboardService.getAgentPerformance(user.id);
   }
 }

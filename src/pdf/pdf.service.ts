@@ -111,8 +111,9 @@ export class PdfService {
     const totalCollected = invoices
       .filter((i) => i.status === 'PAID')
       .reduce((sum, i) => sum + Number(i.amount), 0);
+    const now = new Date();
     const totalOverdue = invoices
-      .filter((i) => i.status === 'OVERDUE')
+      .filter((i) => i.status === 'PENDING' && new Date(i.dueDate) < now)
       .reduce((sum, i) => sum + Number(i.amount), 0);
 
     // Group by status
@@ -159,7 +160,11 @@ export class PdfService {
     startDate: Date,
     endDate: Date,
   ): Promise<Buffer> {
-    const [leads, contracts, activities] = await Promise.all([
+    const [agent, leads, contracts, activities] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: agentId },
+        select: { firstName: true, lastName: true },
+      }),
       this.prisma.lead.findMany({
         where: {
           assignedAgentId: agentId,
@@ -186,7 +191,7 @@ export class PdfService {
 
     const data: AgentPerformanceData = {
       agentId,
-      agentName: agentId, // Would be replaced with actual agent name from IAM
+      agentName: agent ? [agent.firstName, agent.lastName].filter(Boolean).join(' ') : agentId,
       period,
       leadsAssigned: leads.length,
       leadsWon,

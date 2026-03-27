@@ -58,7 +58,7 @@ export class ContractsService {
           type: dto.type,
           propertyId: dto.propertyId,
           clientId: dto.clientId,
-          agentId: dto.agentId ?? user.sub,
+          agentId: dto.agentId ?? user.id,
           startDate: new Date(dto.startDate),
           endDate: dto.endDate ? new Date(dto.endDate) : null,
           totalAmount: dto.totalAmount,
@@ -115,7 +115,7 @@ export class ContractsService {
     const isAgent =
       user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent) {
-      where.agentId = user.sub;
+      where.agentId = user.id;
     }
 
     const orderBy: Prisma.ContractOrderByWithRelationInput = {};
@@ -162,7 +162,7 @@ export class ContractsService {
     // Agent can only view own contracts
     const isAgent =
       user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
-    if (isAgent && contract.agentId !== user.sub) {
+    if (isAgent && contract.agentId !== user.id) {
       throw new ForbiddenException('You can only view your own contracts');
     }
 
@@ -178,7 +178,7 @@ export class ContractsService {
     // Agent can only update own contracts
     const isAgent =
       user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
-    if (isAgent && existing.agentId !== user.sub) {
+    if (isAgent && existing.agentId !== user.id) {
       throw new ForbiddenException('You can only update your own contracts');
     }
 
@@ -215,7 +215,7 @@ export class ContractsService {
     // Agent can only change status of own contracts
     const isAgent =
       user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
-    if (isAgent && contract.agentId !== user.sub) {
+    if (isAgent && contract.agentId !== user.id) {
       throw new ForbiddenException('You can only change the status of your own contracts');
     }
 
@@ -274,7 +274,7 @@ export class ContractsService {
     // Agent can only view invoices for own contracts
     const isAgent =
       user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
-    if (isAgent && contract.agentId !== user.sub) {
+    if (isAgent && contract.agentId !== user.id) {
       throw new ForbiddenException('You can only view invoices for your own contracts');
     }
 
@@ -297,7 +297,7 @@ export class ContractsService {
     // Agent can only generate invoices for own contracts
     const isAgent =
       user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
-    if (isAgent && contract.agentId !== user.sub) {
+    if (isAgent && contract.agentId !== user.id) {
       throw new ForbiddenException('You can only generate invoices for your own contracts');
     }
 
@@ -353,7 +353,7 @@ export class ContractsService {
     const isAgent =
       user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent) {
-      agentFilter.agentId = user.sub;
+      agentFilter.agentId = user.id;
     }
 
     const [total, byStatus, byType, totalValue] = await Promise.all([
@@ -395,7 +395,7 @@ export class ContractsService {
     const isAgent =
       user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent) {
-      where.agentId = user.sub;
+      where.agentId = user.id;
     }
 
     return this.prisma.contract.findMany({

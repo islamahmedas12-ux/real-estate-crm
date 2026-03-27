@@ -84,7 +84,7 @@ export class ActivityInterceptor implements NestInterceptor {
             description,
             entityType: options.entityType,
             entityId,
-            performedBy: user?.sub ?? 'system',
+            performedBy: user?.id ?? 'system',
             metadata: action === 'CREATE' ? { created: true } : undefined,
           })
           .catch(() => {
