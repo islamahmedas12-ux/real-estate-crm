@@ -98,22 +98,40 @@ jobs:
           SSH_KEY: ${{ secrets.DEV_SERVER_SSH_KEY }}
           SSH_HOST: ${{ secrets.DEV_SERVER_HOST }}
           SSH_USER: islam
+          IMAGE_TAG: ${{ needs.migrate.outputs.image-tag || 'ghcr.io/islamahmedas12-ux/real-estate-crm:dev' }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
           
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'SSHEOF'
           cd /apps/real-estate-crm
-          docker-compose pull
-          docker-compose up -d
-          EOF
+          git pull origin dev
+          
+          # Pull latest backend image from GHCR (public repo, no auth needed)
+          docker pull ghcr.io/islamahmedas12-ux/real-estate-crm:dev
+          
+          # Deploy using server-specific compose file (uses pre-built image)
+          export APP_IMAGE="ghcr.io/islamahmedas12-ux/real-estate-crm:dev"
+          docker-compose -f docker-compose.dev-server.yml up -d
+          
+          echo "=== Running containers ==="
+          docker-compose -f docker-compose.dev-server.yml ps
+          SSHEOF
           
           rm ~/.ssh/deploy_key
 
-      - name: Notify Slack (Success)
+      - name: Notify Success
         if: success()
+        run: echo "✅ Dev deployment successful! Commit: ${{ github.sha }}"
+
+      - name: Notify Failure  
+        if: failure()
+        run: echo "❌ Dev deployment failed! Commit: ${{ github.sha }}"
+
+      - name: Notify Slack (Success)
+        if: false
         run: |
           curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
             -H 'Content-Type: application/json' \
@@ -126,14 +144,6 @@ jobs:
             }'
 
       - name: Notify Slack (Failure)
-        if: failure()
+        if: false
         run: |
-          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
-            -H 'Content-Type: application/json' \
-            -d '{
-              "text": "❌ Dev deployment failed",
-              "attachments": [{
-                "color": "danger",
-                "text": "Branch: dev\nCommit: ${{ github.sha }}"
-              }]
-            }'
+          echo "Slack notifications disabled"

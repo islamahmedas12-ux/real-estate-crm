@@ -1,0 +1,124 @@
+# ==============================================================================
+# Real Estate CRM — Dev Server Deployment (uses pre-built GHCR image)
+# ==============================================================================
+#
+# Used by CD pipeline to deploy to dev server (34.24.201.183)
+# Unlike docker-compose.dev-full.yml, this uses the built image from GHCR
+# not source-mount dev mode.
+#
+# Usage on server:
+#   export APP_IMAGE=ghcr.io/islamahmedas12-ux/real-estate-crm:dev
+#   docker-compose -f docker-compose.dev-server.yml up -d
+# ==============================================================================
+
+services:
+  # ── CRM PostgreSQL ──────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    container_name: crm-dev-db
+    environment:
+      POSTGRES_USER: crm_user
+      POSTGRES_PASSWORD: real-estate-dev-password-123
+      POSTGRES_DB: real_estate_crm_dev
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crm_user"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - crm-dev-network
+
+  # ── AuthMe PostgreSQL ───────────────────────────────────────────────────────
+  authme-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    container_name: crm-dev-authme-db
+    environment:
+      POSTGRES_USER: authme
+      POSTGRES_PASSWORD: authme
+      POSTGRES_DB: authme
+    volumes:
+      - authme-pgdata-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authme"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - crm-dev-network
+
+  # ── AuthMe IAM ──────────────────────────────────────────────────────────────
+  authme:
+    image: islamawad/authme
+    restart: unless-stopped
+    container_name: crm-dev-authme
+    environment:
+      DATABASE_URL: postgresql://authme:authme@authme-db:5432/authme
+      PORT: "3001"
+      BASE_URL: http://dev-auth.realstate-crm.homes
+    ports:
+      - "3001:3001"
+    depends_on:
+      authme-db:
+        condition: service_healthy
+    networks:
+      - crm-dev-network
+
+  # ── NestJS Backend (pre-built image from GHCR) ──────────────────────────────
+  app:
+    image: ${APP_IMAGE:-ghcr.io/islamahmedas12-ux/real-estate-crm:dev}
+    restart: unless-stopped
+    container_name: crm-dev-app
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgresql://crm_user:real-estate-dev-password-123@db:5432/real_estate_crm_dev
+      AUTHME_URL: http://authme:3001
+      AUTHME_REALM: real-estate-dev
+      AUTHME_CLIENT_ID: crm-backend
+      AUTHME_CLIENT_SECRET: dev-secret
+      ADMIN_PORTAL_URL: http://dev-admin.realstate-crm.homes
+      AGENT_PORTAL_URL: http://dev-agent.realstate-crm.homes
+      UPLOAD_DIR: /app/uploads
+      JWT_SECRET: dev-jwt-secret-change-in-prod
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - uploads-dev:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+    networks:
+      - crm-dev-network
+
+  # ── Redis (for queue) ───────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    container_name: crm-dev-redis
+    networks:
+      - crm-dev-network
+
+volumes:
+  pgdata-dev:
+    driver: local
+  authme-pgdata-dev:
+    driver: local
+  uploads-dev:
+    driver: local
+
+networks:
+  crm-dev-network:
+    driver: bridge
