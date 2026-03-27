@@ -69,6 +69,34 @@ enum PropertyStatus {
   }
 }
 
+class PropertyAgent {
+  final String id;
+  final String firstName;
+  final String lastName;
+  final String? email;
+  final String? phone;
+
+  const PropertyAgent({
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    this.email,
+    this.phone,
+  });
+
+  String get fullName => '$firstName $lastName';
+
+  factory PropertyAgent.fromJson(Map<String, dynamic> json) {
+    return PropertyAgent(
+      id: json['id'] as String,
+      firstName: json['firstName'] as String? ?? '',
+      lastName: json['lastName'] as String? ?? '',
+      email: json['email'] as String?,
+      phone: json['phone'] as String?,
+    );
+  }
+}
+
 class Property {
   final String id;
   final String title;
@@ -87,6 +115,7 @@ class Property {
   final double? longitude;
   final List<String> features;
   final String? assignedAgentId;
+  final PropertyAgent? assignedAgent;
   final List<PropertyImage> images;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -109,6 +138,7 @@ class Property {
     this.longitude,
     this.features = const [],
     this.assignedAgentId,
+    this.assignedAgent,
     this.images = const [],
     required this.createdAt,
     required this.updatedAt,
@@ -150,6 +180,12 @@ class Property {
         ..sort((a, b) => a.order.compareTo(b.order));
     }
 
+    final agentRaw = json['assignedAgent'];
+    PropertyAgent? assignedAgent;
+    if (agentRaw is Map<String, dynamic>) {
+      assignedAgent = PropertyAgent.fromJson(agentRaw);
+    }
+
     return Property(
       id: json['id'] as String,
       title: json['title'] as String,
@@ -168,6 +204,7 @@ class Property {
       longitude: double.tryParse('${json['longitude']}'),
       features: features,
       assignedAgentId: json['assignedAgentId'] as String?,
+      assignedAgent: assignedAgent,
       images: images,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),

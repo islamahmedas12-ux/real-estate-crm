@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,19 +12,76 @@ import 'property_filter_sheet.dart';
 
 final _viewModeProvider = StateProvider<bool>((ref) => false); // false=list, true=grid
 
-class PropertiesScreen extends ConsumerWidget {
+class PropertiesScreen extends ConsumerStatefulWidget {
   const PropertiesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PropertiesScreen> createState() => _PropertiesScreenState();
+}
+
+class _PropertiesScreenState extends ConsumerState<PropertiesScreen> {
+  final _searchController = TextEditingController();
+  Timer? _debounce;
+  bool _showSearch = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      ref.read(propertyFilterProvider.notifier).state =
+          ref.read(propertyFilterProvider).copyWith(
+                search: () => query.isEmpty ? null : query,
+              );
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _showSearch = !_showSearch;
+      if (!_showSearch) {
+        _searchController.clear();
+        _debounce?.cancel();
+        // Clear search filter
+        final current = ref.read(propertyFilterProvider);
+        if (current.search != null) {
+          ref.read(propertyFilterProvider.notifier).state =
+              current.copyWith(search: () => null);
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final listState = ref.watch(propertyListProvider);
     final isGrid = ref.watch(_viewModeProvider);
     final filter = ref.watch(propertyFilterProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Properties'),
+        title: _showSearch
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Search properties...',
+                  border: InputBorder.none,
+                ),
+                onChanged: _onSearchChanged,
+              )
+            : const Text('Properties'),
         actions: [
+          IconButton(
+            icon: Icon(_showSearch ? Icons.close : Icons.search),
+            tooltip: _showSearch ? 'Close search' : 'Search',
+            onPressed: _toggleSearch,
+          ),
           IconButton(
             icon: Icon(isGrid ? Icons.view_list : Icons.grid_view),
             tooltip: isGrid ? 'List view' : 'Grid view',
@@ -101,10 +160,34 @@ class PropertiesScreen extends ConsumerWidget {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () =>
-          ref.read(propertyListProvider.notifier).loadProperties(),
-      child: isGrid ? _buildGrid(context, ref, state) : _buildList(context, ref, state),
+    return Column(
+      children: [
+        if (state.isFromCache)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Colors.orange.shade100,
+            child: Row(
+              children: [
+                Icon(Icons.cloud_off, size: 16, color: Colors.orange.shade800),
+                const SizedBox(width: 8),
+                Text(
+                  'Showing cached data — pull to refresh when online',
+                  style: TextStyle(fontSize: 12, color: Colors.orange.shade800),
+                ),
+              ],
+            ),
+          ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () =>
+                ref.read(propertyListProvider.notifier).loadProperties(),
+            child: isGrid
+                ? _buildGrid(context, ref, state)
+                : _buildList(context, ref, state),
+          ),
+        ),
+      ],
     );
   }
 

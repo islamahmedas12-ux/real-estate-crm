@@ -11,6 +11,7 @@ class PropertyService {
   Future<PropertyListResponse> getProperties({
     int page = 1,
     int limit = 20,
+    String? search,
     PropertyType? type,
     PropertyStatus? status,
     String? city,
@@ -29,6 +30,7 @@ class PropertyService {
       'sortOrder': sortOrder,
     };
 
+    if (search != null && search.isNotEmpty) params['search'] = search;
     if (type != null) params['type'] = type.value;
     if (status != null) params['status'] = status.value;
     if (city != null && city.isNotEmpty) params['city'] = city;

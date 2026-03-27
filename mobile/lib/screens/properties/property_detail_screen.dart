@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -71,7 +72,7 @@ class _PropertyDetailView extends StatelessWidget {
             actions: [
               IconButton(
                 icon: const Icon(Icons.share),
-                onPressed: () => _shareProperty(context),
+                onPressed: () => _showShareOptions(context),
               ),
             ],
           ),
@@ -102,10 +103,12 @@ class _PropertyDetailView extends StatelessWidget {
                     children: [
                       const Icon(Icons.location_on_outlined, size: 16),
                       const SizedBox(width: 4),
-                      Text(
-                        '${property.address}, ${property.locationText}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      Expanded(
+                        child: Text(
+                          '${property.address}, ${property.locationText}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ],
@@ -172,15 +175,93 @@ class _PropertyDetailView extends StatelessWidget {
                     ),
                   ],
 
+                  // Assigned agent
+                  if (property.assignedAgent != null) ...[
+                    const SizedBox(height: 20),
+                    Text('Assigned Agent', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 8),
+                    Card(
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: theme.colorScheme.primaryContainer,
+                          child: Text(
+                            property.assignedAgent!.firstName.isNotEmpty
+                                ? property.assignedAgent!.firstName[0].toUpperCase()
+                                : 'A',
+                            style: TextStyle(
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        title: Text(property.assignedAgent!.fullName),
+                        subtitle: property.assignedAgent!.email != null
+                            ? Text(property.assignedAgent!.email!)
+                            : null,
+                        trailing: property.assignedAgent!.phone != null
+                            ? IconButton(
+                                icon: const Icon(Icons.phone_outlined),
+                                onPressed: () => launchUrl(
+                                  Uri.parse('tel:${property.assignedAgent!.phone}'),
+                                ),
+                              )
+                            : null,
+                      ),
+                    ),
+                  ],
+
                   // Map link
                   if (property.latitude != null && property.longitude != null) ...[
                     const SizedBox(height: 20),
                     Text('Location', style: theme.textTheme.titleMedium),
                     const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.map),
-                      label: const Text('Open in Maps'),
-                      onPressed: () => _openInMaps(context),
+                    // Static map preview
+                    GestureDetector(
+                      onTap: () => _openInMaps(context),
+                      child: Container(
+                        height: 180,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.map, size: 48, color: theme.colorScheme.primary),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '${property.latitude!.toStringAsFixed(4)}, ${property.longitude!.toStringAsFixed(4)}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Tap to open in Maps',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: Icon(
+                                Icons.open_in_new,
+                                size: 18,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
 
@@ -194,12 +275,61 @@ class _PropertyDetailView extends StatelessWidget {
     );
   }
 
-  void _shareProperty(BuildContext context) {
-    final text = '${property.title}\n'
+  void _showShareOptions(BuildContext context) {
+    final shareText = '${property.title}\n'
         '${property.type.label} — ${property.priceFormatted}\n'
         '${property.locationText}\n'
         '${property.area.toStringAsFixed(0)} m²';
-    Share.share(text, subject: property.title);
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.share),
+              title: const Text('Share'),
+              onTap: () {
+                Navigator.pop(context);
+                Share.share(shareText, subject: property.title);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.message, color: Colors.green.shade600),
+              title: const Text('Share via WhatsApp'),
+              onTap: () {
+                Navigator.pop(context);
+                _shareViaWhatsApp(context, shareText);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.copy),
+              title: const Text('Copy to clipboard'),
+              onTap: () {
+                Navigator.pop(context);
+                Clipboard.setData(ClipboardData(text: shareText));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Copied to clipboard')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _shareViaWhatsApp(BuildContext context, String text) async {
+    final url = Uri.parse('https://wa.me/?text=${Uri.encodeComponent(text)}');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        // Fallback to regular share
+        Share.share(text, subject: property.title);
+      }
+    }
   }
 
   void _openInMaps(BuildContext context) {
