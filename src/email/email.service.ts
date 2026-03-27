@@ -113,7 +113,7 @@ export class EmailService implements OnModuleInit {
         to,
         subject,
         template,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         context: (context as any) ?? Prisma.DbNull,
         status: EmailStatus.QUEUED,
       },
