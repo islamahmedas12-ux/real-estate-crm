@@ -1,23 +1,23 @@
 # Stage 1: Dependencies
-FROM node:22-alpine AS deps
+FROM node:24-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
 # Stage 1b: Admin UI dependencies
-FROM node:22-alpine AS admin-deps
+FROM node:24-alpine AS admin-deps
 WORKDIR /app/admin-ui
 COPY admin-ui/package.json admin-ui/package-lock.json ./
 RUN npm ci
 
 # Stage 1c: Agent UI dependencies
-FROM node:22-alpine AS agent-deps
+FROM node:24-alpine AS agent-deps
 WORKDIR /app/agent-ui
 COPY agent-ui/package.json agent-ui/package-lock.json ./
 RUN npm ci
 
 # Stage 2: Build
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=admin-deps /app/admin-ui/node_modules ./admin-ui/node_modules
@@ -34,7 +34,7 @@ RUN cp -r admin-ui/dist dist/admin-ui
 RUN cp -r agent-ui/dist dist/agent-ui
 
 # Stage 3: Production
-FROM node:22-alpine AS production
+FROM node:24-alpine AS production
 WORKDIR /app
 
 COPY --from=build /app/node_modules ./node_modules
