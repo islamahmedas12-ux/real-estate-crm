@@ -113,9 +113,8 @@ export class EmailService implements OnModuleInit {
         to,
         subject,
         template,
-        context: context && typeof context === 'object' 
-          ? (context as unknown as Prisma.InputJsonValue)
-          : null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        context: (context as any) ?? Prisma.DbNull,
         status: EmailStatus.QUEUED,
       },
     });
