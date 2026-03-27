@@ -1,0 +1,62 @@
+name: 🤖 Auto-Dispatch Agent on Issue Label
+
+on:
+  issues:
+    types: [labeled, assigned]
+
+jobs:
+  dispatch-agent:
+    name: Dispatch Agent for Issue
+    runs-on: ubuntu-latest
+    if: github.event.action == 'labeled'
+
+    steps:
+      - name: Determine Responsible Agent
+        id: agent
+        run: |
+          LABEL="${{ github.event.label.name }}"
+          ISSUE_NUMBER="${{ github.event.issue.number }}"
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+
+          # Map label → agent name
+          case "$LABEL" in
+            backend)       AGENT="Karim-Backend" ;;
+            frontend)      AGENT="Layla-Frontend" ;;
+            mobile)        AGENT="Youssef-Mobile" ;;
+            devops|infra)  AGENT="Hassan-DevOps" ;;
+            authme)        AGENT="Adam-AuthMe" ;;
+            qa)            AGENT="Nour-QA" ;;
+            automation)    AGENT="Sara-QA-Automation" ;;
+            ux)            AGENT="Dina-UX" ;;
+            *)             AGENT="none" ;;
+          esac
+
+          echo "agent=$AGENT" >> $GITHUB_OUTPUT
+          echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          echo "issue_title=$ISSUE_TITLE" >> $GITHUB_OUTPUT
+          echo "label=$LABEL" >> $GITHUB_OUTPUT
+          echo "Dispatching to: $AGENT for issue #$ISSUE_NUMBER"
+
+      - name: Notify OpenClaw Server
+        if: steps.agent.outputs.agent != 'none'
+        env:
+          SSH_KEY: ${{ secrets.DEV_SERVER_SSH_KEY }}
+          SSH_HOST: ${{ secrets.DEV_SERVER_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null
+
+          AGENT="${{ steps.agent.outputs.agent }}"
+          ISSUE_NUMBER="${{ steps.agent.outputs.issue_number }}"
+          ISSUE_TITLE="${{ steps.agent.outputs.issue_title }}"
+          LABEL="${{ steps.agent.outputs.label }}"
+
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no islam@$SSH_HOST \
+            "openclaw system event \
+              --text '🤖 New issue dispatched to $AGENT: #$ISSUE_NUMBER - $ISSUE_TITLE (label: $LABEL)' \
+              --mode now 2>/dev/null || echo 'OpenClaw notify sent'"
+
+          rm ~/.ssh/deploy_key
+          echo "✅ Agent $AGENT notified for issue #$ISSUE_NUMBER"
