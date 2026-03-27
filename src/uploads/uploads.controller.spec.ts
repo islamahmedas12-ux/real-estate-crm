@@ -63,7 +63,7 @@ describe('UploadsController', () => {
       mockService.uploadPropertyImages.mockResolvedValue([{ id: 'img-1' }, { id: 'img-2' }]);
 
       const files = [mockFile, { ...mockFile, originalname: 'photo2.jpg' }];
-      const result = await controller.uploadPropertyImages(propertyId, files as Express.Multer.File[]);
+      const result = await controller.uploadPropertyImages(propertyId, files);
 
       expect(result).toHaveLength(2);
       expect(mockService.uploadPropertyImages).toHaveBeenCalledWith(propertyId, files);
@@ -83,9 +83,9 @@ describe('UploadsController', () => {
     it('should propagate NotFoundException from service', async () => {
       mockService.deletePropertyImage.mockRejectedValue(new NotFoundException('Image not found'));
 
-      await expect(
-        controller.deletePropertyImage(propertyId, 'nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.deletePropertyImage(propertyId, 'nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -102,9 +102,9 @@ describe('UploadsController', () => {
     it('should propagate NotFoundException from service', async () => {
       mockService.setPrimaryImage.mockRejectedValue(new NotFoundException('Image not found'));
 
-      await expect(
-        controller.setPrimaryImage(propertyId, 'nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.setPrimaryImage(propertyId, 'nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -114,7 +114,10 @@ describe('UploadsController', () => {
       mockService.uploadContractDocument.mockResolvedValue(docResult);
 
       const docFile = { ...mockFile, mimetype: 'application/pdf', originalname: 'contract.pdf' };
-      const result = await controller.uploadContractDocument(contractId, docFile as Express.Multer.File);
+      const result = await controller.uploadContractDocument(
+        contractId,
+        docFile as Express.Multer.File,
+      );
 
       expect(result).toEqual(docResult);
       expect(mockService.uploadContractDocument).toHaveBeenCalledWith(contractId, docFile);
@@ -125,9 +128,9 @@ describe('UploadsController', () => {
         new NotFoundException('Contract not found'),
       );
 
-      await expect(
-        controller.uploadContractDocument('nonexistent', mockFile),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.uploadContractDocument('nonexistent', mockFile)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -140,7 +143,7 @@ describe('UploadsController', () => {
       return res;
     };
 
-    const mockRequest = (user?: any) => ({ user } as any);
+    const mockRequest = (user?: any) => ({ user }) as any;
 
     it('should serve an image file without authentication', async () => {
       const res = mockResponse();
@@ -179,9 +182,9 @@ describe('UploadsController', () => {
       const res = mockResponse();
       const req = mockRequest(); // no user
 
-      await expect(
-        controller.serveFile(FileType.DOCUMENTS, 'doc.pdf', req, res),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(controller.serveFile(FileType.DOCUMENTS, 'doc.pdf', req, res)).rejects.toThrow(
+        ForbiddenException,
+      );
 
       expect(mockService.getFilePath).not.toHaveBeenCalled();
     });

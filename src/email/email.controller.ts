@@ -10,21 +10,18 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import { Prisma, EmailStatus } from '@prisma/client';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { EmailService } from './email.service.js';
 import { SendEmailDto } from './dto/send-email.dto.js';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto.js';
 import { EmailFilterDto } from './dto/email-filter.dto.js';
 import { paginate } from '../common/dto/pagination.dto.js';
-import { CurrentUser, type AuthenticatedUser } from '../common/decorators/current-user.decorator.js';
+import {
+  CurrentUser,
+  type AuthenticatedUser,
+} from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 

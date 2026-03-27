@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import {
   BarChart3,
   Download,
@@ -55,8 +55,8 @@ export default function ReportsPage() {
   const [range, setRange] = useState<DateRangePreset>('this_month')
   const [exporting, setExporting] = useState(false)
 
-  const revenueParams: RevenueReportParams = { range, groupBy: 'day' }
-  const leadParams: LeadConversionParams = { range }
+  const revenueParams: RevenueReportParams = useMemo(() => ({ range, groupBy: 'day' }), [range])
+  const leadParams: LeadConversionParams = useMemo(() => ({ range }), [range])
 
   const revenue = useRevenueReport(revenueParams)
   const leadConversion = useLeadConversionReport(leadParams)

@@ -23,7 +23,11 @@ export class CreatePropertyDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'Property type', enum: PropertyType, example: PropertyType.APARTMENT })
+  @ApiProperty({
+    description: 'Property type',
+    enum: PropertyType,
+    example: PropertyType.APARTMENT,
+  })
   @IsNotEmpty()
   @IsEnum(PropertyType)
   type: PropertyType;
@@ -83,7 +87,11 @@ export class CreatePropertyDto {
   @IsDecimal({ decimal_digits: '0,7' })
   longitude?: string;
 
-  @ApiPropertyOptional({ description: 'Features list', example: ['pool', 'gym', 'parking'], type: [String] })
+  @ApiPropertyOptional({
+    description: 'Features list',
+    example: ['pool', 'gym', 'parking'],
+    type: [String],
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

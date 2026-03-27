@@ -153,7 +153,11 @@ describe('InvoicesController', () => {
 
       const result = await controller.update(sampleInvoice.id, { amount: 60000 }, mockUser);
       expect(result.amount).toBe(60000);
-      expect(mockService.update).toHaveBeenCalledWith(sampleInvoice.id, { amount: 60000 }, mockUser);
+      expect(mockService.update).toHaveBeenCalledWith(
+        sampleInvoice.id,
+        { amount: 60000 },
+        mockUser,
+      );
     });
   });
 

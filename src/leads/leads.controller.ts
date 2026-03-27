@@ -27,7 +27,10 @@ import { LeadFilterDto } from './dto/lead-filter.dto.js';
 import { ChangeLeadStatusDto } from './dto/change-lead-status.dto.js';
 import { AssignAgentDto } from './dto/assign-agent.dto.js';
 import { CreateLeadActivityDto } from './dto/create-lead-activity.dto.js';
-import { CurrentUser, type AuthenticatedUser } from '../common/decorators/current-user.decorator.js';
+import {
+  CurrentUser,
+  type AuthenticatedUser,
+} from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 
@@ -41,45 +44,40 @@ export class LeadsController {
   @Post()
   @ApiOperation({ summary: 'Create a new lead' })
   @ApiResponse({ status: 201, description: 'Lead created successfully' })
-  create(
-    @Body() dto: CreateLeadDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  create(@Body() dto: CreateLeadDto, @CurrentUser() user: AuthenticatedUser) {
     return this.leadsService.create(dto, user.id);
   }
 
   @Get()
   @ApiOperation({ summary: 'List leads with filters and pagination' })
-  findAll(
-    @Query() filter: LeadFilterDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    const isAdminOrManager = user.roles?.some((r) =>
-      ['admin', 'manager'].includes(r),
-    ) ?? false;
+  findAll(@Query() filter: LeadFilterDto, @CurrentUser() user: AuthenticatedUser) {
+    const isAdminOrManager = user.roles?.some((r) => ['admin', 'manager'].includes(r)) ?? false;
     return this.leadsService.findAll(filter, user.id, isAdminOrManager);
   }
 
   @Get('pipeline')
   @ApiOperation({ summary: 'Get leads grouped by status for kanban pipeline view' })
-  @ApiQuery({ name: 'limitPerStatus', required: false, type: Number, description: 'Max leads per status bucket (default 50)' })
+  @ApiQuery({
+    name: 'limitPerStatus',
+    required: false,
+    type: Number,
+    description: 'Max leads per status bucket (default 50)',
+  })
   getPipeline(
     @CurrentUser() user: AuthenticatedUser,
     @Query('limitPerStatus') limitPerStatus?: string,
   ) {
-    const isAdminOrManager = user.roles?.some((r) =>
-      ['admin', 'manager'].includes(r),
-    ) ?? false;
-    const limit = limitPerStatus ? Math.min(Math.max(parseInt(limitPerStatus, 10) || 50, 1), 200) : 50;
+    const isAdminOrManager = user.roles?.some((r) => ['admin', 'manager'].includes(r)) ?? false;
+    const limit = limitPerStatus
+      ? Math.min(Math.max(parseInt(limitPerStatus, 10) || 50, 1), 200)
+      : 50;
     return this.leadsService.getPipeline(user.id, isAdminOrManager, limit);
   }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get lead statistics' })
   getStats(@CurrentUser() user: AuthenticatedUser) {
-    const isAdminOrManager = user.roles?.some((r) =>
-      ['admin', 'manager'].includes(r),
-    ) ?? false;
+    const isAdminOrManager = user.roles?.some((r) => ['admin', 'manager'].includes(r)) ?? false;
     return this.leadsService.getStats(user.id, isAdminOrManager);
   }
 
@@ -97,10 +95,7 @@ export class LeadsController {
   @ApiParam({ name: 'id', description: 'Lead UUID' })
   @ApiResponse({ status: 200, description: 'Lead updated' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateLeadDto,
-  ) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateLeadDto) {
     return this.leadsService.update(id, dto);
   }
 
@@ -134,10 +129,7 @@ export class LeadsController {
   @ApiParam({ name: 'id', description: 'Lead UUID' })
   @ApiResponse({ status: 200, description: 'Agent assigned' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
-  assignAgent(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AssignAgentDto,
-  ) {
+  assignAgent(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AssignAgentDto) {
     return this.leadsService.assignAgent(id, dto.agentId);
   }
 

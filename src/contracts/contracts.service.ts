@@ -112,8 +112,7 @@ export class ContractsService {
     }
 
     // Agent role: only own contracts
-    const isAgent =
-      user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
+    const isAgent = user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent) {
       where.agentId = user.id;
     }
@@ -160,8 +159,7 @@ export class ContractsService {
     }
 
     // Agent can only view own contracts
-    const isAgent =
-      user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
+    const isAgent = user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent && contract.agentId !== user.id) {
       throw new ForbiddenException('You can only view your own contracts');
     }
@@ -176,8 +174,7 @@ export class ContractsService {
     }
 
     // Agent can only update own contracts
-    const isAgent =
-      user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
+    const isAgent = user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent && existing.agentId !== user.id) {
       throw new ForbiddenException('You can only update your own contracts');
     }
@@ -190,7 +187,9 @@ export class ContractsService {
         ...(dto.startDate !== undefined && { startDate: new Date(dto.startDate) }),
         ...(dto.endDate !== undefined && { endDate: new Date(dto.endDate) }),
         ...(dto.totalAmount !== undefined && { totalAmount: dto.totalAmount }),
-        ...(dto.paymentTerms !== undefined && { paymentTerms: (dto.paymentTerms as Prisma.InputJsonValue) ?? Prisma.JsonNull }),
+        ...(dto.paymentTerms !== undefined && {
+          paymentTerms: (dto.paymentTerms as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+        }),
         ...(dto.documentUrl !== undefined && { documentUrl: dto.documentUrl }),
         ...(dto.notes !== undefined && { notes: dto.notes }),
       },
@@ -213,8 +212,7 @@ export class ContractsService {
     }
 
     // Agent can only change status of own contracts
-    const isAgent =
-      user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
+    const isAgent = user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent && contract.agentId !== user.id) {
       throw new ForbiddenException('You can only change the status of your own contracts');
     }
@@ -230,9 +228,7 @@ export class ContractsService {
 
     const allowed = validTransitions[contract.status] ?? [];
     if (!allowed.includes(dto.status)) {
-      throw new BadRequestException(
-        `Cannot transition from ${contract.status} to ${dto.status}`,
-      );
+      throw new BadRequestException(`Cannot transition from ${contract.status} to ${dto.status}`);
     }
 
     // Determine whether to restore property to AVAILABLE
@@ -272,8 +268,7 @@ export class ContractsService {
     }
 
     // Agent can only view invoices for own contracts
-    const isAgent =
-      user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
+    const isAgent = user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent && contract.agentId !== user.id) {
       throw new ForbiddenException('You can only view invoices for your own contracts');
     }
@@ -295,8 +290,7 @@ export class ContractsService {
     }
 
     // Agent can only generate invoices for own contracts
-    const isAgent =
-      user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
+    const isAgent = user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent && contract.agentId !== user.id) {
       throw new ForbiddenException('You can only generate invoices for your own contracts');
     }
@@ -335,9 +329,7 @@ export class ContractsService {
     }
 
     if (invoices.length === 0) {
-      throw new BadRequestException(
-        'All invoices have already been generated for this contract',
-      );
+      throw new BadRequestException('All invoices have already been generated for this contract');
     }
 
     await this.prisma.invoice.createMany({ data: invoices });
@@ -350,8 +342,7 @@ export class ContractsService {
 
   async getStats(user: AuthenticatedUser) {
     const agentFilter: Prisma.ContractWhereInput = {};
-    const isAgent =
-      user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
+    const isAgent = user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent) {
       agentFilter.agentId = user.id;
     }
@@ -370,7 +361,10 @@ export class ContractsService {
       }),
       this.prisma.contract.aggregate({
         _sum: { totalAmount: true },
-        where: { ...agentFilter, status: { in: [ContractStatus.ACTIVE, ContractStatus.COMPLETED] } },
+        where: {
+          ...agentFilter,
+          status: { in: [ContractStatus.ACTIVE, ContractStatus.COMPLETED] },
+        },
       }),
     ]);
 
@@ -392,8 +386,7 @@ export class ContractsService {
       endDate: { gte: now, lte: future },
     };
 
-    const isAgent =
-      user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
+    const isAgent = user.roles && !user.roles.includes('admin') && !user.roles.includes('manager');
     if (isAgent) {
       where.agentId = user.id;
     }

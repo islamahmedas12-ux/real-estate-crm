@@ -32,7 +32,10 @@ export class LeadFilterDto extends PaginationDto {
   @IsDate()
   dateTo?: Date;
 
-  @ApiPropertyOptional({ description: 'Sort field', enum: ['createdAt', 'priority', 'nextFollowUp'] })
+  @ApiPropertyOptional({
+    description: 'Sort field',
+    enum: ['createdAt', 'priority', 'nextFollowUp'],
+  })
   @IsOptional()
   @IsString()
   sortBy?: 'createdAt' | 'priority' | 'nextFollowUp' = 'createdAt';

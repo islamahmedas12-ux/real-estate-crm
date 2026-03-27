@@ -40,16 +40,10 @@ export abstract class PdfBaseTemplate {
     const pageWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
 
     // Company name
-    doc
-      .fontSize(18)
-      .fillColor(this.primaryColor)
-      .text(company.name, { align: 'center' });
+    doc.fontSize(18).fillColor(this.primaryColor).text(company.name, { align: 'center' });
 
     if (company.nameAr) {
-      doc
-        .fontSize(14)
-        .fillColor(this.accentColor)
-        .text(company.nameAr, { align: 'center' });
+      doc.fontSize(14).fillColor(this.accentColor).text(company.nameAr, { align: 'center' });
     }
 
     doc.moveDown(0.3);
@@ -60,10 +54,7 @@ export abstract class PdfBaseTemplate {
       if (company.address) parts.push(company.address);
       if (company.phone) parts.push(company.phone);
       if (company.email) parts.push(company.email);
-      doc
-        .fontSize(8)
-        .fillColor('#718096')
-        .text(parts.join('  |  '), { align: 'center' });
+      doc.fontSize(8).fillColor('#718096').text(parts.join('  |  '), { align: 'center' });
     }
 
     doc.moveDown(0.5);
@@ -80,10 +71,7 @@ export abstract class PdfBaseTemplate {
     doc.moveDown(0.5);
 
     // Document title
-    doc
-      .fontSize(16)
-      .fillColor(this.primaryColor)
-      .text(title, { align: 'center' });
+    doc.fontSize(16).fillColor(this.primaryColor).text(title, { align: 'center' });
 
     doc.moveDown(1);
   }
@@ -96,12 +84,10 @@ export abstract class PdfBaseTemplate {
       doc
         .fontSize(8)
         .fillColor('#a0aec0')
-        .text(
-          `Page ${i + 1} of ${pages.count}`,
-          doc.page.margins.left,
-          doc.page.height - 35,
-          { align: 'center', width: pageWidth - doc.page.margins.left - doc.page.margins.right },
-        );
+        .text(`Page ${i + 1} of ${pages.count}`, doc.page.margins.left, doc.page.height - 35, {
+          align: 'center',
+          width: pageWidth - doc.page.margins.left - doc.page.margins.right,
+        });
       doc.text(
         `Generated on ${new Date().toLocaleDateString('en-GB')}`,
         doc.page.margins.left,
@@ -111,22 +97,12 @@ export abstract class PdfBaseTemplate {
     }
   }
 
-  protected addSection(
-    doc: typeof PDFDocument.prototype,
-    title: string,
-  ): void {
-    doc
-      .fontSize(12)
-      .fillColor(this.primaryColor)
-      .text(title, { underline: true });
+  protected addSection(doc: typeof PDFDocument.prototype, title: string): void {
+    doc.fontSize(12).fillColor(this.primaryColor).text(title, { underline: true });
     doc.moveDown(0.5);
   }
 
-  protected addLabelValue(
-    doc: typeof PDFDocument.prototype,
-    label: string,
-    value: string,
-  ): void {
+  protected addLabelValue(doc: typeof PDFDocument.prototype, label: string, value: string): void {
     doc
       .fontSize(10)
       .fillColor('#718096')
@@ -149,9 +125,7 @@ export abstract class PdfBaseTemplate {
     let y = doc.y;
 
     // Header row
-    doc
-      .rect(startX, y, pageWidth, rowHeight)
-      .fill(this.primaryColor);
+    doc.rect(startX, y, pageWidth, rowHeight).fill(this.primaryColor);
 
     let x = startX;
     headers.forEach((h, i) => {
@@ -173,9 +147,7 @@ export abstract class PdfBaseTemplate {
       }
 
       const bgColor = rowIdx % 2 === 0 ? this.lightGray : '#ffffff';
-      doc
-        .rect(startX, y, pageWidth, rowHeight)
-        .fill(bgColor);
+      doc.rect(startX, y, pageWidth, rowHeight).fill(bgColor);
 
       x = startX;
       row.forEach((cell, i) => {

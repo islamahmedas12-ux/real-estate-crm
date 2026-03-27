@@ -14,10 +14,7 @@ export class PropertyPdfTemplate extends PdfBaseTemplate {
     this.addHeader(doc, 'PROPERTY LISTING / عقار');
 
     // Title and price
-    doc
-      .fontSize(14)
-      .fillColor(this.primaryColor)
-      .text(property.title, { align: 'center' });
+    doc.fontSize(14).fillColor(this.primaryColor).text(property.title, { align: 'center' });
     doc
       .fontSize(16)
       .fillColor(this.accentColor)
@@ -53,7 +50,10 @@ export class PropertyPdfTemplate extends PdfBaseTemplate {
       const features = property.features as Record<string, unknown>;
       if (Array.isArray(features)) {
         features.forEach((f) => {
-          doc.fontSize(10).fillColor(this.textColor).text(`• ${String(f)}`);
+          doc
+            .fontSize(10)
+            .fillColor(this.textColor)
+            .text(`• ${String(f)}`);
         });
       } else {
         Object.entries(features).forEach(([key, val]) => {

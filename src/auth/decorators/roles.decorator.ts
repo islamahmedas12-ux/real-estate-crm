@@ -20,4 +20,5 @@ export const ROLES_KEY = 'roles';
  * \@Get('reports')
  * getReports() { ... }
  */
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export const Roles = (...roles: (UserRole | string)[]) => SetMetadata(ROLES_KEY, roles);

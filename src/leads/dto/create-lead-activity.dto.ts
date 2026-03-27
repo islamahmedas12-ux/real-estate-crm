@@ -8,7 +8,10 @@ export class CreateLeadActivityDto {
   @IsEnum(LeadActivityType)
   type: LeadActivityType;
 
-  @ApiProperty({ description: 'Activity description', example: 'Called client to discuss property options' })
+  @ApiProperty({
+    description: 'Activity description',
+    example: 'Called client to discuss property options',
+  })
   @IsNotEmpty()
   @IsString()
   description: string;

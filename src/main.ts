@@ -83,8 +83,7 @@ async function bootstrap() {
   // Warn about insecure default credentials in production
   const dbUrl = process.env['DATABASE_URL'] ?? '';
   const isProduction = process.env['NODE_ENV'] === 'production';
-  const hasDefaultCreds =
-    dbUrl.includes(':postgres@') || dbUrl.includes(':password@');
+  const hasDefaultCreds = dbUrl.includes(':postgres@') || dbUrl.includes(':password@');
   if (isProduction && hasDefaultCreds) {
     console.warn(
       '\n⚠️  WARNING: Database credentials appear to use default/weak values.\n' +
@@ -98,4 +97,4 @@ async function bootstrap() {
   console.log(`Swagger UI: http://localhost:${port}/api/docs`);
 }
 
-bootstrap();
+void bootstrap();

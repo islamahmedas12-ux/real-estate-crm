@@ -26,10 +26,7 @@ describe('LeadsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        LeadsService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [LeadsService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<LeadsService>(LeadsService);
@@ -144,11 +141,7 @@ describe('LeadsService', () => {
       mockPrisma.lead.findMany.mockResolvedValue([]);
       mockPrisma.lead.count.mockResolvedValue(0);
 
-      await service.findAll(
-        { page: 1, limit: 20, skip: 0 } as any,
-        'agent-123',
-        false,
-      );
+      await service.findAll({ page: 1, limit: 20, skip: 0 } as any, 'agent-123', false);
 
       expect(mockPrisma.lead.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -161,11 +154,7 @@ describe('LeadsService', () => {
       mockPrisma.lead.findMany.mockResolvedValue([]);
       mockPrisma.lead.count.mockResolvedValue(0);
 
-      await service.findAll(
-        { page: 1, limit: 20, skip: 0 } as any,
-        'agent-123',
-        true,
-      );
+      await service.findAll({ page: 1, limit: 20, skip: 0 } as any, 'agent-123', true);
 
       expect(mockPrisma.lead.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -274,11 +263,7 @@ describe('LeadsService', () => {
       mockPrisma.lead.findMany.mockResolvedValue([]);
       mockPrisma.lead.count.mockResolvedValue(0);
 
-      await service.findAll(
-        { page: 1, limit: 20, skip: 0 } as any,
-        undefined,
-        true,
-      );
+      await service.findAll({ page: 1, limit: 20, skip: 0 } as any, undefined, true);
 
       expect(mockPrisma.lead.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -291,11 +276,7 @@ describe('LeadsService', () => {
       mockPrisma.lead.findMany.mockResolvedValue([]);
       mockPrisma.lead.count.mockResolvedValue(0);
 
-      await service.findAll(
-        { page: 1, limit: 20, skip: 0 } as any,
-        undefined,
-        true,
-      );
+      await service.findAll({ page: 1, limit: 20, skip: 0 } as any, undefined, true);
 
       expect(mockPrisma.lead.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -355,9 +336,7 @@ describe('LeadsService', () => {
     it('should throw NotFoundException when lead not found', async () => {
       mockPrisma.lead.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -381,9 +360,9 @@ describe('LeadsService', () => {
     it('should throw NotFoundException on update of nonexistent lead', async () => {
       mockPrisma.lead.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.update('nonexistent', { notes: 'Test' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.update('nonexistent', { notes: 'Test' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should update budget', async () => {
@@ -416,9 +395,7 @@ describe('LeadsService', () => {
     it('should throw NotFoundException on remove of nonexistent lead', async () => {
       mockPrisma.lead.findUnique.mockResolvedValue(null);
 
-      await expect(service.remove('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.remove('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -552,11 +529,7 @@ describe('LeadsService', () => {
       });
 
       await expect(
-        service.changeStatus(
-          sampleLead.id,
-          { status: LeadStatus.QUALIFIED },
-          performedBy,
-        ),
+        service.changeStatus(sampleLead.id, { status: LeadStatus.QUALIFIED }, performedBy),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -567,11 +540,7 @@ describe('LeadsService', () => {
       });
 
       await expect(
-        service.changeStatus(
-          sampleLead.id,
-          { status: LeadStatus.WON },
-          performedBy,
-        ),
+        service.changeStatus(sampleLead.id, { status: LeadStatus.WON }, performedBy),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -582,11 +551,7 @@ describe('LeadsService', () => {
       });
 
       await expect(
-        service.changeStatus(
-          sampleLead.id,
-          { status: LeadStatus.LOST },
-          performedBy,
-        ),
+        service.changeStatus(sampleLead.id, { status: LeadStatus.LOST }, performedBy),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -597,11 +562,7 @@ describe('LeadsService', () => {
       });
 
       await expect(
-        service.changeStatus(
-          sampleLead.id,
-          { status: LeadStatus.NEW },
-          performedBy,
-        ),
+        service.changeStatus(sampleLead.id, { status: LeadStatus.NEW }, performedBy),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -609,11 +570,7 @@ describe('LeadsService', () => {
       mockPrisma.lead.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.changeStatus(
-          'nonexistent',
-          { status: LeadStatus.CONTACTED },
-          performedBy,
-        ),
+        service.changeStatus('nonexistent', { status: LeadStatus.CONTACTED }, performedBy),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -645,11 +602,7 @@ describe('LeadsService', () => {
       });
 
       try {
-        await service.changeStatus(
-          sampleLead.id,
-          { status: LeadStatus.WON },
-          performedBy,
-        );
+        await service.changeStatus(sampleLead.id, { status: LeadStatus.WON }, performedBy);
         fail('Should have thrown');
       } catch (e: any) {
         expect(e).toBeInstanceOf(BadRequestException);
@@ -680,9 +633,9 @@ describe('LeadsService', () => {
     it('should throw NotFoundException when lead not found', async () => {
       mockPrisma.lead.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.assignAgent('nonexistent', 'agent-456'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.assignAgent('nonexistent', 'agent-456')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -779,9 +732,7 @@ describe('LeadsService', () => {
     it('should throw NotFoundException when lead not found', async () => {
       mockPrisma.lead.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.getActivities('nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.getActivities('nonexistent')).rejects.toThrow(NotFoundException);
     });
 
     it('should use default page and limit', async () => {

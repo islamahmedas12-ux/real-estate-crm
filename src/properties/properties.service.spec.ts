@@ -20,10 +20,7 @@ describe('PropertiesService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PropertiesService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [PropertiesService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<PropertiesService>(PropertiesService);
@@ -113,8 +110,11 @@ describe('PropertiesService', () => {
       mockPrisma.property.count.mockResolvedValue(0);
 
       await service.findAll({
-        page: 1, limit: 20, skip: 0,
-        minPrice: '100000', maxPrice: '500000',
+        page: 1,
+        limit: 20,
+        skip: 0,
+        minPrice: '100000',
+        maxPrice: '500000',
       } as any);
 
       const whereArg = mockPrisma.property.findMany.mock.calls[0][0].where;
@@ -149,14 +149,19 @@ describe('PropertiesService', () => {
     it('should throw NotFoundException when property does not exist', async () => {
       mockPrisma.property.findUnique.mockResolvedValue(null);
 
-      await expect(service.update('nonexistent', { title: 'X' })).rejects.toThrow(NotFoundException);
+      await expect(service.update('nonexistent', { title: 'X' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('remove', () => {
     it('should soft-delete by setting status to OFF_MARKET', async () => {
       mockPrisma.property.findUnique.mockResolvedValue({ id: sampleProperty.id });
-      mockPrisma.property.update.mockResolvedValue({ ...sampleProperty, status: PropertyStatus.OFF_MARKET });
+      mockPrisma.property.update.mockResolvedValue({
+        ...sampleProperty,
+        status: PropertyStatus.OFF_MARKET,
+      });
 
       const result = await service.remove(sampleProperty.id);
       expect(result.status).toBe(PropertyStatus.OFF_MARKET);
@@ -170,7 +175,10 @@ describe('PropertiesService', () => {
   describe('changeStatus', () => {
     it('should update property status', async () => {
       mockPrisma.property.findUnique.mockResolvedValue({ id: sampleProperty.id });
-      mockPrisma.property.update.mockResolvedValue({ ...sampleProperty, status: PropertyStatus.RESERVED });
+      mockPrisma.property.update.mockResolvedValue({
+        ...sampleProperty,
+        status: PropertyStatus.RESERVED,
+      });
 
       const result = await service.changeStatus(sampleProperty.id, PropertyStatus.RESERVED);
       expect(result.status).toBe(PropertyStatus.RESERVED);
@@ -180,7 +188,10 @@ describe('PropertiesService', () => {
   describe('assignAgent', () => {
     it('should assign an agent to a property', async () => {
       mockPrisma.property.findUnique.mockResolvedValue({ id: sampleProperty.id });
-      mockPrisma.property.update.mockResolvedValue({ ...sampleProperty, assignedAgentId: 'agent-1' });
+      mockPrisma.property.update.mockResolvedValue({
+        ...sampleProperty,
+        assignedAgentId: 'agent-1',
+      });
 
       const result = await service.assignAgent(sampleProperty.id, 'agent-1');
       expect(result.assignedAgentId).toBe('agent-1');

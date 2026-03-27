@@ -17,10 +17,7 @@ describe('ActivitiesService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ActivitiesService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [ActivitiesService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<ActivitiesService>(ActivitiesService);
@@ -94,7 +91,9 @@ describe('ActivitiesService', () => {
     const makeFilter = (overrides = {}) => ({
       page: 1,
       limit: 20,
-      get skip() { return ((this.page ?? 1) - 1) * (this.limit ?? 20); },
+      get skip() {
+        return ((this.page ?? 1) - 1) * (this.limit ?? 20);
+      },
       ...overrides,
     });
 
@@ -287,7 +286,9 @@ describe('ActivitiesService', () => {
     const makeFilter = (overrides = {}) => ({
       page: 1,
       limit: 20,
-      get skip() { return ((this.page ?? 1) - 1) * (this.limit ?? 20); },
+      get skip() {
+        return ((this.page ?? 1) - 1) * (this.limit ?? 20);
+      },
       ...overrides,
     });
 
@@ -358,7 +359,9 @@ describe('ActivitiesService', () => {
     const makeFilter = (overrides = {}) => ({
       page: 1,
       limit: 20,
-      get skip() { return ((this.page ?? 1) - 1) * (this.limit ?? 20); },
+      get skip() {
+        return ((this.page ?? 1) - 1) * (this.limit ?? 20);
+      },
       ...overrides,
     });
 
@@ -381,10 +384,7 @@ describe('ActivitiesService', () => {
       mockPrisma.activity.findMany.mockResolvedValue([]);
       mockPrisma.activity.count.mockResolvedValue(0);
 
-      await service.findByUser(
-        'user-001',
-        makeFilter({ from: '2026-01-01' }) as any,
-      );
+      await service.findByUser('user-001', makeFilter({ from: '2026-01-01' }) as any);
 
       expect(mockPrisma.activity.findMany).toHaveBeenCalledWith(
         expect.objectContaining({

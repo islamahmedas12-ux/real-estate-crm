@@ -34,7 +34,10 @@ export class InvoicesService {
     return invoice;
   }
 
-  private assertOwnership(invoice: { contract: { agentId: string | null } }, user: AuthenticatedUser) {
+  private assertOwnership(
+    invoice: { contract: { agentId: string | null } },
+    user: AuthenticatedUser,
+  ) {
     if (this.isAgent(user) && invoice.contract.agentId !== user.id) {
       throw new ForbiddenException('You can only access invoices for your own contracts');
     }
@@ -101,7 +104,10 @@ export class InvoicesService {
     });
   }
 
-  async findAll(filter: InvoiceFilterDto, user: AuthenticatedUser): Promise<PaginatedResult<unknown>> {
+  async findAll(
+    filter: InvoiceFilterDto,
+    user: AuthenticatedUser,
+  ): Promise<PaginatedResult<unknown>> {
     const where: Prisma.InvoiceWhereInput = {};
 
     // Agents can only see invoices for their own contracts
@@ -173,7 +179,9 @@ export class InvoicesService {
         contract: {
           include: {
             property: { select: { id: true, title: true, type: true, city: true, address: true } },
-            client: { select: { id: true, firstName: true, lastName: true, phone: true, email: true } },
+            client: {
+              select: { id: true, firstName: true, lastName: true, phone: true, email: true },
+            },
           },
         },
       },
@@ -322,13 +330,7 @@ export class InvoicesService {
       agentFilter.contract = { agentId: user.id };
     }
 
-    const [
-      totalInvoices,
-      totalDue,
-      totalCollected,
-      totalOverdue,
-      byStatus,
-    ] = await Promise.all([
+    const [totalInvoices, totalDue, totalCollected, totalOverdue, byStatus] = await Promise.all([
       this.prisma.invoice.count({ where: agentFilter }),
       // Total pending (not yet paid, not cancelled)
       this.prisma.invoice.aggregate({
@@ -363,10 +365,7 @@ export class InvoicesService {
       totalCollected: totalCollected._sum.amount ?? 0,
       totalOverdue: totalOverdue._sum.amount ?? 0,
       byStatus: Object.fromEntries(
-        byStatus.map((s) => [
-          s.status,
-          { count: s._count.id, amount: s._sum.amount ?? 0 },
-        ]),
+        byStatus.map((s) => [s.status, { count: s._count.id, amount: s._sum.amount ?? 0 }]),
       ),
     };
   }

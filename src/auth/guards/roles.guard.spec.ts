@@ -51,48 +51,36 @@ describe('RolesGuard', () => {
     });
 
     it('should allow access when user has a required role (enum value)', () => {
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue([UserRole.ADMIN]);
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
 
       const context = mockExecutionContext(mockUser(UserRole.ADMIN));
       expect(guard.canActivate(context)).toBe(true);
     });
 
     it('should allow access when user has a required role (lowercase string)', () => {
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue(['admin']);
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['admin']);
 
       const context = mockExecutionContext(mockUser(UserRole.ADMIN));
       expect(guard.canActivate(context)).toBe(true);
     });
 
     it('should allow access when user has one of multiple required roles', () => {
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue(['admin', 'manager']);
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['admin', 'manager']);
 
       const context = mockExecutionContext(mockUser(UserRole.MANAGER));
       expect(guard.canActivate(context)).toBe(true);
     });
 
     it('should throw ForbiddenException when user lacks required role', () => {
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue(['admin', 'manager']);
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['admin', 'manager']);
 
       const context = mockExecutionContext(mockUser(UserRole.AGENT));
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
-      expect(() => guard.canActivate(context)).toThrow(
-        'Insufficient permissions',
-      );
+      expect(() => guard.canActivate(context)).toThrow('Insufficient permissions');
     });
 
     it('should throw ForbiddenException when user is not authenticated', () => {
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue(['admin']);
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['admin']);
 
       const context = mockExecutionContext(undefined);
       expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
@@ -101,18 +89,14 @@ describe('RolesGuard', () => {
 
     it('should handle case-insensitive comparison with enum values', () => {
       // UserRole.ADMIN is 'ADMIN', required role is 'ADMIN' (enum)
-      jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue([UserRole.ADMIN]);
+      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
 
       const context = mockExecutionContext(mockUser(UserRole.ADMIN));
       expect(guard.canActivate(context)).toBe(true);
     });
 
     it('should use reflector with correct metadata key', () => {
-      const spy = jest
-        .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue(undefined);
+      const spy = jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
 
       const context = mockExecutionContext(mockUser(UserRole.AGENT));
       guard.canActivate(context);
