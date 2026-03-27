@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../providers/notification_provider.dart';
 import 'offline_indicator.dart';
 
-class AppShell extends ConsumerWidget {
+/// App shell that wraps each main tab with a bottom navigation bar
+/// and an offline indicator banner.
+///
+/// Each screen is responsible for its own AppBar (title + actions).
+class AppShell extends StatelessWidget {
   final Widget child;
 
   const AppShell({super.key, required this.child});
@@ -20,29 +22,8 @@ class AppShell extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final unreadCount = ref.watch(unreadNotificationCountProvider);
-
+  Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: _titleForIndex(_currentIndex(context)),
-        actions: [
-          // Notification bell with unread badge
-          IconButton(
-            icon: Badge(
-              isLabelVisible: unreadCount > 0,
-              label: Text(
-                unreadCount > 99 ? '99+' : unreadCount.toString(),
-                style: const TextStyle(fontSize: 10),
-              ),
-              child: const Icon(Icons.notifications_outlined),
-            ),
-            onPressed: () => context.go('/notifications'),
-            tooltip: 'Notifications',
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
       body: Column(
         children: [
           const OfflineIndicator(),
@@ -94,16 +75,5 @@ class AppShell extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  Widget _titleForIndex(int index) {
-    const titles = [
-      'Dashboard',
-      'Properties',
-      'Leads',
-      'Clients',
-      'Profile',
-    ];
-    return Text(titles[index]);
   }
 }

@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../models/dashboard_stats.dart';
 import '../../providers/dashboard_provider.dart';
+import '../../providers/notification_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -13,16 +16,23 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboard = ref.watch(dashboardProvider);
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {
-              // TODO: navigate to notifications
-            },
+            icon: Badge(
+              isLabelVisible: unreadCount > 0,
+              label: Text(
+                unreadCount > 99 ? '99+' : '$unreadCount',
+                style: const TextStyle(fontSize: 10),
+              ),
+              child: const Icon(Icons.notifications_outlined),
+            ),
+            tooltip: 'Notifications',
+            onPressed: () => context.push('/notifications'),
           ),
         ],
       ),
@@ -211,7 +221,7 @@ class _QuickActions extends StatelessWidget {
                 child: _ActionButton(
                   icon: Icons.person_add,
                   label: 'Add Lead',
-                  onTap: () => context.go('/leads'),
+                  onTap: () => context.push('/leads/new'),
                 ),
               ),
               const SizedBox(width: 8),
@@ -229,7 +239,7 @@ class _QuickActions extends StatelessWidget {
                 child: _ActionButton(
                   icon: Icons.group_add,
                   label: 'Add Client',
-                  onTap: () => context.go('/clients'),
+                  onTap: () => context.push('/clients/new'),
                 ),
               ),
             ],

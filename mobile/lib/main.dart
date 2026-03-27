@@ -7,10 +7,20 @@ import 'config/theme.dart';
 import 'services/notification_service.dart';
 import 'services/offline_service.dart';
 
+// NOTE: Replace this stub with the real generated file once you run:
+//   flutterfire configure
+// That command generates lib/firebase_options.dart which exports
+// DefaultFirebaseOptions.currentPlatform used below.
+// Until then, Firebase.initializeApp() is called without options and will only
+// work on Android/iOS devices where google-services.json / GoogleService-Info.plist
+// is placed in the correct location.
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase.
+  // TODO: replace with `options: DefaultFirebaseOptions.currentPlatform`
+  //       once `flutterfire configure` has been run.
   await Firebase.initializeApp();
 
   // Initialize offline caching (Hive boxes + connectivity listener).
