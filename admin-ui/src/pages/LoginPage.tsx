@@ -1,50 +1,13 @@
-import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Building, Mail, Lock } from 'lucide-react'
+import { Building } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
-import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
-import toast from 'react-hot-toast'
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoading } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
 
   if (!isLoading && isAuthenticated) {
     return <Navigate to="/" replace />
-  }
-
-  function validate() {
-    const errs: typeof errors = {}
-    if (!email) errs.email = 'Email is required'
-    else if (!/\S+@\S+\.\S+/.test(email)) errs.email = 'Enter a valid email'
-    if (!password) errs.password = 'Password is required'
-    return errs
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const errs = validate()
-    if (Object.keys(errs).length) {
-      setErrors(errs)
-      return
-    }
-    setErrors({})
-    setSubmitting(true)
-    try {
-      await login({ email, password })
-      toast.success('Welcome back!')
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Invalid credentials. Please try again.'
-      toast.error(msg)
-    } finally {
-      setSubmitting(false)
-    }
   }
 
   return (
@@ -63,37 +26,15 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-            <Input
-              label="Email address"
-              type="email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              error={errors.email}
-              required
-              leftAddon={<Mail size={15} />}
-            />
-            <Input
-              label="Password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              error={errors.password}
-              required
-              leftAddon={<Lock size={15} />}
-            />
-
-            <Button
-              type="submit"
-              loading={submitting}
-              className="mt-2 w-full"
-              size="lg"
-            >
-              Sign in
-            </Button>
-          </form>
+          <Button
+            type="button"
+            className="mt-2 w-full"
+            size="lg"
+            onClick={() => login()}
+            loading={isLoading}
+          >
+            Sign in with AuthMe
+          </Button>
 
           <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
             Secure admin access &mdash; Real Estate CRM &copy; {new Date().getFullYear()}
