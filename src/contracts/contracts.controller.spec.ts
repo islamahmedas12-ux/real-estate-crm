@@ -90,9 +90,17 @@ describe('ContractsController', () => {
 
   it('should change contract status', async () => {
     mockService.changeStatus.mockResolvedValue({ id: 'c1', status: ContractStatus.ACTIVE });
-    const result = await controller.changeStatus('c1', { status: ContractStatus.ACTIVE }, adminUser);
+    const result = await controller.changeStatus(
+      'c1',
+      { status: ContractStatus.ACTIVE },
+      adminUser,
+    );
     expect(result.status).toBe(ContractStatus.ACTIVE);
-    expect(mockService.changeStatus).toHaveBeenCalledWith('c1', { status: ContractStatus.ACTIVE }, adminUser);
+    expect(mockService.changeStatus).toHaveBeenCalledWith(
+      'c1',
+      { status: ContractStatus.ACTIVE },
+      adminUser,
+    );
   });
 
   it('should list contract invoices', async () => {

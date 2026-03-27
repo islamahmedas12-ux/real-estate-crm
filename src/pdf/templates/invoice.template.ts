@@ -85,9 +85,7 @@ export class InvoicePdfTemplate extends PdfBaseTemplate {
     doc.moveDown(0.5);
     const totalBoxX = doc.page.margins.left + pageWidth - 200;
     const totalBoxY = doc.y;
-    doc
-      .rect(totalBoxX, totalBoxY, 200, 35)
-      .fill(this.primaryColor);
+    doc.rect(totalBoxX, totalBoxY, 200, 35).fill(this.primaryColor);
     doc
       .fontSize(12)
       .fillColor('#ffffff')

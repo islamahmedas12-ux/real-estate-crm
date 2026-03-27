@@ -38,7 +38,12 @@ export class ActivitiesController {
 
   @Get('recent')
   @ApiOperation({ summary: 'Get recent activities for dashboard feed' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of recent activities (default 20)' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Number of recent activities (default 20)',
+  })
   @ApiResponse({ status: 200, description: 'Recent activities' })
   findRecent(@Query('limit', new ParseIntPipe({ optional: true })) limit?: number) {
     return this.activitiesService.findRecent(limit ?? 20);
@@ -61,17 +66,18 @@ export class ActivitiesController {
   @ApiOperation({ summary: 'Get activities by a user' })
   @ApiParam({ name: 'userId', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'Activities performed by the user' })
-  findByUser(
-    @Param('userId', ParseUUIDPipe) userId: string,
-    @Query() filter: ActivityFilterDto,
-  ) {
+  findByUser(@Param('userId', ParseUUIDPipe) userId: string, @Query() filter: ActivityFilterDto) {
     return this.activitiesService.findByUser(userId, filter);
   }
 
   @Get('purge/:days')
   @Roles('admin')
   @ApiOperation({ summary: 'Purge activities older than N days (admin only)' })
-  @ApiParam({ name: 'days', type: Number, description: 'Delete activities older than this many days' })
+  @ApiParam({
+    name: 'days',
+    type: Number,
+    description: 'Delete activities older than this many days',
+  })
   @ApiResponse({ status: 200, description: 'Purge result with count of deleted records' })
   purge(@Param('days', ParseIntPipe) days: number) {
     return this.activitiesService.purgeOlderThan(days);

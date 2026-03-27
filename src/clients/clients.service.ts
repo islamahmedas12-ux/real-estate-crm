@@ -198,11 +198,7 @@ export class ClientsService {
     return where;
   }
 
-  private async checkDuplicates(
-    email?: string,
-    phone?: string,
-    excludeId?: string,
-  ) {
+  private async checkDuplicates(email?: string, phone?: string, excludeId?: string) {
     const conditions: Prisma.ClientWhereInput[] = [];
 
     if (email) conditions.push({ email });

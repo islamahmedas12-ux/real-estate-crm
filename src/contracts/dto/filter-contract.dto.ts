@@ -1,6 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsUUID, IsDateString, IsString } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ContractType, ContractStatus } from '@prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto.js';
 
@@ -40,7 +39,10 @@ export class ContractFilterDto extends PaginationDto {
   @IsDateString()
   dateTo?: string;
 
-  @ApiPropertyOptional({ description: 'Sort by field', enum: ['createdAt', 'startDate', 'endDate', 'totalAmount'] })
+  @ApiPropertyOptional({
+    description: 'Sort by field',
+    enum: ['createdAt', 'startDate', 'endDate', 'totalAmount'],
+  })
   @IsOptional()
   @IsString()
   sortBy?: string = 'createdAt';

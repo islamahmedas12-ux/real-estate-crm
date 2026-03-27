@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { EmailService } from './email.service.js';
 
@@ -74,7 +74,9 @@ export class EmailScheduler {
         }));
 
         await this.emailService.sendFollowUpReminderEmail(agentEmail, agentName, leadData);
-        this.logger.log(`Follow-up reminder sent to agent ${agentId} for ${agentLeads.length} lead(s)`);
+        this.logger.log(
+          `Follow-up reminder sent to agent ${agentId} for ${agentLeads.length} lead(s)`,
+        );
       } catch (error) {
         this.logger.error(`Failed to send follow-up reminder to agent ${agentId}`, error);
       }
@@ -133,7 +135,7 @@ export class EmailScheduler {
           {
             invoiceNumber: invoice.invoiceNumber,
             amount: invoice.amount.toString(),
-            dueDate: invoice.dueDate.toISOString().split('T')[0]!,
+            dueDate: invoice.dueDate.toISOString().split('T')[0],
             status: invoice.status,
           },
           daysUntilDue,
@@ -171,50 +173,58 @@ export class EmailScheduler {
       if (!agentId) continue;
 
       try {
-        const [newLeads, leadsWon, leadsLost, activeLeads, followUpsDue, contractsCreated, pendingInvoices, upcomingFollowUps] =
-          await Promise.all([
-            this.prisma.lead.count({
-              where: { assignedAgentId: agentId, createdAt: { gte: oneWeekAgo } },
-            }),
-            this.prisma.lead.count({
-              where: { assignedAgentId: agentId, status: 'WON', updatedAt: { gte: oneWeekAgo } },
-            }),
-            this.prisma.lead.count({
-              where: { assignedAgentId: agentId, status: 'LOST', updatedAt: { gte: oneWeekAgo } },
-            }),
-            this.prisma.lead.count({
-              where: {
-                assignedAgentId: agentId,
-                status: { notIn: ['WON', 'LOST'] },
-              },
-            }),
-            this.prisma.lead.count({
-              where: {
-                assignedAgentId: agentId,
-                nextFollowUp: { lte: nextWeek, gte: new Date() },
-              },
-            }),
-            this.prisma.contract.count({
-              where: { agentId, createdAt: { gte: oneWeekAgo } },
-            }),
-            this.prisma.invoice.count({
-              where: {
-                contract: { agentId },
-                status: 'PENDING',
-              },
-            }),
-            this.prisma.lead.findMany({
-              where: {
-                assignedAgentId: agentId,
-                nextFollowUp: { gte: new Date(), lte: nextWeek },
-              },
-              include: {
-                client: { select: { firstName: true, lastName: true } },
-              },
-              orderBy: { nextFollowUp: 'asc' },
-              take: 10,
-            }),
-          ]);
+        const [
+          newLeads,
+          leadsWon,
+          leadsLost,
+          activeLeads,
+          followUpsDue,
+          contractsCreated,
+          pendingInvoices,
+          upcomingFollowUps,
+        ] = await Promise.all([
+          this.prisma.lead.count({
+            where: { assignedAgentId: agentId, createdAt: { gte: oneWeekAgo } },
+          }),
+          this.prisma.lead.count({
+            where: { assignedAgentId: agentId, status: 'WON', updatedAt: { gte: oneWeekAgo } },
+          }),
+          this.prisma.lead.count({
+            where: { assignedAgentId: agentId, status: 'LOST', updatedAt: { gte: oneWeekAgo } },
+          }),
+          this.prisma.lead.count({
+            where: {
+              assignedAgentId: agentId,
+              status: { notIn: ['WON', 'LOST'] },
+            },
+          }),
+          this.prisma.lead.count({
+            where: {
+              assignedAgentId: agentId,
+              nextFollowUp: { lte: nextWeek, gte: new Date() },
+            },
+          }),
+          this.prisma.contract.count({
+            where: { agentId, createdAt: { gte: oneWeekAgo } },
+          }),
+          this.prisma.invoice.count({
+            where: {
+              contract: { agentId },
+              status: 'PENDING',
+            },
+          }),
+          this.prisma.lead.findMany({
+            where: {
+              assignedAgentId: agentId,
+              nextFollowUp: { gte: new Date(), lte: nextWeek },
+            },
+            include: {
+              client: { select: { firstName: true, lastName: true } },
+            },
+            orderBy: { nextFollowUp: 'asc' },
+            take: 10,
+          }),
+        ]);
 
         const agentUser = await this.prisma.user.findUnique({
           where: { id: agentId },
@@ -225,7 +235,8 @@ export class EmailScheduler {
           continue;
         }
         const agentEmail = agentUser.email;
-        const agentName = [agentUser.firstName, agentUser.lastName].filter(Boolean).join(' ') || agentId;
+        const agentName =
+          [agentUser.firstName, agentUser.lastName].filter(Boolean).join(' ') || agentId;
 
         await this.emailService.sendWeeklySummaryEmail(agentEmail, agentName, {
           newLeads,

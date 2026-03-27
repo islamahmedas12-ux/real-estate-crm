@@ -344,9 +344,9 @@ describe('PropertiesController', () => {
         new Error('Property with ID "nonexistent-id" not found'),
       );
 
-      await expect(
-        controller.update('nonexistent-id', { title: 'Test' } as any),
-      ).rejects.toThrow('Property with ID "nonexistent-id" not found');
+      await expect(controller.update('nonexistent-id', { title: 'Test' } as any)).rejects.toThrow(
+        'Property with ID "nonexistent-id" not found',
+      );
     });
   });
 
@@ -389,7 +389,10 @@ describe('PropertiesController', () => {
       const dto = { status: PropertyStatus.RESERVED };
       const result = await controller.changeStatus(sampleProperty.id, dto);
       expect(result.status).toBe(PropertyStatus.RESERVED);
-      expect(mockService.changeStatus).toHaveBeenCalledWith(sampleProperty.id, PropertyStatus.RESERVED);
+      expect(mockService.changeStatus).toHaveBeenCalledWith(
+        sampleProperty.id,
+        PropertyStatus.RESERVED,
+      );
     });
 
     it('should change property status to RENTED', async () => {
@@ -399,7 +402,10 @@ describe('PropertiesController', () => {
       const dto = { status: PropertyStatus.RENTED };
       const result = await controller.changeStatus(sampleProperty.id, dto);
       expect(result.status).toBe(PropertyStatus.RENTED);
-      expect(mockService.changeStatus).toHaveBeenCalledWith(sampleProperty.id, PropertyStatus.RENTED);
+      expect(mockService.changeStatus).toHaveBeenCalledWith(
+        sampleProperty.id,
+        PropertyStatus.RENTED,
+      );
     });
 
     it('should propagate NotFoundException when property not found', async () => {
@@ -430,9 +436,9 @@ describe('PropertiesController', () => {
       );
 
       const agentId = '550e8400-e29b-41d4-a716-446655440001';
-      await expect(
-        controller.assignAgent('nonexistent-id', { agentId }),
-      ).rejects.toThrow('Property with ID "nonexistent-id" not found');
+      await expect(controller.assignAgent('nonexistent-id', { agentId })).rejects.toThrow(
+        'Property with ID "nonexistent-id" not found',
+      );
     });
   });
 });

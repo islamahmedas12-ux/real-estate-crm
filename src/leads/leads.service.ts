@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, LeadStatus, LeadActivityType, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateLeadDto } from './dto/create-lead.dto.js';

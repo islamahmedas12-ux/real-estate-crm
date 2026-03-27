@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, LeadStatus, ContractStatus, InvoiceStatus, PropertyStatus } from '@prisma/client';
+import { LeadStatus, ContractStatus, InvoiceStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { DateRangeDto, DateRangePreset } from './dto/date-range.dto.js';
 
@@ -123,9 +123,12 @@ export class DashboardService {
     ]);
 
     const total = byStatus.reduce((sum, g) => sum + g._count, 0);
-    const conversionRate = total > 0
-      ? Math.round((byStatus.find((g) => g.status === LeadStatus.WON)?._count ?? 0) / total * 10000) / 100
-      : 0;
+    const conversionRate =
+      total > 0
+        ? Math.round(
+            ((byStatus.find((g) => g.status === LeadStatus.WON)?._count ?? 0) / total) * 10000,
+          ) / 100
+        : 0;
 
     return {
       pipeline: byStatus.map((g) => ({ status: g.status, count: g._count })),
@@ -318,10 +321,18 @@ export class DashboardService {
         where: { assignedAgentId: agentId, createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
       }),
       this.prisma.lead.count({
-        where: { assignedAgentId: agentId, status: LeadStatus.WON, updatedAt: { gte: thisMonthStart } },
+        where: {
+          assignedAgentId: agentId,
+          status: LeadStatus.WON,
+          updatedAt: { gte: thisMonthStart },
+        },
       }),
       this.prisma.lead.count({
-        where: { assignedAgentId: agentId, status: LeadStatus.WON, updatedAt: { gte: lastMonthStart, lte: lastMonthEnd } },
+        where: {
+          assignedAgentId: agentId,
+          status: LeadStatus.WON,
+          updatedAt: { gte: lastMonthStart, lte: lastMonthEnd },
+        },
       }),
       this.prisma.contract.aggregate({
         _sum: { totalAmount: true },

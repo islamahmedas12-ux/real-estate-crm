@@ -1,9 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable, tap } from 'rxjs';
 import type { Request } from 'express';
@@ -71,7 +66,9 @@ export class ActivityInterceptor implements NestInterceptor {
       tap((responseBody) => {
         const rawEntityId =
           request.params[idParam] ??
-          (responseBody && typeof responseBody === 'object' ? responseBody.id : undefined);
+          (responseBody && typeof responseBody === 'object'
+            ? (responseBody as Record<string, unknown>).id
+            : undefined);
         const entityId = Array.isArray(rawEntityId) ? rawEntityId[0] : rawEntityId;
 
         if (!entityId) return;

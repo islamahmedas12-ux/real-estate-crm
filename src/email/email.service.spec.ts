@@ -78,12 +78,10 @@ describe('EmailService', () => {
       mockPrisma.emailLog.create.mockResolvedValue(emailLog);
       mockQueue.add.mockResolvedValue({});
 
-      const result = await service.sendEmail(
-        'test@example.com',
-        'Test',
-        'lead-assignment',
-        { agentName: 'John', lead: {} },
-      );
+      const result = await service.sendEmail('test@example.com', 'Test', 'lead-assignment', {
+        agentName: 'John',
+        lead: {},
+      });
 
       expect(mockPrisma.emailLog.create).toHaveBeenCalledWith({
         data: {

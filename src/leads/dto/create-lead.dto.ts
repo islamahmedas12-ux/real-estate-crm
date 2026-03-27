@@ -17,7 +17,10 @@ export class CreateLeadDto {
   @IsUUID()
   clientId: string;
 
-  @ApiPropertyOptional({ description: 'Property UUID', example: '00000000-0000-0000-0000-000000000002' })
+  @ApiPropertyOptional({
+    description: 'Property UUID',
+    example: '00000000-0000-0000-0000-000000000002',
+  })
   @IsOptional()
   @IsUUID()
   propertyId?: string;
@@ -27,7 +30,11 @@ export class CreateLeadDto {
   @IsEnum(LeadStatus)
   status?: LeadStatus = LeadStatus.NEW;
 
-  @ApiPropertyOptional({ description: 'Lead priority', enum: LeadPriority, default: LeadPriority.MEDIUM })
+  @ApiPropertyOptional({
+    description: 'Lead priority',
+    enum: LeadPriority,
+    default: LeadPriority.MEDIUM,
+  })
   @IsOptional()
   @IsEnum(LeadPriority)
   priority?: LeadPriority = LeadPriority.MEDIUM;

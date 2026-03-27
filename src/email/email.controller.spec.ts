@@ -56,9 +56,7 @@ describe('EmailController', () => {
 
   describe('getLogs', () => {
     it('should return paginated email logs', async () => {
-      const logs = [
-        { id: '1', to: 'a@test.com', subject: 'Test', status: EmailStatus.SENT },
-      ];
+      const logs = [{ id: '1', to: 'a@test.com', subject: 'Test', status: EmailStatus.SENT }];
 
       mockPrisma.emailLog.findMany.mockResolvedValue(logs);
       mockPrisma.emailLog.count.mockResolvedValue(1);
@@ -66,7 +64,9 @@ describe('EmailController', () => {
       const result = await controller.getLogs({
         page: 1,
         limit: 20,
-        get skip() { return 0; },
+        get skip() {
+          return 0;
+        },
       } as any);
 
       expect(result).toEqual({
@@ -86,7 +86,9 @@ describe('EmailController', () => {
         page: 1,
         limit: 20,
         status: EmailStatus.FAILED,
-        get skip() { return 0; },
+        get skip() {
+          return 0;
+        },
       } as any);
 
       expect(mockPrisma.emailLog.findMany).toHaveBeenCalledWith(

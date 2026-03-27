@@ -24,10 +24,7 @@ describe('ClientsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ClientsService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [ClientsService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<ClientsService>(ClientsService);
@@ -108,11 +105,7 @@ describe('ClientsService', () => {
       mockPrisma.client.findMany.mockResolvedValue(clients);
       mockPrisma.client.count.mockResolvedValue(1);
 
-      const result = await service.findAll(
-        { page: 1, limit: 20, skip: 0 } as any,
-        undefined,
-        true,
-      );
+      const result = await service.findAll({ page: 1, limit: 20, skip: 0 } as any, undefined, true);
 
       expect(result.data).toEqual(clients);
       expect(result.total).toBe(1);
@@ -123,11 +116,7 @@ describe('ClientsService', () => {
       mockPrisma.client.findMany.mockResolvedValue([]);
       mockPrisma.client.count.mockResolvedValue(0);
 
-      await service.findAll(
-        { page: 1, limit: 20, skip: 0 } as any,
-        'agent-123',
-        false,
-      );
+      await service.findAll({ page: 1, limit: 20, skip: 0 } as any, 'agent-123', false);
 
       expect(mockPrisma.client.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -148,9 +137,7 @@ describe('ClientsService', () => {
     it('should throw NotFoundException when not found', async () => {
       mockPrisma.client.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -171,9 +158,9 @@ describe('ClientsService', () => {
     it('should throw NotFoundException on update of nonexistent client', async () => {
       mockPrisma.client.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.update('nonexistent', { firstName: 'Test' }),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.update('nonexistent', { firstName: 'Test' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

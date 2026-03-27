@@ -67,7 +67,13 @@ describe('DashboardController', () => {
     it('should return overview statistics', async () => {
       const overview = {
         totals: { properties: 50, clients: 100, leads: 200, contracts: 30, revenue: 5000000 },
-        period: { newProperties: 5, newClients: 10, newLeads: 20, start: new Date(), end: new Date() },
+        period: {
+          newProperties: 5,
+          newClients: 10,
+          newLeads: 20,
+          start: new Date(),
+          end: new Date(),
+        },
       };
       mockService.getAdminOverview.mockResolvedValue(overview);
 
@@ -100,7 +106,10 @@ describe('DashboardController', () => {
   describe('getAdminLeads', () => {
     it('should return lead pipeline summary', async () => {
       const leads = {
-        pipeline: [{ status: 'NEW', count: 10 }, { status: 'WON', count: 5 }],
+        pipeline: [
+          { status: 'NEW', count: 10 },
+          { status: 'WON', count: 5 },
+        ],
         byPriority: [{ priority: 'HIGH', count: 3 }],
         newLeadsInPeriod: 10,
         wonLeadsInPeriod: 5,
@@ -146,7 +155,12 @@ describe('DashboardController', () => {
   describe('getAdminRecent', () => {
     it('should return recent activities', async () => {
       const activities = [
-        { id: 'act-001', type: 'CREATED', description: 'New property added', createdAt: new Date() },
+        {
+          id: 'act-001',
+          type: 'CREATED',
+          description: 'New property added',
+          createdAt: new Date(),
+        },
       ];
       mockService.getAdminRecent.mockResolvedValue(activities);
 

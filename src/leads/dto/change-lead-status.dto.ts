@@ -8,7 +8,10 @@ export class ChangeLeadStatusDto {
   @IsEnum(LeadStatus)
   status: LeadStatus;
 
-  @ApiPropertyOptional({ description: 'Optional notes about the status change', example: 'Client interested in 3-bedroom units' })
+  @ApiPropertyOptional({
+    description: 'Optional notes about the status change',
+    example: 'Client interested in 3-bedroom units',
+  })
   @IsOptional()
   @IsString()
   notes?: string;

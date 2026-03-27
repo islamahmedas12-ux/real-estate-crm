@@ -24,6 +24,7 @@ export function TopBar() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function handleSearch(_query: string) {
     // TODO: implement global search
   }

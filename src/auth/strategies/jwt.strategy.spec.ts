@@ -180,9 +180,7 @@ describe('JwtStrategy', () => {
     it('should throw UnauthorizedException when sub is missing', async () => {
       const payload = { email: 'test@example.com' } as JwtPayload;
 
-      await expect(strategy.validate(payload)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
       await expect(strategy.validate(payload)).rejects.toThrow(
         'Malformed token: missing sub or email',
       );
@@ -191,9 +189,7 @@ describe('JwtStrategy', () => {
     it('should throw UnauthorizedException when email is missing', async () => {
       const payload = { sub: 'authme-sub-123' } as JwtPayload;
 
-      await expect(strategy.validate(payload)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException when user is deactivated', async () => {
@@ -207,12 +203,8 @@ describe('JwtStrategy', () => {
         email: 'test@example.com',
       };
 
-      await expect(strategy.validate(payload)).rejects.toThrow(
-        UnauthorizedException,
-      );
-      await expect(strategy.validate(payload)).rejects.toThrow(
-        'User account is deactivated',
-      );
+      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate(payload)).rejects.toThrow('User account is deactivated');
     });
   });
 });

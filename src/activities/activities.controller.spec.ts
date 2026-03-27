@@ -140,11 +140,7 @@ describe('ActivitiesController', () => {
       mockService.findByEntity.mockResolvedValue({ ...paginatedResult, data: [] });
 
       const filter = { page: 2, limit: 10, from: '2026-01-01', to: '2026-06-30' };
-      await controller.findByEntity(
-        ActivityEntityType.CLIENT,
-        'client-uuid',
-        filter as any,
-      );
+      await controller.findByEntity(ActivityEntityType.CLIENT, 'client-uuid', filter as any);
 
       expect(mockService.findByEntity).toHaveBeenCalledWith(
         ActivityEntityType.CLIENT,
@@ -163,11 +159,7 @@ describe('ActivitiesController', () => {
         ActivityEntityType.CONTRACT,
       ]) {
         await controller.findByEntity(entityType, 'some-id', {} as any);
-        expect(mockService.findByEntity).toHaveBeenCalledWith(
-          entityType,
-          'some-id',
-          {},
-        );
+        expect(mockService.findByEntity).toHaveBeenCalledWith(entityType, 'some-id', {});
       }
 
       expect(mockService.findByEntity).toHaveBeenCalledTimes(4);

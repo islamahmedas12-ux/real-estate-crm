@@ -17,10 +17,7 @@ describe('DashboardService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        DashboardService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [DashboardService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<DashboardService>(DashboardService);
@@ -122,10 +119,10 @@ describe('DashboardService', () => {
   describe('getAgentPerformance', () => {
     it('should compare this month vs last month', async () => {
       mockPrisma.lead.count
-        .mockResolvedValueOnce(10)  // this month leads
-        .mockResolvedValueOnce(8)   // last month leads
-        .mockResolvedValueOnce(3)   // this month won
-        .mockResolvedValueOnce(2);  // last month won
+        .mockResolvedValueOnce(10) // this month leads
+        .mockResolvedValueOnce(8) // last month leads
+        .mockResolvedValueOnce(3) // this month won
+        .mockResolvedValueOnce(2); // last month won
       mockPrisma.contract.aggregate
         .mockResolvedValueOnce({ _sum: { totalAmount: 500000 } })
         .mockResolvedValueOnce({ _sum: { totalAmount: 400000 } });

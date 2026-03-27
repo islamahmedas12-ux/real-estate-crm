@@ -37,10 +37,7 @@ describe('InvoicesService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        InvoicesService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [InvoicesService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<InvoicesService>(InvoicesService);
@@ -76,13 +73,19 @@ describe('InvoicesService', () => {
     it('should create an invoice with an auto-generated invoice number', async () => {
       mockPrisma.contract.findUnique.mockResolvedValue(sampleContract);
       mockPrisma.invoice.count.mockResolvedValue(0);
-      mockPrisma.invoice.create.mockResolvedValue({ ...sampleInvoice, invoiceNumber: 'INV-2026-0001' });
+      mockPrisma.invoice.create.mockResolvedValue({
+        ...sampleInvoice,
+        invoiceNumber: 'INV-2026-0001',
+      });
 
-      const result = await service.create({
-        contractId: sampleContract.id,
-        amount: 50000,
-        dueDate: '2026-04-01',
-      }, adminUser);
+      const result = await service.create(
+        {
+          contractId: sampleContract.id,
+          amount: 50000,
+          dueDate: '2026-04-01',
+        },
+        adminUser,
+      );
 
       expect(result.invoiceNumber).toBe('INV-2026-0001');
       expect(mockPrisma.invoice.create).toHaveBeenCalledTimes(1);
@@ -92,20 +95,29 @@ describe('InvoicesService', () => {
       mockPrisma.contract.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.create({ contractId: 'nonexistent', amount: 1000, dueDate: '2026-04-01' }, adminUser),
+        service.create(
+          { contractId: 'nonexistent', amount: 1000, dueDate: '2026-04-01' },
+          adminUser,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should increment invoice number when invoices already exist for the year', async () => {
       mockPrisma.contract.findUnique.mockResolvedValue(sampleContract);
       mockPrisma.invoice.count.mockResolvedValue(5);
-      mockPrisma.invoice.create.mockResolvedValue({ ...sampleInvoice, invoiceNumber: 'INV-2026-0006' });
+      mockPrisma.invoice.create.mockResolvedValue({
+        ...sampleInvoice,
+        invoiceNumber: 'INV-2026-0006',
+      });
 
-      const result = await service.create({
-        contractId: sampleContract.id,
-        amount: 25000,
-        dueDate: '2026-05-01',
-      }, adminUser);
+      const result = await service.create(
+        {
+          contractId: sampleContract.id,
+          amount: 25000,
+          dueDate: '2026-05-01',
+        },
+        adminUser,
+      );
 
       expect(result.invoiceNumber).toBe('INV-2026-0006');
     });
@@ -140,12 +152,15 @@ describe('InvoicesService', () => {
       mockPrisma.invoice.findMany.mockResolvedValue([]);
       mockPrisma.invoice.count.mockResolvedValue(0);
 
-      await service.findAll({
-        page: 1,
-        limit: 20,
-        skip: 0,
-        status: InvoiceStatus.PAID,
-      } as any, adminUser);
+      await service.findAll(
+        {
+          page: 1,
+          limit: 20,
+          skip: 0,
+          status: InvoiceStatus.PAID,
+        } as any,
+        adminUser,
+      );
 
       expect(mockPrisma.invoice.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -158,12 +173,15 @@ describe('InvoicesService', () => {
       mockPrisma.invoice.findMany.mockResolvedValue([]);
       mockPrisma.invoice.count.mockResolvedValue(0);
 
-      await service.findAll({
-        page: 1,
-        limit: 20,
-        skip: 0,
-        contractId: sampleContract.id,
-      } as any, adminUser);
+      await service.findAll(
+        {
+          page: 1,
+          limit: 20,
+          skip: 0,
+          contractId: sampleContract.id,
+        } as any,
+        adminUser,
+      );
 
       expect(mockPrisma.invoice.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -242,10 +260,14 @@ describe('InvoicesService', () => {
       };
       mockPrisma.invoice.update.mockResolvedValue(paid);
 
-      const result = await service.recordPayment(sampleInvoice.id, {
-        paidDate: '2026-03-25',
-        paymentMethod: PaymentMethod.BANK_TRANSFER,
-      }, adminUser);
+      const result = await service.recordPayment(
+        sampleInvoice.id,
+        {
+          paidDate: '2026-03-25',
+          paymentMethod: PaymentMethod.BANK_TRANSFER,
+        },
+        adminUser,
+      );
 
       expect(result.status).toBe(InvoiceStatus.PAID);
       expect(result.paymentMethod).toBe(PaymentMethod.BANK_TRANSFER);
@@ -258,10 +280,14 @@ describe('InvoicesService', () => {
       });
 
       await expect(
-        service.recordPayment(sampleInvoice.id, {
-          paidDate: '2026-03-25',
-          paymentMethod: PaymentMethod.CASH,
-        }, adminUser),
+        service.recordPayment(
+          sampleInvoice.id,
+          {
+            paidDate: '2026-03-25',
+            paymentMethod: PaymentMethod.CASH,
+          },
+          adminUser,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -272,10 +298,14 @@ describe('InvoicesService', () => {
       });
 
       await expect(
-        service.recordPayment(sampleInvoice.id, {
-          paidDate: '2026-03-25',
-          paymentMethod: PaymentMethod.CASH,
-        }, adminUser),
+        service.recordPayment(
+          sampleInvoice.id,
+          {
+            paidDate: '2026-03-25',
+            paymentMethod: PaymentMethod.CASH,
+          },
+          adminUser,
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -298,7 +328,9 @@ describe('InvoicesService', () => {
         status: InvoiceStatus.PAID,
       });
 
-      await expect(service.cancel(sampleInvoice.id, adminUser)).rejects.toThrow(BadRequestException);
+      await expect(service.cancel(sampleInvoice.id, adminUser)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException when invoice is already cancelled', async () => {
@@ -307,7 +339,9 @@ describe('InvoicesService', () => {
         status: InvoiceStatus.CANCELLED,
       });
 
-      await expect(service.cancel(sampleInvoice.id, adminUser)).rejects.toThrow(BadRequestException);
+      await expect(service.cancel(sampleInvoice.id, adminUser)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -364,9 +398,9 @@ describe('InvoicesService', () => {
     it('should return aggregated payment statistics', async () => {
       mockPrisma.invoice.count.mockResolvedValue(20);
       mockPrisma.invoice.aggregate
-        .mockResolvedValueOnce({ _sum: { amount: 200000 } })  // totalDue
-        .mockResolvedValueOnce({ _sum: { amount: 150000 } })  // totalCollected
-        .mockResolvedValueOnce({ _sum: { amount: 30000 } });  // totalOverdue
+        .mockResolvedValueOnce({ _sum: { amount: 200000 } }) // totalDue
+        .mockResolvedValueOnce({ _sum: { amount: 150000 } }) // totalCollected
+        .mockResolvedValueOnce({ _sum: { amount: 30000 } }); // totalOverdue
       mockPrisma.invoice.groupBy.mockResolvedValue([
         { status: InvoiceStatus.PENDING, _count: { id: 8 }, _sum: { amount: 200000 } },
         { status: InvoiceStatus.PAID, _count: { id: 10 }, _sum: { amount: 150000 } },

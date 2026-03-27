@@ -138,7 +138,8 @@ export class UploadsController {
     @Res() res: Response,
   ) {
     // Documents require authentication - reject unauthenticated requests
-    if (type === FileType.DOCUMENTS && !(req as any).user) {
+    const reqWithUser = req as Request & { user?: unknown };
+    if (type === FileType.DOCUMENTS && !reqWithUser.user) {
       throw new ForbiddenException('Documents require authentication');
     }
 

@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, PropertyStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreatePropertyDto } from './dto/create-property.dto.js';
@@ -188,9 +184,7 @@ export class PropertiesService {
         ? Prisma.sql`AND p."assignedAgentId" = ${agentId}`
         : Prisma.empty;
 
-    const cursorFilter = cursor
-      ? Prisma.sql`AND p."id" < ${cursor}`
-      : Prisma.empty;
+    const cursorFilter = cursor ? Prisma.sql`AND p."id" < ${cursor}` : Prisma.empty;
 
     const results = await this.prisma.$queryRaw<any[]>`
       SELECT p.*,
@@ -235,9 +229,7 @@ export class PropertiesService {
 
     const data = await this.prisma.property.findMany({
       where,
-      ...(cursor
-        ? { cursor: { id: cursor }, skip: 1 }
-        : {}),
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       take: take + 1,
       orderBy: { createdAt: 'desc' },
       include: {

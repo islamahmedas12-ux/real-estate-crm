@@ -2,7 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { ContractsService } from './contracts.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { ContractType, ContractStatus, PropertyStatus, InvoiceStatus, UserRole } from '@prisma/client';
+import {
+  ContractType,
+  ContractStatus,
+  PropertyStatus,
+  InvoiceStatus,
+  UserRole,
+} from '@prisma/client';
 import { AuthenticatedUser } from '../common/decorators/current-user.decorator.js';
 
 const mockPrisma: Record<string, any> = {
@@ -90,10 +96,7 @@ describe('ContractsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ContractsService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [ContractsService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<ContractsService>(ContractsService);
@@ -105,7 +108,10 @@ describe('ContractsService', () => {
       mockPrisma.property.findUnique.mockResolvedValue(mockProperty);
       mockPrisma.client.findUnique.mockResolvedValue(mockClient);
       mockPrisma.contract.create.mockResolvedValue(mockContract);
-      mockPrisma.property.update.mockResolvedValue({ ...mockProperty, status: PropertyStatus.SOLD });
+      mockPrisma.property.update.mockResolvedValue({
+        ...mockProperty,
+        status: PropertyStatus.SOLD,
+      });
 
       const result = await service.create(
         {
@@ -192,9 +198,7 @@ describe('ContractsService', () => {
     it('should throw if contract not found', async () => {
       mockPrisma.contract.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent', adminUser)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(service.findOne('nonexistent', adminUser)).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException for agent viewing another agent contract', async () => {
@@ -203,9 +207,7 @@ describe('ContractsService', () => {
         agentId: 'other-agent',
       });
 
-      await expect(service.findOne('contract-001', agentUser)).rejects.toThrow(
-        ForbiddenException,
-      );
+      await expect(service.findOne('contract-001', agentUser)).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -217,9 +219,13 @@ describe('ContractsService', () => {
         status: ContractStatus.ACTIVE,
       });
 
-      const result = await service.changeStatus('contract-001', {
-        status: ContractStatus.ACTIVE,
-      }, adminUser);
+      const result = await service.changeStatus(
+        'contract-001',
+        {
+          status: ContractStatus.ACTIVE,
+        },
+        adminUser,
+      );
 
       expect(result.status).toBe(ContractStatus.ACTIVE);
     });
@@ -249,9 +255,13 @@ describe('ContractsService', () => {
         status: PropertyStatus.AVAILABLE,
       });
 
-      await service.changeStatus('contract-001', {
-        status: ContractStatus.CANCELLED,
-      }, adminUser);
+      await service.changeStatus(
+        'contract-001',
+        {
+          status: ContractStatus.CANCELLED,
+        },
+        adminUser,
+      );
 
       expect(mockPrisma.property.update).toHaveBeenCalledWith({
         where: { id: 'prop-001' },
@@ -286,9 +296,13 @@ describe('ContractsService', () => {
         status: PropertyStatus.AVAILABLE,
       });
 
-      await service.changeStatus('contract-001', {
-        status: ContractStatus.COMPLETED,
-      }, adminUser);
+      await service.changeStatus(
+        'contract-001',
+        {
+          status: ContractStatus.COMPLETED,
+        },
+        adminUser,
+      );
 
       expect(mockPrisma.property.update).toHaveBeenCalledWith({
         where: { id: 'prop-001' },
@@ -312,9 +326,13 @@ describe('ContractsService', () => {
         status: PropertyStatus.AVAILABLE,
       });
 
-      await service.changeStatus('contract-001', {
-        status: ContractStatus.COMPLETED,
-      }, adminUser);
+      await service.changeStatus(
+        'contract-001',
+        {
+          status: ContractStatus.COMPLETED,
+        },
+        adminUser,
+      );
 
       expect(mockPrisma.property.update).toHaveBeenCalledWith({
         where: { id: 'prop-001' },
@@ -334,9 +352,13 @@ describe('ContractsService', () => {
         status: ContractStatus.COMPLETED,
       });
 
-      await service.changeStatus('contract-001', {
-        status: ContractStatus.COMPLETED,
-      }, adminUser);
+      await service.changeStatus(
+        'contract-001',
+        {
+          status: ContractStatus.COMPLETED,
+        },
+        adminUser,
+      );
 
       expect(mockPrisma.property.update).not.toHaveBeenCalled();
     });
@@ -352,9 +374,13 @@ describe('ContractsService', () => {
         status: ContractStatus.ACTIVE,
       });
 
-      const result = await service.changeStatus('contract-001', {
-        status: ContractStatus.ACTIVE,
-      }, agentUser);
+      const result = await service.changeStatus(
+        'contract-001',
+        {
+          status: ContractStatus.ACTIVE,
+        },
+        agentUser,
+      );
 
       expect(result.status).toBe(ContractStatus.ACTIVE);
     });
@@ -375,9 +401,9 @@ describe('ContractsService', () => {
         agentId: 'other-agent',
       });
 
-      await expect(
-        service.findContractInvoices('contract-001', agentUser),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.findContractInvoices('contract-001', agentUser)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -405,9 +431,9 @@ describe('ContractsService', () => {
         status: ContractStatus.CANCELLED,
       });
 
-      await expect(
-        service.generateInvoices('contract-001', {}, adminUser),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.generateInvoices('contract-001', {}, adminUser)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw ForbiddenException for agent generating invoices for another agent contract', async () => {
@@ -416,9 +442,9 @@ describe('ContractsService', () => {
         agentId: 'other-agent',
       });
 
-      await expect(
-        service.generateInvoices('contract-001', {}, agentUser),
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.generateInvoices('contract-001', {}, agentUser)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
