@@ -12,26 +12,8 @@
 # ==============================================================================
 
 services:
-  # ── CRM PostgreSQL ──────────────────────────────────────────────────────────
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    container_name: crm-dev-db
-    environment:
-      POSTGRES_USER: crm_user
-      POSTGRES_PASSWORD: real-estate-dev-password-123
-      POSTGRES_DB: real_estate_crm_dev
-    ports:
-      - "127.0.0.1:5432:5432"
-    volumes:
-      - pgdata-dev:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U crm_user"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    networks:
-      - crm-dev-network
+  # NOTE: CRM PostgreSQL is the standalone `postgres-dev` container on port 5432
+  # App connects via host.docker.internal:5432 (no separate db service here)
 
   # ── AuthMe PostgreSQL ───────────────────────────────────────────────────────
   authme-db:
@@ -80,8 +62,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
-      DATABASE_URL: postgresql://crm_user:real-estate-dev-password-123@db:5432/real_estate_crm_dev
-      AUTHME_URL: http://authme:3001
+      # Connect to the standalone postgres-dev container via host network
+      DATABASE_URL: postgresql://crm_user:real-estate-dev-password-123@host.docker.internal:5432/real_estate_crm_dev
+      AUTHME_URL: http://crm-dev-authme:3001
       AUTHME_REALM: real-estate-dev
       AUTHME_CLIENT_ID: crm-backend
       AUTHME_CLIENT_SECRET: dev-secret
@@ -89,12 +72,11 @@ services:
       AGENT_PORTAL_URL: http://dev-agent.realstate-crm.homes
       UPLOAD_DIR: /app/uploads
       JWT_SECRET: dev-jwt-secret-change-in-prod
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://crm-dev-redis:6379
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - uploads-dev:/app/uploads
-    depends_on:
-      db:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       interval: 15s
@@ -113,8 +95,6 @@ services:
       - crm-dev-network
 
 volumes:
-  pgdata-dev:
-    driver: local
   authme-pgdata-dev:
     driver: local
   uploads-dev:
