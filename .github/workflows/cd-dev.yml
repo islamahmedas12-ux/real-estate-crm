@@ -80,8 +80,8 @@ jobs:
           cd /apps/real-estate-crm
           git fetch origin dev && git checkout dev && git pull origin dev
           npm ci
-          DEV_DATABASE_URL="postgresql://crm_user:real-estate-dev-password-123@localhost:5432/real_estate_crm_dev" \
-            npx prisma migrate deploy
+          export DATABASE_URL="postgresql://crm_user:real-estate-dev-password-123@localhost:5432/real_estate_crm_dev"
+          npx prisma migrate deploy
           SSHEOF
           
           rm ~/.ssh/deploy_key
