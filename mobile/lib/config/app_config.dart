@@ -56,17 +56,24 @@ class AppConfig {
   // ---------------------------------------------------------------------------
 
   static const Map<Environment, String> _authmeUrls = {
-    Environment.dev: 'http://10.0.2.2:3001',
-    Environment.qa: 'https://auth.qa.real-estate-crm.example.com',
-    Environment.uat: 'https://auth.uat.real-estate-crm.example.com',
-    Environment.prod: 'https://auth.real-estate-crm.example.com',
+    Environment.dev: 'https://dev-auth.realstate-crm.homes',
+    Environment.qa: 'https://qa-auth.realstate-crm.homes',
+    Environment.uat: 'https://uat-auth.realstate-crm.homes',
+    Environment.prod: 'https://auth.realstate-crm.homes',
   };
 
-  static const String authmeRealm = 'real-estate';
+  static const Map<Environment, String> _authmeRealms = {
+    Environment.dev: 'real-estate-dev',
+    Environment.qa: 'real-estate-qa',
+    Environment.uat: 'real-estate-uat',
+    Environment.prod: 'real-estate',
+  };
+
+  static String get authmeRealm => _authmeRealms[environment]!;
   static const String authmeClientId = 'mobile';
 
   static String get authmeUrl => _authmeUrls[environment]!;
-  static String get authmeIssuer => '${authmeUrl}/realms/$authmeRealm';
+  static String get authmeIssuer => '$authmeUrl/realms/$authmeRealm';
   static String get authmeDiscoveryUrl =>
       '$authmeIssuer/.well-known/openid-configuration';
 
@@ -74,7 +81,7 @@ class AppConfig {
   // OAuth redirect
   // ---------------------------------------------------------------------------
 
-  static const String redirectUrl = 'com.realestate.crm://oauth2redirect';
+  static const String redirectUrl = 'com.realestatecrm.app://callback';
   static const List<String> scopes = ['openid', 'profile', 'email'];
 
   // ---------------------------------------------------------------------------

@@ -1,43 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'config/router.dart';
-import 'config/theme.dart';
-import 'services/notification_service.dart';
-import 'services/offline_service.dart';
+import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
 
-// NOTE: Replace this stub with the real generated file once you run:
-//   flutterfire configure
-// That command generates lib/firebase_options.dart which exports
-// DefaultFirebaseOptions.currentPlatform used below.
-// Until then, Firebase.initializeApp() is called without options and will only
-// work on Android/iOS devices where google-services.json / GoogleService-Info.plist
-// is placed in the correct location.
+// ---------------------------------------------------------------------------
+// NOTE: Firebase integration
+// ---------------------------------------------------------------------------
+// Firebase is intentionally excluded from this PR scope (Issue #11).
+// To re-enable Firebase:
+//   1. Run `flutterfire configure`
+//   2. Import firebase_core and firebase_options
+//   3. Call `await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)`
+//      before `runApp`.
+// ---------------------------------------------------------------------------
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase.
-  // TODO: replace with `options: DefaultFirebaseOptions.currentPlatform`
-  //       once `flutterfire configure` has been run.
-  await Firebase.initializeApp();
-
-  // Initialize offline caching (Hive boxes + connectivity listener).
-  await OfflineService.instance.initialize();
-
-  // Initialize push notifications and local notification channels.
-  await NotificationService.instance.initialize();
-
-  runApp(const ProviderScope(child: RealEstateCrmApp()));
+  runApp(
+    // ProviderScope enables Riverpod state management for the whole widget tree.
+    const ProviderScope(
+      child: RealEstateCrmApp(),
+    ),
+  );
 }
 
+/// Root widget for the Real Estate CRM mobile application.
+///
+/// Uses [ConsumerWidget] to watch [appRouterProvider] (which itself watches
+/// [authProvider]) so the router automatically redirects when auth state
+/// changes (login / logout).
 class RealEstateCrmApp extends ConsumerWidget {
   const RealEstateCrmApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(routerProvider);
+    final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
       title: 'Real Estate CRM',
