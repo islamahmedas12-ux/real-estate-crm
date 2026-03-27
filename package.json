@@ -23,7 +23,11 @@
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:seed": "npx ts-node prisma/seed.ts",
-    "db:setup": "npx prisma migrate dev && npx ts-node prisma/seed.ts"
+    "db:setup": "npx prisma migrate dev && npx ts-node prisma/seed.ts",
+    "e2e": "playwright test",
+    "e2e:health": "playwright test e2e/health.spec.ts",
+    "e2e:headed": "playwright test --headed",
+    "e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@nestjs/bull": "^11.0.4",
@@ -66,6 +70,7 @@
     "@nestjs/cli": "^11.0.16",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
+    "@playwright/test": "^1.58.2",
     "@types/bull": "^3.15.9",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.0",
