@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.95.2",
+    "authme-sdk": "^1.0.0",
     "axios": "^1.13.6",
     "clsx": "^2.1.1",
     "lucide-react": "^1.6.0",
