@@ -136,7 +136,8 @@ model User {
   assignedProperties Property[] @relation("PropertyAgent")
   assignedClients    Client[]   @relation("ClientAgent")
   assignedLeads      Lead[]     @relation("LeadAgent")
-  assignedContracts  Contract[] @relation("ContractAgent")
+  assignedContracts  Contract[]    @relation("ContractAgent")
+  appointments       Appointment[] @relation("AppointmentAgent")
   emailPreference    EmailPreference?
 
   @@index([authmeId])
@@ -170,6 +171,7 @@ model Property {
   images          PropertyImage[]
   leads           Lead[]
   contracts       Contract[]
+  appointments    Appointment[]   @relation("AppointmentProperty")
 
   @@index([status, assignedAgentId])
   @@index([type, status])
@@ -214,6 +216,7 @@ model Client {
   leads           Lead[]
   contracts       Contract[]
 
+  appointments    Appointment[]   @relation("AppointmentClient")
   @@unique([email])
   @@unique([phone])
   @@index([type, assignedAgentId])
@@ -242,6 +245,7 @@ model Lead {
   property        Property?    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   activities      LeadActivity[]
 
+  appointments    Appointment[]   @relation("AppointmentLead")
   @@index([status, assignedAgentId])
   @@index([priority])
   @@index([nextFollowUp])
@@ -390,4 +394,55 @@ model EmailPreference {
   updatedAt             DateTime @updatedAt
 
   @@map("email_preferences")
+}
+
+// ─── Appointments ────────────────────────────────────────────────
+
+enum AppointmentType {
+  VIEWING
+  MEETING
+  CALL
+  INSPECTION
+  SIGNING
+  FOLLOW_UP
+  OTHER
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  RESCHEDULED
+}
+
+model Appointment {
+  id          String            @id @default(uuid())
+  title       String
+  type        AppointmentType   @default(VIEWING)
+  status      AppointmentStatus @default(SCHEDULED)
+  startTime   DateTime
+  endTime     DateTime
+  location    String?
+  notes       String?
+
+  agentId     String?
+  agent       User?             @relation("AppointmentAgent", fields: [agentId], references: [id], onDelete: SetNull)
+  clientId    String?
+  client      Client?           @relation("AppointmentClient", fields: [clientId], references: [id], onDelete: SetNull)
+  propertyId  String?
+  property    Property?         @relation("AppointmentProperty", fields: [propertyId], references: [id], onDelete: SetNull)
+  leadId      String?
+  lead        Lead?             @relation("AppointmentLead", fields: [leadId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([status])
+  @@index([agentId])
+  @@index([clientId])
+  @@index([propertyId])
+  @@index([startTime])
+  @@map("appointments")
 }

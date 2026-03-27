@@ -1,23 +1,36 @@
-import { PrismaClient } from '@prisma/client';
+/**
+ * prisma/seed.ts — Database Seed Script
+ *
+ * Issue #6: Database Seed Script
+ * Implemented by: Karim Mostafa (Backend Developer)
+ *
+ * Seeds the database with:
+ *   - 3 test users (AuthMe test accounts: admin, manager, agent)
+ *   - 5 sample properties (different types and statuses)
+ *   - 3 sample clients
+ *   - 2 sample leads
+ *   - Sample appointments, lead activities
+ *
+ * Test users correspond to AuthMe accounts:
+ *   - admin@test.com  (ADMIN)
+ *   - manager@test.com (MANAGER)
+ *   - agent@test.com  (AGENT)
+ */
+
+import { PrismaClient, UserRole } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 const adapter = new PrismaPg({
-  connectionString: process.env['DATABASE_URL'],
+  connectionString:
+    process.env['DATABASE_URL'] ?? 'postgresql://postgres:postgres@localhost:5432/crm_dev',
 });
 const prisma = new PrismaClient({ adapter });
 
-const AGENT_IDS = [
-  'agent-001',
-  'agent-002',
-  'agent-003',
-  'agent-004',
-  'agent-005',
-];
-
 async function main() {
-  console.log('Seeding database...');
+  console.log('🌱 Seeding database...');
 
-  // Clean existing data
+  // ─── Clean existing data (order matters for FK constraints) ─────
+  await prisma.appointment.deleteMany();
   await prisma.leadActivity.deleteMany();
   await prisma.activity.deleteMany();
   await prisma.invoice.deleteMany();
@@ -26,17 +39,58 @@ async function main() {
   await prisma.propertyImage.deleteMany();
   await prisma.property.deleteMany();
   await prisma.client.deleteMany();
+  await prisma.emailPreference.deleteMany();
+  await prisma.user.deleteMany();
   await prisma.setting.deleteMany();
 
-  // ─── Properties (20) ────────────────────────────────────────────
-  const properties = await Promise.all([
+  // ─── Test Users (AuthMe accounts) ───────────────────────────────
+  // These correspond to users in AuthMe: admin@test.com, manager@test.com, agent@test.com
+  const [adminUser, managerUser, agentUser] = await Promise.all([
+    prisma.user.create({
+      data: {
+        authmeId: 'authme-admin-001',
+        email: 'admin@test.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        role: UserRole.ADMIN,
+        isActive: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        authmeId: 'authme-manager-001',
+        email: 'manager@test.com',
+        firstName: 'Manager',
+        lastName: 'User',
+        role: UserRole.MANAGER,
+        isActive: true,
+      },
+    }),
+    prisma.user.create({
+      data: {
+        authmeId: 'authme-agent-001',
+        email: 'agent@test.com',
+        firstName: 'Agent',
+        lastName: 'User',
+        role: UserRole.AGENT,
+        isActive: true,
+      },
+    }),
+  ]);
+
+  console.log(
+    `✅ Created 3 test users: admin@test.com (${adminUser.id}), manager@test.com (${managerUser.id}), agent@test.com (${agentUser.id})`,
+  );
+
+  // ─── Properties (5 — different types and statuses) ──────────────
+  const [prop1, prop2, prop3, prop4, prop5] = await Promise.all([
     prisma.property.create({
       data: {
         title: 'Modern 3BR Apartment in Zamalek',
-        description: 'Spacious apartment with Nile view, fully furnished',
+        description: 'Spacious apartment with Nile view, fully furnished, high-end finishes',
         type: 'APARTMENT',
         status: 'AVAILABLE',
-        price: 3500000,
+        price: 3_500_000,
         area: 180,
         bedrooms: 3,
         bathrooms: 2,
@@ -46,17 +100,17 @@ async function main() {
         region: 'Zamalek',
         latitude: 30.0561,
         longitude: 31.2194,
-        features: { parking: true, elevator: true, security: true, pool: false },
-        assignedAgentId: AGENT_IDS[0],
+        features: { parking: true, elevator: true, security: true, pool: false, nileView: true },
+        assignedAgentId: agentUser.id,
       },
     }),
     prisma.property.create({
       data: {
         title: 'Luxury Villa in New Cairo',
-        description: 'Standalone villa with private garden and pool',
+        description: 'Standalone villa with private garden, pool, and smart home system',
         type: 'VILLA',
-        status: 'AVAILABLE',
-        price: 12000000,
+        status: 'RESERVED',
+        price: 12_000_000,
         area: 450,
         bedrooms: 5,
         bathrooms: 4,
@@ -66,48 +120,32 @@ async function main() {
         region: 'New Cairo',
         latitude: 30.0589,
         longitude: 31.4908,
-        features: { parking: true, garden: true, pool: true, security: true },
-        assignedAgentId: AGENT_IDS[0],
+        features: { parking: true, garden: true, pool: true, security: true, smartHome: true },
+        assignedAgentId: managerUser.id,
       },
     }),
     prisma.property.create({
       data: {
-        title: 'Office Space in Smart Village',
-        description: 'Grade A office, open plan with meeting rooms',
+        title: 'Grade A Office in Smart Village',
+        description: 'Open plan office with conference rooms, fiber internet, parking',
         type: 'OFFICE',
         status: 'AVAILABLE',
-        price: 85000,
+        price: 85_000,
         area: 200,
         address: 'Smart Village, Building B2',
         city: 'Cairo',
         region: '6th of October',
-        features: { airConditioning: true, internet: true, parking: true },
-        assignedAgentId: AGENT_IDS[1],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Retail Shop in Citystars',
-        description: 'Prime retail location on ground floor',
-        type: 'SHOP',
-        status: 'RENTED',
-        price: 150000,
-        area: 60,
-        floor: 0,
-        address: 'Citystars Mall, Phase 1',
-        city: 'Cairo',
-        region: 'Nasr City',
-        features: { storefront: true, storage: true },
-        assignedAgentId: AGENT_IDS[1],
+        features: { airConditioning: true, internet: true, parking: true, conferenceRooms: 2 },
+        assignedAgentId: agentUser.id,
       },
     }),
     prisma.property.create({
       data: {
         title: 'Sea View Studio in Alexandria',
-        description: 'Cozy studio with direct sea view',
+        description: 'Cozy furnished studio with direct sea view on the Corniche',
         type: 'STUDIO',
-        status: 'AVAILABLE',
-        price: 800000,
+        status: 'RENTED',
+        price: 800_000,
         area: 55,
         bedrooms: 0,
         bathrooms: 1,
@@ -117,890 +155,173 @@ async function main() {
         region: 'Sidi Bishr',
         latitude: 31.2653,
         longitude: 29.9906,
-        features: { seaView: true, furnished: true },
-        assignedAgentId: AGENT_IDS[2],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Duplex in Madinaty',
-        description: 'Modern duplex with rooftop terrace',
-        type: 'DUPLEX',
-        status: 'AVAILABLE',
-        price: 5200000,
-        area: 280,
-        bedrooms: 4,
-        bathrooms: 3,
-        floor: 3,
-        address: 'Madinaty, B12',
-        city: 'Cairo',
-        region: 'Madinaty',
-        features: { terrace: true, parking: true, clubAccess: true },
-        assignedAgentId: AGENT_IDS[2],
+        features: { seaView: true, furnished: true, elevator: true },
+        assignedAgentId: adminUser.id,
       },
     }),
     prisma.property.create({
       data: {
         title: 'Land Plot in North Coast',
-        description: '500sqm plot in gated community',
+        description: '500 sqm plot in gated community with beach access',
         type: 'LAND',
-        status: 'AVAILABLE',
-        price: 2000000,
+        status: 'SOLD',
+        price: 2_000_000,
         area: 500,
         address: 'Hacienda Bay, Km 200',
         city: 'North Coast',
         region: 'Sidi Abdel Rahman',
-        features: { gatedCommunity: true, beachAccess: true },
-        assignedAgentId: AGENT_IDS[3],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Penthouse in Garden City',
-        description: 'Top floor penthouse with 360° views',
-        type: 'PENTHOUSE',
-        status: 'RESERVED',
-        price: 8500000,
-        area: 320,
-        bedrooms: 4,
-        bathrooms: 3,
-        floor: 15,
-        address: '22 Qasr El Aini St',
-        city: 'Cairo',
-        region: 'Garden City',
-        latitude: 30.0377,
-        longitude: 31.2314,
-        features: { panoramicView: true, jacuzzi: true, smartHome: true },
-        assignedAgentId: AGENT_IDS[3],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Chalet in Ain Sokhna',
-        description: 'Beachfront chalet with pool access',
-        type: 'CHALET',
-        status: 'AVAILABLE',
-        price: 1800000,
-        area: 120,
-        bedrooms: 2,
-        bathrooms: 1,
-        floor: 0,
-        address: 'La Vista Bay, Km 140',
-        city: 'Ain Sokhna',
-        region: 'Suez',
-        features: { beachAccess: true, pool: true, furnished: true },
-        assignedAgentId: AGENT_IDS[4],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: '2BR Apartment in Mohandessin',
-        description: 'Renovated apartment close to metro',
-        type: 'APARTMENT',
-        status: 'SOLD',
-        price: 1500000,
-        area: 110,
-        bedrooms: 2,
-        bathrooms: 1,
-        floor: 4,
-        address: 'Shehab St, Mohandessin',
-        city: 'Cairo',
-        region: 'Mohandessin',
-        features: { metro: true, elevator: true },
-        assignedAgentId: AGENT_IDS[4],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Commercial Building in Downtown',
-        description: 'Full building for commercial use, 10 floors',
-        type: 'BUILDING',
-        status: 'AVAILABLE',
-        price: 45000000,
-        area: 2000,
-        address: 'Talaat Harb St',
-        city: 'Cairo',
-        region: 'Downtown',
-        features: { elevator: true, parking: true, generator: true },
-        assignedAgentId: AGENT_IDS[0],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: '1BR Apartment in Heliopolis',
-        description: 'Bright apartment near Airport Rd',
-        type: 'APARTMENT',
-        status: 'AVAILABLE',
-        price: 950000,
-        area: 75,
-        bedrooms: 1,
-        bathrooms: 1,
-        floor: 3,
-        address: 'Othman Ibn Affan St',
-        city: 'Cairo',
-        region: 'Heliopolis',
-        features: { elevator: true, security: true },
-        assignedAgentId: AGENT_IDS[1],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Villa Twin House in Palm Hills',
-        description: 'Semi-detached villa in compound',
-        type: 'VILLA',
-        status: 'AVAILABLE',
-        price: 7500000,
-        area: 350,
-        bedrooms: 4,
-        bathrooms: 3,
-        floor: 0,
-        address: 'Palm Hills, 6th October',
-        city: 'Cairo',
-        region: '6th of October',
-        features: { garden: true, parking: true, clubAccess: true },
-        assignedAgentId: AGENT_IDS[2],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Furnished Studio in Dokki',
-        description: 'Fully furnished studio near Cairo University',
-        type: 'STUDIO',
-        status: 'RENTED',
-        price: 450000,
-        area: 45,
-        bedrooms: 0,
-        bathrooms: 1,
-        floor: 6,
-        address: 'Tahrir St, Dokki',
-        city: 'Cairo',
-        region: 'Dokki',
-        features: { furnished: true, airConditioning: true },
-        assignedAgentId: AGENT_IDS[3],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Office Floor in New Administrative Capital',
-        description: 'Full floor open office space, smart building',
-        type: 'OFFICE',
-        status: 'AVAILABLE',
-        price: 200000,
-        area: 500,
-        address: 'Business District, Tower C3',
-        city: 'New Capital',
-        region: 'Business District',
-        features: { smartBuilding: true, conferenceRooms: true, parking: true },
-        assignedAgentId: AGENT_IDS[4],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: '3BR Apartment in Sheikh Zayed',
-        description: 'Corner unit with garden view',
-        type: 'APARTMENT',
-        status: 'AVAILABLE',
-        price: 2800000,
-        area: 165,
-        bedrooms: 3,
-        bathrooms: 2,
-        floor: 2,
-        address: 'Zayed 2000 Compound',
-        city: 'Cairo',
-        region: 'Sheikh Zayed',
-        features: { gardenView: true, parking: true, clubAccess: true },
-        assignedAgentId: AGENT_IDS[0],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Retail Shop in Mall of Egypt',
-        description: 'High-traffic location, food court wing',
-        type: 'SHOP',
-        status: 'AVAILABLE',
-        price: 250000,
-        area: 80,
-        floor: 1,
-        address: 'Mall of Egypt, 6th October',
-        city: 'Cairo',
-        region: '6th of October',
-        features: { highTraffic: true, foodCourt: true },
-        assignedAgentId: AGENT_IDS[1],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Land in New Mansoura',
-        description: 'Residential land plot near the coast',
-        type: 'LAND',
-        status: 'AVAILABLE',
-        price: 900000,
-        area: 300,
-        address: 'New Mansoura City, Sector 4',
-        city: 'Mansoura',
-        region: 'New Mansoura',
-        features: { coastal: true, utilities: true },
-        assignedAgentId: AGENT_IDS[2],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Duplex in Katameya Heights',
-        description: 'Golf course view duplex',
-        type: 'DUPLEX',
-        status: 'RESERVED',
-        price: 15000000,
-        area: 400,
-        bedrooms: 5,
-        bathrooms: 4,
-        floor: 0,
-        address: 'Katameya Heights, Street 9',
-        city: 'Cairo',
-        region: 'New Cairo',
-        features: { golfView: true, pool: true, security: true, smartHome: true },
-        assignedAgentId: AGENT_IDS[3],
-      },
-    }),
-    prisma.property.create({
-      data: {
-        title: 'Chalet in Sahel - Marassi',
-        description: 'Premium chalet in Marassi resort',
-        type: 'CHALET',
-        status: 'SOLD',
-        price: 4500000,
-        area: 150,
-        bedrooms: 3,
-        bathrooms: 2,
-        floor: 0,
-        address: 'Marassi, Sidi Abdel Rahman',
-        city: 'North Coast',
-        region: 'Sidi Abdel Rahman',
-        features: { beachAccess: true, pool: true, lagoon: true },
-        assignedAgentId: AGENT_IDS[4],
+        features: { gatedCommunity: true, beachAccess: true, utilities: true },
+        assignedAgentId: managerUser.id,
       },
     }),
   ]);
 
-  console.log(`Created ${properties.length} properties`);
+  console.log(`✅ Created 5 properties (APARTMENT, VILLA, OFFICE, STUDIO, LAND)`);
 
-  // ─── Clients (15) ───────────────────────────────────────────────
-  const clients = await Promise.all([
+  // ─── Clients (3) ────────────────────────────────────────────────
+  const [client1, client2, client3] = await Promise.all([
     prisma.client.create({
       data: {
         firstName: 'Ahmed',
         lastName: 'Hassan',
-        email: 'ahmed.hassan@email.com',
+        email: 'ahmed.hassan@example.com',
         phone: '+201001234567',
         nationalId: '29001011234567',
         type: 'BUYER',
         source: 'REFERRAL',
-        notes: 'Looking for family apartment in New Cairo',
-        assignedAgentId: AGENT_IDS[0],
+        notes: 'Looking for family apartment in New Cairo, budget 3-4M EGP',
+        assignedAgentId: agentUser.id,
       },
     }),
     prisma.client.create({
       data: {
         firstName: 'Fatma',
         lastName: 'Ali',
-        email: 'fatma.ali@email.com',
+        email: 'fatma.ali@example.com',
         phone: '+201112345678',
-        type: 'BUYER',
+        type: 'INVESTOR',
         source: 'WEBSITE',
-        notes: 'First-time buyer, budget 2-3M EGP',
-        assignedAgentId: AGENT_IDS[0],
+        notes: 'Interested in commercial properties in Smart Village area',
+        assignedAgentId: managerUser.id,
       },
     }),
     prisma.client.create({
       data: {
         firstName: 'Mohamed',
         lastName: 'Ibrahim',
-        email: 'mo.ibrahim@email.com',
+        email: 'mo.ibrahim@example.com',
         phone: '+201223456789',
         nationalId: '28505051234567',
-        type: 'INVESTOR',
-        source: 'SOCIAL_MEDIA',
-        notes: 'Interested in commercial properties',
-        assignedAgentId: AGENT_IDS[1],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Sara',
-        lastName: 'Mahmoud',
-        email: 'sara.m@email.com',
-        phone: '+201034567890',
         type: 'TENANT',
-        source: 'WALK_IN',
-        notes: 'Looking for furnished apartment',
-        assignedAgentId: AGENT_IDS[1],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Khaled',
-        lastName: 'Mostafa',
-        email: 'khaled.m@email.com',
-        phone: '+201145678901',
-        nationalId: '29201011234567',
-        type: 'SELLER',
-        source: 'PHONE',
-        notes: 'Selling inherited villa',
-        assignedAgentId: AGENT_IDS[2],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Nour',
-        lastName: 'El-Din',
-        email: 'nour.eldin@email.com',
-        phone: '+201256789012',
-        type: 'BUYER',
-        source: 'ADVERTISEMENT',
-        notes: 'Relocating from Saudi, needs large villa',
-        assignedAgentId: AGENT_IDS[2],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Tarek',
-        lastName: 'Sayed',
-        email: 'tarek.s@email.com',
-        phone: '+201067890123',
-        nationalId: '28808081234567',
-        type: 'LANDLORD',
-        source: 'REFERRAL',
-        notes: 'Owns multiple properties in Zamalek',
-        assignedAgentId: AGENT_IDS[3],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Hana',
-        lastName: 'Youssef',
-        email: 'hana.y@email.com',
-        phone: '+201178901234',
-        type: 'BUYER',
-        source: 'WEBSITE',
-        notes: 'Young professional, looking for studio',
-        assignedAgentId: AGENT_IDS[3],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Omar',
-        lastName: 'Farouk',
-        email: 'omar.f@email.com',
-        phone: '+201289012345',
-        nationalId: '29505051234567',
-        type: 'INVESTOR',
         source: 'SOCIAL_MEDIA',
-        notes: 'Portfolio investor, 10+ properties',
-        assignedAgentId: AGENT_IDS[4],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Layla',
-        lastName: 'Abdel-Rahim',
-        email: 'layla.ar@email.com',
-        phone: '+201090123456',
-        type: 'TENANT',
-        source: 'OTHER',
-        notes: 'Corporate lease for expat employees',
-        assignedAgentId: AGENT_IDS[4],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Yasser',
-        lastName: 'Gamal',
-        email: 'yasser.g@email.com',
-        phone: '+201501234567',
-        type: 'BUYER',
-        source: 'REFERRAL',
-        assignedAgentId: AGENT_IDS[0],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Dina',
-        lastName: 'Adel',
-        email: 'dina.adel@email.com',
-        phone: '+201612345678',
-        type: 'SELLER',
-        source: 'PHONE',
-        notes: 'Downsizing, selling family home',
-        assignedAgentId: AGENT_IDS[1],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Amr',
-        lastName: 'Helmy',
-        email: 'amr.helmy@email.com',
-        phone: '+201723456789',
-        nationalId: '29303031234567',
-        type: 'BUYER',
-        source: 'WEBSITE',
-        notes: 'Interested in North Coast chalets',
-        assignedAgentId: AGENT_IDS[2],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Mona',
-        lastName: 'Rashid',
-        email: 'mona.r@email.com',
-        phone: '+201834567890',
-        type: 'LANDLORD',
-        source: 'WALK_IN',
-        notes: 'Managing family property portfolio',
-        assignedAgentId: AGENT_IDS[3],
-      },
-    }),
-    prisma.client.create({
-      data: {
-        firstName: 'Sherif',
-        lastName: 'Nabil',
-        email: 'sherif.n@email.com',
-        phone: '+201945678901',
-        type: 'BUYER',
-        source: 'ADVERTISEMENT',
-        notes: 'Looking for commercial space in New Capital',
-        assignedAgentId: AGENT_IDS[4],
+        notes: 'Looking for furnished apartment or studio, 1-year lease preferred',
+        assignedAgentId: agentUser.id,
       },
     }),
   ]);
 
-  console.log(`Created ${clients.length} clients`);
+  console.log(`✅ Created 3 clients`);
 
-  // ─── Leads (10) ─────────────────────────────────────────────────
-  const leads = await Promise.all([
+  // ─── Leads (2) ──────────────────────────────────────────────────
+  const [lead1, lead2] = await Promise.all([
     prisma.lead.create({
       data: {
-        clientId: clients[0].id,
-        propertyId: properties[1].id,
+        clientId: client1.id,
+        propertyId: prop1.id,
         status: 'QUALIFIED',
         priority: 'HIGH',
         source: 'Agent referral',
-        budget: 15000000,
-        notes: 'Visited property twice, very interested',
-        assignedAgentId: AGENT_IDS[0],
-        nextFollowUp: new Date('2026-03-28'),
+        budget: 3_800_000,
+        notes: 'Visited property twice, very interested, requesting floor plan',
+        assignedAgentId: agentUser.id,
+        nextFollowUp: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
       },
     }),
     prisma.lead.create({
       data: {
-        clientId: clients[1].id,
-        propertyId: properties[0].id,
+        clientId: client2.id,
+        propertyId: prop3.id,
         status: 'CONTACTED',
         priority: 'MEDIUM',
         source: 'Website inquiry',
-        budget: 3500000,
-        notes: 'Requested floor plan',
-        assignedAgentId: AGENT_IDS[0],
-        nextFollowUp: new Date('2026-03-27'),
-      },
-    }),
-    prisma.lead.create({
-      data: {
-        clientId: clients[2].id,
-        propertyId: properties[10].id,
-        status: 'PROPOSAL',
-        priority: 'HIGH',
-        source: 'LinkedIn campaign',
-        budget: 50000000,
-        notes: 'Wants to convert to mixed-use',
-        assignedAgentId: AGENT_IDS[1],
-        nextFollowUp: new Date('2026-03-26'),
-      },
-    }),
-    prisma.lead.create({
-      data: {
-        clientId: clients[3].id,
-        propertyId: properties[13].id,
-        status: 'NEW',
-        priority: 'MEDIUM',
-        source: 'Walk-in',
-        budget: 500000,
-        notes: 'Needs 1-year lease',
-        assignedAgentId: AGENT_IDS[1],
-      },
-    }),
-    prisma.lead.create({
-      data: {
-        clientId: clients[5].id,
-        propertyId: properties[1].id,
-        status: 'NEGOTIATION',
-        priority: 'URGENT',
-        source: 'Ad campaign',
-        budget: 12000000,
-        notes: 'Counter-offered at 11.5M',
-        assignedAgentId: AGENT_IDS[2],
-        nextFollowUp: new Date('2026-03-26'),
-      },
-    }),
-    prisma.lead.create({
-      data: {
-        clientId: clients[7].id,
-        propertyId: properties[4].id,
-        status: 'CONTACTED',
-        priority: 'LOW',
-        source: 'Website',
-        budget: 900000,
-        notes: 'Exploring options, not urgent',
-        assignedAgentId: AGENT_IDS[3],
-      },
-    }),
-    prisma.lead.create({
-      data: {
-        clientId: clients[8].id,
-        status: 'QUALIFIED',
-        priority: 'HIGH',
-        source: 'Social media',
-        budget: 20000000,
-        notes: 'Looking for bulk commercial properties',
-        assignedAgentId: AGENT_IDS[4],
-        nextFollowUp: new Date('2026-03-29'),
-      },
-    }),
-    prisma.lead.create({
-      data: {
-        clientId: clients[12].id,
-        propertyId: properties[19].id,
-        status: 'WON',
-        priority: 'MEDIUM',
-        source: 'Website',
-        budget: 5000000,
-        notes: 'Deal closed, contract pending',
-        assignedAgentId: AGENT_IDS[2],
-      },
-    }),
-    prisma.lead.create({
-      data: {
-        clientId: clients[14].id,
-        propertyId: properties[14].id,
-        status: 'NEW',
-        priority: 'HIGH',
-        source: 'Ad',
-        budget: 250000,
-        notes: 'Interested in leasing full floor',
-        assignedAgentId: AGENT_IDS[4],
-        nextFollowUp: new Date('2026-03-27'),
-      },
-    }),
-    prisma.lead.create({
-      data: {
-        clientId: clients[10].id,
-        propertyId: properties[15].id,
-        status: 'LOST',
-        priority: 'LOW',
-        source: 'Referral',
-        budget: 3000000,
-        notes: 'Chose competitor listing',
-        assignedAgentId: AGENT_IDS[0],
+        budget: 100_000,
+        notes: 'Interested in annual office lease, requested commercial proposal',
+        assignedAgentId: managerUser.id,
+        nextFollowUp: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
       },
     }),
   ]);
 
-  console.log(`Created ${leads.length} leads`);
+  console.log(`✅ Created 2 leads`);
 
   // ─── Lead Activities ────────────────────────────────────────────
   await Promise.all([
     prisma.leadActivity.create({
       data: {
-        leadId: leads[0].id,
+        leadId: lead1.id,
         type: 'VIEWING',
-        description: 'First property viewing with client',
-        performedBy: AGENT_IDS[0],
+        description: 'First on-site property viewing with client Ahmed Hassan',
+        performedBy: agentUser.id,
       },
     }),
     prisma.leadActivity.create({
       data: {
-        leadId: leads[0].id,
+        leadId: lead1.id,
         type: 'FOLLOW_UP',
-        description: 'Follow-up call, client still interested',
-        performedBy: AGENT_IDS[0],
+        description: 'Follow-up call — client confirmed strong interest, asking about payment plan',
+        performedBy: agentUser.id,
       },
     }),
     prisma.leadActivity.create({
       data: {
-        leadId: leads[2].id,
-        type: 'MEETING',
-        description: 'Meeting to discuss proposal terms',
-        performedBy: AGENT_IDS[1],
-      },
-    }),
-    prisma.leadActivity.create({
-      data: {
-        leadId: leads[4].id,
+        leadId: lead2.id,
         type: 'CALL',
-        description: 'Price negotiation call',
-        performedBy: AGENT_IDS[2],
-      },
-    }),
-    prisma.leadActivity.create({
-      data: {
-        leadId: leads[4].id,
-        type: 'STATUS_CHANGE',
-        description: 'Moved to negotiation stage',
-        performedBy: AGENT_IDS[2],
+        description: 'Initial discovery call with Fatma Ali regarding Smart Village office',
+        performedBy: managerUser.id,
       },
     }),
   ]);
 
-  console.log('Created lead activities');
+  console.log(`✅ Created lead activities`);
 
-  // ─── Contracts (5) ──────────────────────────────────────────────
-  const contracts = await Promise.all([
-    prisma.contract.create({
-      data: {
-        type: 'SALE',
-        propertyId: properties[9].id,
-        clientId: clients[0].id,
-        agentId: AGENT_IDS[4],
-        startDate: new Date('2026-02-01'),
-        totalAmount: 1500000,
-        paymentTerms: { installments: 4, downPayment: 500000 },
-        status: 'COMPLETED',
-        notes: 'Sale completed, property transferred',
-      },
-    }),
-    prisma.contract.create({
-      data: {
-        type: 'RENT',
-        propertyId: properties[3].id,
-        clientId: clients[3].id,
-        agentId: AGENT_IDS[1],
-        startDate: new Date('2026-01-15'),
-        endDate: new Date('2027-01-14'),
-        totalAmount: 1800000,
-        paymentTerms: { monthlyRent: 150000, deposit: 300000 },
-        status: 'ACTIVE',
-        notes: 'Annual lease with auto-renewal',
-      },
-    }),
-    prisma.contract.create({
-      data: {
-        type: 'SALE',
-        propertyId: properties[19].id,
-        clientId: clients[12].id,
-        agentId: AGENT_IDS[2],
-        startDate: new Date('2026-03-20'),
-        totalAmount: 4500000,
-        paymentTerms: { installments: 6, downPayment: 1500000 },
-        status: 'ACTIVE',
-        notes: 'Installment sale, 6 quarterly payments',
-      },
-    }),
-    prisma.contract.create({
-      data: {
-        type: 'RENT',
-        propertyId: properties[13].id,
-        clientId: clients[9].id,
-        agentId: AGENT_IDS[3],
-        startDate: new Date('2026-03-01'),
-        endDate: new Date('2027-02-28'),
-        totalAmount: 540000,
-        paymentTerms: { monthlyRent: 45000, deposit: 90000 },
-        status: 'ACTIVE',
-      },
-    }),
-    prisma.contract.create({
-      data: {
-        type: 'LEASE',
-        propertyId: properties[2].id,
-        clientId: clients[2].id,
-        agentId: AGENT_IDS[1],
-        startDate: new Date('2026-04-01'),
-        endDate: new Date('2029-03-31'),
-        totalAmount: 3060000,
-        paymentTerms: { monthlyRent: 85000, annualIncrease: '10%' },
-        status: 'DRAFT',
-        notes: 'Pending legal review',
-      },
-    }),
-  ]);
+  // ─── Sample Appointments ─────────────────────────────────────────
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  console.log(`Created ${contracts.length} contracts`);
-
-  // ─── Invoices (10) ──────────────────────────────────────────────
-  const invoices = await Promise.all([
-    prisma.invoice.create({
-      data: {
-        contractId: contracts[0].id,
-        invoiceNumber: 'INV-2026-001',
-        amount: 500000,
-        dueDate: new Date('2026-02-01'),
-        paidDate: new Date('2026-02-01'),
-        status: 'PAID',
-        paymentMethod: 'BANK_TRANSFER',
-        notes: 'Down payment',
-      },
-    }),
-    prisma.invoice.create({
-      data: {
-        contractId: contracts[0].id,
-        invoiceNumber: 'INV-2026-002',
-        amount: 333333,
-        dueDate: new Date('2026-05-01'),
-        status: 'PENDING',
-        notes: 'Installment 1 of 3',
-      },
-    }),
-    prisma.invoice.create({
-      data: {
-        contractId: contracts[0].id,
-        invoiceNumber: 'INV-2026-003',
-        amount: 333333,
-        dueDate: new Date('2026-08-01'),
-        status: 'PENDING',
-        notes: 'Installment 2 of 3',
-      },
-    }),
-    prisma.invoice.create({
-      data: {
-        contractId: contracts[0].id,
-        invoiceNumber: 'INV-2026-004',
-        amount: 333334,
-        dueDate: new Date('2026-11-01'),
-        status: 'PENDING',
-        notes: 'Installment 3 of 3',
-      },
-    }),
-    prisma.invoice.create({
-      data: {
-        contractId: contracts[1].id,
-        invoiceNumber: 'INV-2026-005',
-        amount: 300000,
-        dueDate: new Date('2026-01-15'),
-        paidDate: new Date('2026-01-15'),
-        status: 'PAID',
-        paymentMethod: 'CASH',
-        notes: 'Security deposit',
-      },
-    }),
-    prisma.invoice.create({
-      data: {
-        contractId: contracts[1].id,
-        invoiceNumber: 'INV-2026-006',
-        amount: 150000,
-        dueDate: new Date('2026-02-15'),
-        paidDate: new Date('2026-02-14'),
-        status: 'PAID',
-        paymentMethod: 'BANK_TRANSFER',
-        notes: 'Feb rent',
-      },
-    }),
-    prisma.invoice.create({
-      data: {
-        contractId: contracts[1].id,
-        invoiceNumber: 'INV-2026-007',
-        amount: 150000,
-        dueDate: new Date('2026-03-15'),
-        status: 'PENDING',
-        notes: 'Mar rent',
-      },
-    }),
-    prisma.invoice.create({
-      data: {
-        contractId: contracts[2].id,
-        invoiceNumber: 'INV-2026-008',
-        amount: 1500000,
-        dueDate: new Date('2026-03-20'),
-        paidDate: new Date('2026-03-20'),
-        status: 'PAID',
-        paymentMethod: 'CHECK',
-        notes: 'Down payment',
-      },
-    }),
-    prisma.invoice.create({
-      data: {
-        contractId: contracts[2].id,
-        invoiceNumber: 'INV-2026-009',
-        amount: 600000,
-        dueDate: new Date('2026-06-20'),
-        status: 'PENDING',
-        notes: 'Q2 installment',
-      },
-    }),
-    prisma.invoice.create({
-      data: {
-        contractId: contracts[3].id,
-        invoiceNumber: 'INV-2026-010',
-        amount: 90000,
-        dueDate: new Date('2026-03-01'),
-        paidDate: new Date('2026-03-01'),
-        status: 'PAID',
-        paymentMethod: 'BANK_TRANSFER',
-        notes: 'Security deposit',
-      },
-    }),
-  ]);
-
-  console.log(`Created ${invoices.length} invoices`);
-
-  // ─── Activities (audit trail) ───────────────────────────────────
   await Promise.all([
-    prisma.activity.create({
+    prisma.appointment.create({
       data: {
-        type: 'CREATE',
-        description: 'Property listed for sale',
-        entityType: 'PROPERTY',
-        entityId: properties[0].id,
-        performedBy: AGENT_IDS[0],
+        title: 'Property Viewing — Zamalek Apartment',
+        type: 'VIEWING',
+        status: 'CONFIRMED',
+        startTime: new Date(tomorrow.setHours(10, 0, 0, 0)),
+        endTime: new Date(tomorrow.setHours(11, 0, 0, 0)),
+        location: '15 Shagaret El Dorr St, Zamalek, Cairo',
+        notes: 'Second viewing — bring floor plan and payment schedule',
+        agentId: agentUser.id,
+        clientId: client1.id,
+        propertyId: prop1.id,
+        leadId: lead1.id,
       },
     }),
-    prisma.activity.create({
+    prisma.appointment.create({
       data: {
-        type: 'UPDATE',
-        description: 'Property status changed to SOLD',
-        entityType: 'PROPERTY',
-        entityId: properties[9].id,
-        performedBy: AGENT_IDS[4],
-        metadata: { oldStatus: 'RESERVED', newStatus: 'SOLD' },
-      },
-    }),
-    prisma.activity.create({
-      data: {
-        type: 'CREATE',
-        description: 'New client registered',
-        entityType: 'CLIENT',
-        entityId: clients[0].id,
-        performedBy: AGENT_IDS[0],
-      },
-    }),
-    prisma.activity.create({
-      data: {
-        type: 'CREATE',
-        description: 'Contract signed',
-        entityType: 'CONTRACT',
-        entityId: contracts[0].id,
-        performedBy: AGENT_IDS[4],
-      },
-    }),
-    prisma.activity.create({
-      data: {
-        type: 'CREATE',
-        description: 'Invoice generated for down payment',
-        entityType: 'INVOICE',
-        entityId: invoices[0].id,
-        performedBy: AGENT_IDS[4],
-      },
-    }),
-    prisma.activity.create({
-      data: {
-        type: 'UPDATE',
-        description: 'Invoice marked as paid',
-        entityType: 'INVOICE',
-        entityId: invoices[0].id,
-        performedBy: AGENT_IDS[4],
-        metadata: { oldStatus: 'PENDING', newStatus: 'PAID', paymentMethod: 'BANK_TRANSFER' },
+        title: 'Office Lease Proposal Meeting',
+        type: 'MEETING',
+        status: 'SCHEDULED',
+        startTime: new Date(nextWeek.setHours(14, 0, 0, 0)),
+        endTime: new Date(nextWeek.setHours(15, 0, 0, 0)),
+        location: 'Smart Village, Building B2 — Management Office',
+        notes: 'Present commercial lease proposal, discuss terms',
+        agentId: managerUser.id,
+        clientId: client2.id,
+        propertyId: prop3.id,
+        leadId: lead2.id,
       },
     }),
   ]);
 
-  console.log('Created activities');
+  console.log(`✅ Created sample appointments`);
 
   // ─── Settings ───────────────────────────────────────────────────
   await Promise.all([
@@ -1034,13 +355,17 @@ async function main() {
     }),
   ]);
 
-  console.log('Created settings');
-  console.log('Seeding complete!');
+  console.log(`✅ Created settings`);
+  console.log('\n🎉 Seed complete!');
+  console.log('\nTest Users:');
+  console.log(`  ADMIN   → admin@test.com   (id: ${adminUser.id})`);
+  console.log(`  MANAGER → manager@test.com (id: ${managerUser.id})`);
+  console.log(`  AGENT   → agent@test.com   (id: ${agentUser.id})`);
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error('❌ Seed failed:', e);
     process.exit(1);
   })
   .finally(async () => {
