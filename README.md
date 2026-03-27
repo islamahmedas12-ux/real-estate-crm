@@ -132,6 +132,138 @@ npm run agent:dev
 - **Admin Portal**: http://localhost:5173
 - **Agent Portal**: http://localhost:5174
 
+## Local Development
+
+### Full Dev Environment Setup (Recommended)
+
+For a complete isolated development environment with all services (PostgreSQL, AuthMe, NestJS, Admin UI, Agent UI), use the automated setup script:
+
+```bash
+# Clone and navigate to the project
+git clone https://github.com/Islamawad132/real-estate-crm.git
+cd real-estate-crm
+
+# Run the automated setup script (requires Docker and Docker Compose)
+bash scripts/dev-setup.sh
+```
+
+**What the script does:**
+1. ✅ Validates Docker and Node.js installation
+2. ✅ Creates `.env` from `.env.dev` (if not already present)
+3. ✅ Starts all services with Docker Compose: `docker compose -f docker-compose.dev-full.yml up -d --build`
+4. ✅ Waits for PostgreSQL databases to be ready
+5. ✅ Runs Prisma migrations automatically
+6. ✅ Displays service URLs and next steps
+
+**Service URLs after setup:**
+- **NestJS Backend**: http://localhost:3000
+- **Admin Portal**: http://localhost:5173
+- **Agent Portal**: http://localhost:5174
+- **AuthMe IAM**: http://localhost:3001
+- **AuthMe Admin**: http://localhost:3001/admin
+- **CRM PostgreSQL**: localhost:5432
+- **AuthMe PostgreSQL**: localhost:5433
+
+**Next steps after successful setup:**
+1. Configure AuthMe realm (see [docs/authme-setup.md](docs/authme-setup.md))
+2. Seed sample data: `docker compose -f docker-compose.dev-full.yml exec app npm run prisma:seed`
+3. Access the admin portal at http://localhost:5173
+
+### Troubleshooting Dev Setup
+
+#### Docker Daemon Not Running
+```bash
+# On macOS or Windows, start Docker Desktop
+# On Linux, ensure Docker service is running:
+sudo systemctl start docker
+```
+
+#### Services Not Starting
+```bash
+# Check Docker Compose status
+docker compose -f docker-compose.dev-full.yml ps
+
+# View logs for a specific service
+docker compose -f docker-compose.dev-full.yml logs -f app
+
+# Rebuild and restart all services
+docker compose -f docker-compose.dev-full.yml down -v
+docker compose -f docker-compose.dev-full.yml up -d --build
+```
+
+#### Database Connection Errors
+```bash
+# Verify database is running and healthy
+docker compose -f docker-compose.dev-full.yml exec db pg_isready -U postgres
+
+# Check environment variables in .env match docker-compose.dev-full.yml
+cat .env | grep DATABASE_URL
+```
+
+#### Prisma Migration Failures
+```bash
+# Manually run migrations after databases are ready
+docker compose -f docker-compose.dev-full.yml exec app npx prisma migrate dev
+
+# Reset database (careful — removes all data)
+docker compose -f docker-compose.dev-full.yml exec app npx prisma migrate reset
+```
+
+#### AuthMe Not Connected
+```bash
+# Ensure AuthMe is running
+docker compose -f docker-compose.dev-full.yml ps authme
+
+# Check AuthMe logs
+docker compose -f docker-compose.dev-full.yml logs -f authme
+
+# Verify AUTHME_URL in .env is correct (http://authme:3001 inside Docker)
+grep AUTHME_URL .env
+```
+
+### Manual Development (Without Docker)
+
+If you prefer to run services locally without Docker:
+
+1. **Install PostgreSQL 16** and start the service
+2. **Create databases:**
+   ```bash
+   psql -U postgres -c "CREATE DATABASE real_estate_crm;"
+   psql -U postgres -c "CREATE DATABASE authme;"
+   ```
+3. **Update `.env`:**
+   ```bash
+   cp .env.example .env
+   # Edit .env to use local PostgreSQL connection
+   # DATABASE_URL=postgresql://postgres:password@localhost:5432/real_estate_crm
+   ```
+4. **Install dependencies and run migrations:**
+   ```bash
+   npm install
+   npx prisma migrate dev
+   ```
+5. **Start services in separate terminals:**
+   ```bash
+   # Terminal 1: Backend
+   npm run start:dev
+   
+   # Terminal 2: Admin UI
+   npm run admin:dev
+   
+   # Terminal 3: Agent UI
+   npm run agent:dev
+   ```
+6. **Start AuthMe separately** (see [docs/authme-setup.md](docs/authme-setup.md))
+
+### Development Tips
+
+- **Hot Reload**: Backend watches for changes automatically with `npm run start:dev`
+- **UI Hot Reload**: Both portals (Admin & Agent) auto-refresh on file changes
+- **Prisma Studio**: Inspect the database GUI: `npx prisma studio`
+- **Database Reset**: `npx prisma migrate reset` (local only) or `docker compose exec app npx prisma migrate reset` (Docker)
+- **Seed Data**: `npm run prisma:seed` or `docker compose -f docker-compose.dev-full.yml exec app npm run prisma:seed`
+- **Email Testing**: AuthMe dev setup includes MailHog for viewing test emails at http://localhost:8025
+
 ## Authentication & Authorization
 
 Uses **Authme** as the IAM server (Keycloak-compatible OAuth 2.0 / OIDC).
