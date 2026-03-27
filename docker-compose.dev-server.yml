@@ -61,6 +61,7 @@ services:
       DATABASE_URL: postgresql://authme:authme@authme-db:5432/authme
       PORT: "3001"
       BASE_URL: http://dev-auth.realstate-crm.homes
+      WEBHOOK_SECRET_KEY: dev-webhook-secret-6cc4fb3d383e0e3682dc013ffa533f1322c7cdea
     ports:
       - "3001:3001"
     depends_on:
