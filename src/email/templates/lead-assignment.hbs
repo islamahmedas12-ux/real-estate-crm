@@ -1,0 +1,48 @@
+<h2 style="margin-top:0;">New Lead Assigned</h2>
+<p>Hi {{agentName}},</p>
+<p>A new lead has been assigned to you. Please review the details below and take action promptly.</p>
+
+<table class="details">
+  <tr>
+    <td>Client Name</td>
+    <td>{{lead.clientName}}</td>
+  </tr>
+  <tr>
+    <td>Phone</td>
+    <td>{{lead.clientPhone}}</td>
+  </tr>
+  <tr>
+    <td>Status</td>
+    <td>{{lead.status}}</td>
+  </tr>
+  <tr>
+    <td>Priority</td>
+    <td>{{lead.priority}}</td>
+  </tr>
+  {{#if lead.propertyTitle}}
+  <tr>
+    <td>Property</td>
+    <td>{{lead.propertyTitle}}</td>
+  </tr>
+  {{/if}}
+  {{#if lead.budget}}
+  <tr>
+    <td>Budget</td>
+    <td>{{lead.budget}}</td>
+  </tr>
+  {{/if}}
+  {{#if lead.source}}
+  <tr>
+    <td>Source</td>
+    <td>{{lead.source}}</td>
+  </tr>
+  {{/if}}
+</table>
+
+{{#if lead.notes}}
+<div class="info-box">
+  <strong>Notes:</strong> {{lead.notes}}
+</div>
+{{/if}}
+
+<p>Please contact the client as soon as possible to follow up.</p>

@@ -1,0 +1,57 @@
+# Dependencies (installed inside container)
+node_modules
+**/node_modules
+
+# Build output (built inside container)
+dist
+**/dist
+build
+**/build
+
+# Git
+.git
+.gitignore
+
+# Environment files (injected via docker-compose)
+.env
+.env.local
+.env.*.local
+
+# Coverage & testing
+coverage
+**/coverage
+.nyc_output
+.jest-cache
+
+# Documentation
+*.md
+docs/
+!README.md
+
+# Editor / IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Mobile app (not needed for web deployment)
+mobile/
+
+# Docker files (prevent recursive copy)
+Dockerfile
+Dockerfile.prod
+docker-compose*.yml
+
+# Logs
+*.log
+logs/
+
+# Runtime uploads
+uploads/
+
+# GitHub
+.github/

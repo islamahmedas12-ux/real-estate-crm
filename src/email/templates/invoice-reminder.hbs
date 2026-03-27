@@ -1,0 +1,31 @@
+<h2 style="margin-top:0;">Invoice {{#if isOverdue}}Overdue{{else}}Reminder{{/if}}</h2>
+<p>Hi {{recipientName}},</p>
+
+{{#if isOverdue}}
+<div class="warning-box">
+  <strong>This invoice is overdue.</strong> Please arrange payment as soon as possible to avoid any penalties.
+</div>
+{{else}}
+<p>This is a friendly reminder that the following invoice is due {{#if isDueToday}}today{{else}}in <strong>{{daysUntilDue}} day(s)</strong>{{/if}}.</p>
+{{/if}}
+
+<table class="details">
+  <tr>
+    <td>Invoice Number</td>
+    <td>{{invoice.invoiceNumber}}</td>
+  </tr>
+  <tr>
+    <td>Amount</td>
+    <td>{{invoice.amount}}</td>
+  </tr>
+  <tr>
+    <td>Due Date</td>
+    <td>{{invoice.dueDate}}</td>
+  </tr>
+  <tr>
+    <td>Status</td>
+    <td>{{invoice.status}}</td>
+  </tr>
+</table>
+
+<p>If you have already made the payment, please disregard this reminder.</p>

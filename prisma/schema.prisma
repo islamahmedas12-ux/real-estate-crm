@@ -1,0 +1,393 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  AGENT
+}
+
+enum PropertyType {
+  APARTMENT
+  VILLA
+  OFFICE
+  SHOP
+  LAND
+  BUILDING
+  CHALET
+  STUDIO
+  DUPLEX
+  PENTHOUSE
+}
+
+enum PropertyStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+  RENTED
+  OFF_MARKET
+}
+
+enum ClientType {
+  BUYER
+  SELLER
+  TENANT
+  LANDLORD
+  INVESTOR
+}
+
+enum ClientSource {
+  REFERRAL
+  WEBSITE
+  SOCIAL_MEDIA
+  WALK_IN
+  PHONE
+  ADVERTISEMENT
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum LeadActivityType {
+  CALL
+  EMAIL
+  MEETING
+  NOTE
+  VIEWING
+  FOLLOW_UP
+  STATUS_CHANGE
+}
+
+enum ContractType {
+  SALE
+  RENT
+  LEASE
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CHECK
+  CREDIT_CARD
+  INSTALLMENT
+}
+
+enum ActivityEntityType {
+  PROPERTY
+  CLIENT
+  LEAD
+  CONTRACT
+  INVOICE
+}
+
+// ─── Models ──────────────────────────────────────────────────────────
+
+model User {
+  id          String    @id @default(uuid())
+  authmeId    String    @unique
+  email       String    @unique
+  firstName   String?
+  lastName    String?
+  role        UserRole  @default(AGENT)
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  assignedProperties Property[] @relation("PropertyAgent")
+  assignedClients    Client[]   @relation("ClientAgent")
+  assignedLeads      Lead[]     @relation("LeadAgent")
+  assignedContracts  Contract[] @relation("ContractAgent")
+  emailPreference    EmailPreference?
+
+  @@index([authmeId])
+  @@index([role])
+  @@map("users")
+}
+
+model Property {
+  id              String           @id @default(uuid())
+  title           String
+  description     String?
+  type            PropertyType
+  status          PropertyStatus   @default(AVAILABLE)
+  price           Decimal          @db.Decimal(14, 2)
+  area            Decimal          @db.Decimal(10, 2)
+  bedrooms        Int?
+  bathrooms       Int?
+  floor           Int?
+  address         String
+  city            String
+  region          String
+  latitude        Decimal?         @db.Decimal(10, 7)
+  longitude       Decimal?         @db.Decimal(10, 7)
+  features        Json?
+  assignedAgentId String?
+  assignedAgent   User?            @relation("PropertyAgent", fields: [assignedAgentId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  images          PropertyImage[]
+  leads           Lead[]
+  contracts       Contract[]
+
+  @@index([status, assignedAgentId])
+  @@index([type, status])
+  @@index([city, region])
+  @@index([price])
+  @@index([area])
+  @@index([createdAt])
+  @@map("properties")
+}
+
+model PropertyImage {
+  id         String   @id @default(uuid())
+  propertyId String
+  url        String
+  caption    String?
+  isPrimary  Boolean  @default(false)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@map("property_images")
+}
+
+model Client {
+  id              String       @id @default(uuid())
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String
+  nationalId      String?
+  type            ClientType
+  source          ClientSource @default(OTHER)
+  notes           String?
+  assignedAgentId String?
+  assignedAgent   User?        @relation("ClientAgent", fields: [assignedAgentId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  leads           Lead[]
+  contracts       Contract[]
+
+  @@unique([email])
+  @@unique([phone])
+  @@index([type, assignedAgentId])
+  @@index([source])
+  @@index([createdAt])
+  @@map("clients")
+}
+
+model Lead {
+  id              String       @id @default(uuid())
+  clientId        String
+  propertyId      String?
+  status          LeadStatus   @default(NEW)
+  priority        LeadPriority @default(MEDIUM)
+  source          String?
+  budget          Decimal?     @db.Decimal(14, 2)
+  notes           String?
+  assignedAgentId String?
+  assignedAgent   User?        @relation("LeadAgent", fields: [assignedAgentId], references: [id], onDelete: SetNull)
+  nextFollowUp    DateTime?
+
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  client          Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  property        Property?    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  activities      LeadActivity[]
+
+  @@index([status, assignedAgentId])
+  @@index([priority])
+  @@index([nextFollowUp])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+model LeadActivity {
+  id          String           @id @default(uuid())
+  leadId      String
+  type        LeadActivityType
+  description String
+  performedBy String
+
+  createdAt   DateTime         @default(now())
+
+  lead        Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([createdAt])
+  @@map("lead_activities")
+}
+
+model Contract {
+  id           String         @id @default(uuid())
+  type         ContractType
+  propertyId   String
+  clientId     String
+  agentId      String?
+  startDate    DateTime
+  endDate      DateTime?
+  totalAmount  Decimal        @db.Decimal(14, 2)
+  paymentTerms Json?
+  status       ContractStatus @default(DRAFT)
+  documentUrl  String?
+  notes        String?
+
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  property     Property       @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  client       Client         @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  agent        User?          @relation("ContractAgent", fields: [agentId], references: [id], onDelete: SetNull)
+  invoices     Invoice[]
+
+  @@index([status])
+  @@index([propertyId])
+  @@index([clientId])
+  @@index([agentId])
+  @@index([createdAt])
+  @@map("contracts")
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  contractId    String
+  invoiceNumber String        @unique
+  amount        Decimal       @db.Decimal(14, 2)
+  dueDate       DateTime
+  paidDate      DateTime?
+  status        InvoiceStatus @default(PENDING)
+  paymentMethod PaymentMethod?
+  notes         String?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  contract      Contract      @relation(fields: [contractId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@index([status, paidDate])
+  @@index([dueDate])
+  @@index([contractId])
+  @@index([createdAt])
+  @@map("invoices")
+}
+
+model Activity {
+  id          String             @id @default(uuid())
+  type        String
+  description String
+  entityType  ActivityEntityType
+  entityId    String
+  performedBy String
+  metadata    Json?
+
+  createdAt   DateTime           @default(now())
+
+  @@index([entityType, entityId])
+  @@index([performedBy])
+  @@index([createdAt])
+  @@map("activities")
+}
+
+model Setting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       Json
+  description String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("settings")
+}
+
+// ─── Email ──────────────────────────────────────────────────────────
+
+enum EmailStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+}
+
+model EmailLog {
+  id          String      @id @default(uuid())
+  to          String
+  subject     String
+  template    String
+  context     Json?
+  status      EmailStatus @default(QUEUED)
+  attempts    Int         @default(0)
+  lastError   String?
+  sentAt      DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_logs")
+}
+
+model EmailPreference {
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leadAssignment        Boolean  @default(true)
+  followUpReminder      Boolean  @default(true)
+  contractUpdates       Boolean  @default(true)
+  invoiceReminder       Boolean  @default(true)
+  paymentConfirmation   Boolean  @default(true)
+  weeklySummary         Boolean  @default(true)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("email_preferences")
+}

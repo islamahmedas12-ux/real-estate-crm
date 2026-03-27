@@ -1,0 +1,56 @@
+<h2 style="margin-top:0;">Weekly Summary</h2>
+<p>Hi {{agentName}},</p>
+<p>Here is your activity summary for the past week:</p>
+
+<table class="details">
+  <tr>
+    <td>New Leads</td>
+    <td>{{stats.newLeads}}</td>
+  </tr>
+  <tr>
+    <td>Leads Won</td>
+    <td>{{stats.leadsWon}}</td>
+  </tr>
+  <tr>
+    <td>Leads Lost</td>
+    <td>{{stats.leadsLost}}</td>
+  </tr>
+  <tr>
+    <td>Active Leads</td>
+    <td>{{stats.activeLeads}}</td>
+  </tr>
+  <tr>
+    <td>Follow-Ups Due</td>
+    <td>{{stats.followUpsDue}}</td>
+  </tr>
+  <tr>
+    <td>Contracts Created</td>
+    <td>{{stats.contractsCreated}}</td>
+  </tr>
+  <tr>
+    <td>Invoices Pending</td>
+    <td>{{stats.invoicesPending}}</td>
+  </tr>
+  <tr>
+    <td>Revenue Collected</td>
+    <td>{{stats.revenueCollected}}</td>
+  </tr>
+</table>
+
+{{#if stats.upcomingFollowUps.length}}
+<h3>Upcoming Follow-Ups This Week</h3>
+<table class="details">
+  <tr>
+    <td style="font-weight:600;background-color:#f9fafb;">Client</td>
+    <td style="font-weight:600;background-color:#f9fafb;">Date</td>
+  </tr>
+  {{#each stats.upcomingFollowUps}}
+  <tr>
+    <td>{{this.clientName}}</td>
+    <td>{{this.date}}</td>
+  </tr>
+  {{/each}}
+</table>
+{{/if}}
+
+<p>Keep up the great work!</p>

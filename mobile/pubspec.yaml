@@ -1,0 +1,66 @@
+name: real_estate_crm
+description: Real Estate CRM Mobile App
+publish_to: 'none'
+version: 0.0.1+1
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Networking
+  dio: ^5.7.0
+
+  # Routing
+  go_router: ^14.8.1
+
+  # Auth (OIDC)
+  flutter_appauth: ^7.0.1
+  flutter_secure_storage: ^9.2.4
+
+  # Firebase & Notifications
+  firebase_core: ^3.8.1
+  firebase_messaging: ^15.2.1
+  flutter_local_notifications: ^18.0.1
+
+  # Local Storage
+  shared_preferences: ^2.3.5
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # UI
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.17
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+
+  # Utils
+  intl: ^0.19.0
+  url_launcher: ^6.3.1
+  share_plus: ^10.1.4
+  connectivity_plus: ^6.1.2
+  json_annotation: ^4.9.0
+  freezed_annotation: ^2.4.4
+  local_auth: ^2.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.14
+  json_serializable: ^6.9.4
+  freezed: ^2.5.8
+  riverpod_generator: ^2.6.3
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/

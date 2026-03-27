@@ -1,0 +1,20 @@
+<h2 style="margin-top:0;">Follow-Up Reminder</h2>
+<p>Hi {{agentName}},</p>
+<p>You have <strong>{{leads.length}}</strong> lead(s) scheduled for follow-up today.</p>
+
+<table class="details">
+  <tr>
+    <td style="font-weight:600;background-color:#f9fafb;">Client</td>
+    <td style="font-weight:600;background-color:#f9fafb;">Priority</td>
+  </tr>
+  {{#each leads}}
+  <tr>
+    <td>{{this.clientName}}</td>
+    <td>{{this.priority}}</td>
+  </tr>
+  {{/each}}
+</table>
+
+<div class="info-box">
+  <strong>Tip:</strong> Consistent follow-ups are key to converting leads. Make sure to log your activity after each interaction.
+</div>

@@ -1,0 +1,28 @@
+<h2 style="margin-top:0;">Payment Confirmation</h2>
+<p>Hi {{recipientName}},</p>
+<p>We have received your payment. Thank you!</p>
+
+<table class="details">
+  <tr>
+    <td>Invoice Number</td>
+    <td>{{invoice.invoiceNumber}}</td>
+  </tr>
+  <tr>
+    <td>Amount Paid</td>
+    <td>{{invoice.amount}}</td>
+  </tr>
+  <tr>
+    <td>Payment Date</td>
+    <td>{{invoice.paidDate}}</td>
+  </tr>
+  {{#if invoice.paymentMethod}}
+  <tr>
+    <td>Payment Method</td>
+    <td>{{invoice.paymentMethod}}</td>
+  </tr>
+  {{/if}}
+</table>
+
+<div class="info-box">
+  Your invoice has been marked as <strong>PAID</strong>. No further action is required.
+</div>

@@ -1,0 +1,46 @@
+<h2 style="margin-top:0;">Contract {{action}}</h2>
+<p>Hi {{recipientName}},</p>
+<p>A contract has been <strong>{{action}}</strong>. Here are the details:</p>
+
+<table class="details">
+  <tr>
+    <td>Contract ID</td>
+    <td>{{contract.id}}</td>
+  </tr>
+  <tr>
+    <td>Type</td>
+    <td>{{contract.type}}</td>
+  </tr>
+  <tr>
+    <td>Status</td>
+    <td>{{contract.status}}</td>
+  </tr>
+  <tr>
+    <td>Property</td>
+    <td>{{contract.propertyTitle}}</td>
+  </tr>
+  <tr>
+    <td>Client</td>
+    <td>{{contract.clientName}}</td>
+  </tr>
+  <tr>
+    <td>Total Amount</td>
+    <td>{{contract.totalAmount}}</td>
+  </tr>
+  <tr>
+    <td>Start Date</td>
+    <td>{{contract.startDate}}</td>
+  </tr>
+  {{#if contract.endDate}}
+  <tr>
+    <td>End Date</td>
+    <td>{{contract.endDate}}</td>
+  </tr>
+  {{/if}}
+</table>
+
+{{#if contract.notes}}
+<div class="info-box">
+  <strong>Notes:</strong> {{contract.notes}}
+</div>
+{{/if}}
