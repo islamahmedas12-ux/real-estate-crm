@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-import 'package:go_router/go_router.dart';
-
 import '../../models/dashboard_stats.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/notification_provider.dart';
