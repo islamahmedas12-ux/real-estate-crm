@@ -75,7 +75,7 @@ services:
       AUTHME_ISSUER_URL: https://dev-auth.realstate-crm.homes
       AUTHME_REALM: real-estate-dev
       AUTHME_CLIENT_ID: crm-backend
-      AUTHME_CLIENT_SECRET: 43e7e6b59772f7c676920c42bbe8fa65c2213ea8e03926260cd5431a8d427087
+      AUTHME_CLIENT_SECRET: 3d556405eb8c5aed1910239a59d548c195dc7a698f0aaa7b11e84a970eca2d7f
       ADMIN_PORTAL_URL: http://dev-admin.realstate-crm.homes
       AGENT_PORTAL_URL: http://dev-agent.realstate-crm.homes
       UPLOAD_DIR: /app/uploads
@@ -86,7 +86,7 @@ services:
     volumes:
       - uploads-dev:/app/uploads
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
       interval: 15s
       timeout: 10s
       start_period: 30s
