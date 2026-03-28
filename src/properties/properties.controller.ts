@@ -107,12 +107,12 @@ export class PropertiesController {
     return this.propertiesService.changeStatus(id, dto.status);
   }
 
-  @Patch(':id/assign')
+  @Post(':id/assign-agent')
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Assign property to an agent' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
   @ApiResponse({ status: 200, description: 'Agent assigned' })
-  @ApiResponse({ status: 404, description: 'Property not found' })
+  @ApiResponse({ status: 404, description: 'Property or agent not found' })
   assignAgent(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AssignAgentDto) {
     return this.propertiesService.assignAgent(id, dto.agentId);
   }
