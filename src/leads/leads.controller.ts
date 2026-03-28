@@ -90,6 +90,7 @@ export class LeadsController {
     return this.leadsService.findOne(id);
   }
 
+  @Patch(':id')
   @Put(':id')
   @ApiOperation({ summary: 'Update a lead' })
   @ApiParam({ name: 'id', description: 'Lead UUID' })
@@ -123,6 +124,7 @@ export class LeadsController {
     return this.leadsService.changeStatus(id, dto, user.id);
   }
 
+  @Post(':id/assign')
   @Patch(':id/assign')
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Assign lead to an agent (admin/manager only)' })

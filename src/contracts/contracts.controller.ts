@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Post,
   Put,
@@ -76,6 +77,7 @@ export class ContractsController {
     return this.contractsService.findOne(id, user);
   }
 
+  @Patch(':id')
   @Put(':id')
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Update a contract' })
@@ -88,6 +90,20 @@ export class ContractsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.contractsService.update(id, dto, user);
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Delete a contract (admin only, only DRAFT/CANCELLED)' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiResponse({ status: 200, description: 'Contract deleted' })
+  @ApiResponse({ status: 400, description: 'Cannot delete active/completed contracts' })
+  @ApiResponse({ status: 404, description: 'Contract not found' })
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.contractsService.remove(id, user);
   }
 
   @Patch(':id/status')

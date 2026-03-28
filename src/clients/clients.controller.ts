@@ -74,6 +74,7 @@ export class ClientsController {
     return this.clientsService.findOne(id);
   }
 
+  @Patch(':id')
   @Put(':id')
   @ApiOperation({ summary: 'Update a client' })
   @ApiParam({ name: 'id', description: 'Client UUID' })
@@ -94,6 +95,7 @@ export class ClientsController {
     return this.clientsService.remove(id);
   }
 
+  @Post(':id/assign')
   @Patch(':id/assign')
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Assign client to an agent' })
