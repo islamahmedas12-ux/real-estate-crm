@@ -55,17 +55,18 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
    * the user record in the database.
    */
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    if (!payload.sub || !payload.email) {
-      throw new UnauthorizedException('Malformed token: missing sub or email');
+    const email = payload.email ?? payload.preferred_username ?? payload.sub;
+    if (!payload.sub) {
+      throw new UnauthorizedException('Malformed token: missing sub');
     }
 
     const role = this.mapRole(payload.realm_access?.roles ?? []);
 
     const user = await this.authService.syncUser({
       authmeId: payload.sub,
-      email: payload.email,
-      firstName: payload.given_name ?? null,
-      lastName: payload.family_name ?? null,
+      email,
+      firstName: payload.given_name ?? payload.name?.split(' ')[0] ?? null,
+      lastName: payload.family_name ?? payload.name?.split(' ').slice(1).join(' ') ?? null,
       role,
     });
 
