@@ -20,6 +20,11 @@ export class LeadFilterDto extends PaginationDto {
   @IsUUID()
   assignedAgentId?: string;
 
+  @ApiPropertyOptional({ description: 'Filter by lead source', example: 'Website' })
+  @IsOptional()
+  @IsString()
+  source?: string;
+
   @ApiPropertyOptional({ description: 'Filter from date', example: '2026-01-01T00:00:00Z' })
   @IsOptional()
   @Type(() => Date)

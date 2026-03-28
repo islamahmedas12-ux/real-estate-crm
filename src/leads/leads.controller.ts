@@ -133,6 +133,20 @@ export class LeadsController {
     return this.leadsService.assignAgent(id, dto.agentId);
   }
 
+  @Post(':id/convert')
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Convert a WON lead into a Client, returns created client' })
+  @ApiParam({ name: 'id', description: 'Lead UUID' })
+  @ApiResponse({ status: 201, description: 'Client created from lead' })
+  @ApiResponse({ status: 400, description: 'Lead must be in WON status to convert' })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  convert(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.leadsService.convert(id, user.id);
+  }
+
   @Post(':id/activities')
   @ApiOperation({ summary: 'Add an activity to a lead' })
   @ApiParam({ name: 'id', description: 'Lead UUID' })
