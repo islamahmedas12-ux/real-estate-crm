@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -6,6 +8,9 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
+
+// Read version from package.json so Swagger and health endpoint stay in sync.
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8')) as { version: string };
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -62,7 +67,7 @@ async function bootstrap() {
         'Manages properties, clients, leads, contracts, invoices, and agent activities.\n\n' +
         'All protected endpoints require a Bearer token (JWT) from Authme IAM.',
     )
-    .setVersion('1.0.0')
+    .setVersion(pkg.version)
     .setContact('Real Estate CRM', '', '')
     .setLicense('Private', '')
     .addBearerAuth(
