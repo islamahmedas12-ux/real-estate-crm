@@ -11,7 +11,8 @@ import {
   Clock,
 } from 'lucide-react'
 import { Button, LoadingSpinner } from '../../components/ui'
-import { useClientDetail, useClientHistory } from '../../hooks/useClients'
+import { useClientDetail, useClientHistory, useCheckDuplicates } from '../../hooks/useClients'
+import DuplicateWarning from '../../components/clients/DuplicateWarning'
 import { formatDate, formatCurrency } from '../../utils'
 
 const statusColor: Record<string, string> = {
@@ -29,6 +30,12 @@ export default function ClientDetailPage() {
   const navigate = useNavigate()
   const { data: client, isLoading, isError } = useClientDetail(id!)
   const { data: history } = useClientHistory(id!)
+  const { data: duplicates } = useCheckDuplicates({
+    ...(client?.phone ? { phone: client.phone } : {}),
+    ...(client?.email ? { email: client.email } : {}),
+    ...(client?.nationalId ? { nationalId: client.nationalId } : {}),
+    excludeId: id,
+  })
 
   if (isLoading) return <LoadingSpinner message="Loading client..." />
   if (isError || !client) {
@@ -69,6 +76,10 @@ export default function ClientDetailPage() {
           Edit Client
         </Button>
       </div>
+
+      {duplicates?.hasDuplicates && (
+        <DuplicateWarning matches={duplicates.matches} />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Info Card */}

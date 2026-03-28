@@ -41,15 +41,21 @@ class AppConfig {
   // API base URLs per environment
   // ---------------------------------------------------------------------------
 
+  /// Override at build time: --dart-define=API_BASE_URL=https://...
+  static const String _apiOverride =
+      String.fromEnvironment('API_BASE_URL', defaultValue: '');
+
   static const Map<Environment, String> _apiBaseUrls = {
-    Environment.dev: 'http://10.0.2.2:3000', // Android emulator → localhost
+    Environment.dev: 'https://dev-api.realstate-crm.homes', // remote dev API
     Environment.qa: 'https://api.qa.real-estate-crm.example.com',
     Environment.uat: 'https://api.uat.real-estate-crm.example.com',
     Environment.prod: 'https://api.real-estate-crm.example.com',
   };
 
   /// Use this as `baseUrl` in Dio / ApiClient.
-  static String get apiBaseUrl => _apiBaseUrls[environment]!;
+  /// Can be overridden via --dart-define=API_BASE_URL=<url>
+  static String get apiBaseUrl =>
+      _apiOverride.isNotEmpty ? _apiOverride : _apiBaseUrls[environment]!;
 
   // ---------------------------------------------------------------------------
   // Auth (Authme / Keycloak) per environment

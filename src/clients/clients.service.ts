@@ -159,6 +159,53 @@ export class ClientsService {
     };
   }
 
+  async checkDuplicatesPublic(params: {
+    phone?: string;
+    email?: string;
+    nationalId?: string;
+    excludeId?: string;
+  }) {
+    const conditions: Prisma.ClientWhereInput[] = [];
+
+    if (params.phone) conditions.push({ phone: params.phone });
+    if (params.email) conditions.push({ email: params.email });
+    if (params.nationalId) conditions.push({ nationalId: params.nationalId });
+
+    if (conditions.length === 0) {
+      return { hasDuplicates: false, matches: [] };
+    }
+
+    const matches = await this.prisma.client.findMany({
+      where: {
+        OR: conditions,
+        ...(params.excludeId ? { NOT: { id: params.excludeId } } : {}),
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        email: true,
+        nationalId: true,
+      },
+      take: 5,
+    });
+
+    return {
+      hasDuplicates: matches.length > 0,
+      matches: matches.map((m) => ({
+        ...m,
+        matchedOn: [
+          ...(params.phone && m.phone === params.phone ? ['phone' as const] : []),
+          ...(params.email && m.email === params.email ? ['email' as const] : []),
+          ...(params.nationalId && m.nationalId === params.nationalId
+            ? ['nationalId' as const]
+            : []),
+        ],
+      })),
+    };
+  }
+
   private async ensureExists(id: string) {
     const exists = await this.prisma.client.findUnique({
       where: { id },

@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { Button, Input, Select, Textarea, LoadingSpinner } from '../../components/ui'
-import { useClientDetail, useCreateClient, useUpdateClient } from '../../hooks/useClients'
+import { useClientDetail, useCreateClient, useUpdateClient, useCheckDuplicates } from '../../hooks/useClients'
+import DuplicateWarning from '../../components/clients/DuplicateWarning'
+import { useDebounce } from '../../hooks/useDebounce'
 import toast from 'react-hot-toast'
 import type { ClientType, ClientSource, CreateClientPayload } from '../../types/client'
 
@@ -55,6 +57,23 @@ export default function ClientFormPage() {
   const { data: existing, isLoading: loadingExisting } = useClientDetail(id ?? '')
   const createMutation = useCreateClient()
   const updateMutation = useUpdateClient()
+
+  // Duplicate detection with debounce
+  const debouncedPhone = useDebounce(form.phone.trim(), 500)
+  const debouncedEmail = useDebounce(form.email.trim(), 500)
+  const debouncedNationalId = useDebounce(form.nationalId.trim(), 500)
+
+  const dupParams = useMemo(
+    () => ({
+      ...(debouncedPhone && /^\+?[0-9]{10,15}$/.test(debouncedPhone) ? { phone: debouncedPhone } : {}),
+      ...(debouncedEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(debouncedEmail) ? { email: debouncedEmail } : {}),
+      ...(debouncedNationalId ? { nationalId: debouncedNationalId } : {}),
+      ...(isEdit ? { excludeId: id } : {}),
+    }),
+    [debouncedPhone, debouncedEmail, debouncedNationalId, isEdit, id],
+  )
+
+  const { data: duplicates } = useCheckDuplicates(dupParams)
 
   useEffect(() => {
     if (existing && isEdit) {
@@ -143,6 +162,10 @@ export default function ClientFormPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 space-y-5">
+        {duplicates?.hasDuplicates && (
+          <DuplicateWarning matches={duplicates.matches} />
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="First Name"
