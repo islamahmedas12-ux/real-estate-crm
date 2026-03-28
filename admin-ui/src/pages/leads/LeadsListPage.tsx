@@ -43,7 +43,7 @@ const priorityBadge: Record<string, string> = {
   URGENT: 'text-red-600 dark:text-red-400',
 }
 
-export default function LeadsListPage() {
+export default function LeadsListPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate()
   const [filter, setFilter] = useState<LeadFilter>({
     page: 1,
