@@ -19,7 +19,7 @@ async function bootstrap() {
           scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
           styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
           imgSrc: ["'self'", 'data:', 'blob:', 'https://validator.swagger.io'],
-          connectSrc: ["'self'"],
+          connectSrc: ["'self'", 'https://dev-api.realstate-crm.homes'],
           fontSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
         },
       },
@@ -79,6 +79,8 @@ async function bootstrap() {
     .addTag('Property Images', 'Upload and manage property images')
     .addTag('Contract Documents', 'Upload contract documents')
     .addTag('File Serving', 'Serve uploaded files')
+    .addServer('https://dev-api.realstate-crm.homes', 'Dev')
+    .addServer('http://localhost:3000', 'Local')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
