@@ -225,22 +225,16 @@ create_user() {
     
     echo "  Creating user: $email"
     
-    # Create user
+    # Create user (AuthMe uses separate endpoints for user creation, password, and roles)
     USER_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$AUTHME_URL/admin/realms/$REALM_NAME/users" \
       -H "Authorization: Bearer $ADMIN_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{
         "username": "'$email'",
         "email": "'$email'",
-        "emailVerified": true,
         "enabled": true,
         "firstName": "'$first_name'",
-        "lastName": "'$last_name'",
-        "credentials": [{
-            "type": "password",
-            "value": "'$password'",
-            "temporary": false
-        }]
+        "lastName": "'$last_name'"
       }')
     
     HTTP_CODE=$(echo "$USER_RESPONSE" | tail -n 1)

@@ -72,6 +72,7 @@ services:
       # Connect to the standalone postgres-dev container via host network
       DATABASE_URL: postgresql://crm_user:real-estate-dev-password-123@host.docker.internal:5432/real_estate_crm_dev
       AUTHME_URL: http://crm-dev-authme:3001
+      AUTHME_ISSUER_URL: https://dev-auth.realstate-crm.homes
       AUTHME_REALM: real-estate-dev
       AUTHME_CLIENT_ID: crm-backend
       AUTHME_CLIENT_SECRET: 43e7e6b59772f7c676920c42bbe8fa65c2213ea8e03926260cd5431a8d427087
