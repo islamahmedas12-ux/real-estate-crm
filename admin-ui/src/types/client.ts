@@ -84,3 +84,18 @@ export interface ClientStats {
   bySource: Record<ClientSource, number>
   recentCount: number
 }
+
+export interface DuplicateMatch {
+  id: string
+  firstName: string
+  lastName: string
+  phone: string
+  email?: string | null
+  nationalId?: string | null
+  matchedOn: ('phone' | 'email' | 'nationalId')[]
+}
+
+export interface DuplicateCheckResult {
+  hasDuplicates: boolean
+  matches: DuplicateMatch[]
+}

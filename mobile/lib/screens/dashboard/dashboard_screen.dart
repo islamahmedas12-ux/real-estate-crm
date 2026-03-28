@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-import 'package:go_router/go_router.dart';
-
 import '../../models/dashboard_stats.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/notification_provider.dart';
@@ -101,6 +99,7 @@ class _StatsSection extends StatelessWidget {
                   label: 'My Leads',
                   value: stats?.myLeads ?? 0,
                   color: Colors.blue,
+                  route: '/leads',
                 ),
               ),
               const SizedBox(width: 8),
@@ -110,6 +109,7 @@ class _StatsSection extends StatelessWidget {
                   label: 'My Clients',
                   value: stats?.myClients ?? 0,
                   color: Colors.green,
+                  route: '/clients',
                 ),
               ),
             ],
@@ -123,6 +123,7 @@ class _StatsSection extends StatelessWidget {
                   label: 'Properties',
                   value: stats?.myProperties ?? 0,
                   color: Colors.orange,
+                  route: '/properties',
                 ),
               ),
               const SizedBox(width: 8),
@@ -147,12 +148,14 @@ class _StatCard extends StatelessWidget {
   final String label;
   final int value;
   final Color color;
+  final String? route;
 
   const _StatCard({
     required this.icon,
     required this.label,
     required this.value,
     required this.color,
+    this.route,
   });
 
   @override
@@ -161,40 +164,50 @@ class _StatCard extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withAlpha(30),
-                borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: route != null ? () => context.push(route!) : null,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withAlpha(30),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 22),
               ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$value',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$value',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  Text(
-                    label,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    Text(
+                      label,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              if (route != null)
+                Icon(
+                  Icons.chevron_right,
+                  size: 16,
+                  color: theme.colorScheme.onSurfaceVariant.withAlpha(120),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -227,11 +240,9 @@ class _QuickActions extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _ActionButton(
-                  icon: Icons.phone,
-                  label: 'Log Call',
-                  onTap: () {
-                    // TODO: open call log sheet
-                  },
+                  icon: Icons.add_home_work,
+                  label: 'Add Property',
+                  onTap: () => context.push('/properties/new'),
                 ),
               ),
               const SizedBox(width: 8),
@@ -240,6 +251,16 @@ class _QuickActions extends StatelessWidget {
                   icon: Icons.group_add,
                   label: 'Add Client',
                   onTap: () => context.push('/clients/new'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _ActionButton(
+                  icon: Icons.phone,
+                  label: 'Log Call',
+                  onTap: () {
+                    // TODO: open call log sheet
+                  },
                 ),
               ),
             ],

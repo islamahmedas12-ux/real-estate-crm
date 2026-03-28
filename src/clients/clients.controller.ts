@@ -46,6 +46,18 @@ export class ClientsController {
     return this.clientsService.findAll(filter, user.id, isAdminOrManager);
   }
 
+  @Get('check-duplicates')
+  @ApiOperation({ summary: 'Check for duplicate clients by phone, email or nationalId' })
+  @ApiResponse({ status: 200, description: 'Duplicate check result' })
+  checkDuplicates(
+    @Query('phone') phone?: string,
+    @Query('email') email?: string,
+    @Query('nationalId') nationalId?: string,
+    @Query('excludeId') excludeId?: string,
+  ) {
+    return this.clientsService.checkDuplicatesPublic({ phone, email, nationalId, excludeId });
+  }
+
   @Get('stats')
   @ApiOperation({ summary: 'Get client statistics' })
   getStats(@CurrentUser() user: AuthenticatedUser) {

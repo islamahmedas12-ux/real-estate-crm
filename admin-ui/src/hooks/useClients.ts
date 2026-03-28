@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { clientsApi } from '../api/clients'
-import type { ClientFilter, CreateClientPayload, UpdateClientPayload } from '../types/client'
+import type { ClientFilter, CreateClientPayload, UpdateClientPayload, DuplicateCheckResult } from '../types/client'
 
 const KEYS = {
   all: ['clients'] as const,
@@ -66,6 +66,15 @@ export function useUpdateClient() {
       qc.invalidateQueries({ queryKey: KEYS.lists() })
       qc.invalidateQueries({ queryKey: KEYS.detail(id) })
     },
+  })
+}
+
+export function useCheckDuplicates(params: { phone?: string; email?: string; nationalId?: string; excludeId?: string }) {
+  return useQuery<DuplicateCheckResult>({
+    queryKey: [...KEYS.all, 'duplicates', params],
+    queryFn: () => clientsApi.checkDuplicates(params),
+    enabled: !!(params.phone || params.email || params.nationalId),
+    staleTime: 10_000,
   })
 }
 

@@ -103,6 +103,15 @@ export class DashboardController {
     return this.dashboardService.getAgentFollowUps(user.id);
   }
 
+  // ─── Mobile Dashboard (combined endpoint) ──────────────────────────
+
+  @Get()
+  @ApiOperation({ summary: 'Mobile dashboard — combined stats, follow-ups, recent activity' })
+  @ApiResponse({ status: 200, description: 'Combined dashboard payload for mobile' })
+  getMobileDashboard(@CurrentUser() user: AuthenticatedUser) {
+    return this.dashboardService.getMobileDashboard(user.id);
+  }
+
   @Get('agent/performance')
   @Roles('admin', 'manager', 'agent')
   @ApiOperation({ summary: 'Agent performance — this month vs last month' })
