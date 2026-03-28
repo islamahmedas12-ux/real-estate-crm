@@ -97,8 +97,7 @@ export default function ClientsListPage() {
     toast.success(`Exported ${rows.length} clients`)
   }, [data?.data])
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const toggleSelect = useCallback((id: string) => {
+  const handleRowClick = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
@@ -388,7 +387,7 @@ export default function ClientsListPage() {
         total={data?.total}
         onPageChange={(p) => setFilter((f) => ({ ...f, page: p }))}
         onPageSizeChange={(ps) => setFilter((f) => ({ ...f, pageSize: ps, page: 1 }))}
-        onRowClick={(row) => navigate(`/clients/${String(row.id)}`)}
+        onRowClick={(row) => { handleRowClick(String(row.id)); navigate(`/clients/${String(row.id)}`); }}
         emptyMessage="No clients found. Try adjusting your search or filters."
       />
 
