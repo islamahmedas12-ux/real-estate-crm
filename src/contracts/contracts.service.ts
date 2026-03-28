@@ -201,6 +201,7 @@ export class ContractsService {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async remove(id: string, _user: AuthenticatedUser) {
     const contract = await this.prisma.contract.findUnique({ where: { id } });
     if (!contract) {
