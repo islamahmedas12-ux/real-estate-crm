@@ -27,9 +27,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   ) {
     const authmeUrl = configService.getOrThrow<string>('AUTHME_URL');
     const realm = configService.getOrThrow<string>('AUTHME_REALM');
+    // AUTHME_ISSUER_URL overrides the base URL used for JWT issuer validation.
+    // This is needed when the internal AUTHME_URL (e.g. http://authme:3001) differs
+    // from the public URL that Keycloak stamps into tokens (e.g. https://dev-auth.realstate-crm.homes).
+    const issuerBaseUrl = configService.get<string>('AUTHME_ISSUER_URL') ?? authmeUrl;
 
     const jwksUri = `${authmeUrl}/realms/${realm}/protocol/openid-connect/certs`;
-    const issuer = `${authmeUrl}/realms/${realm}`;
+    const issuer = `${issuerBaseUrl}/realms/${realm}`;
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
