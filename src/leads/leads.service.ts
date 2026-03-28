@@ -183,6 +183,48 @@ export class LeadsService {
     });
   }
 
+  async convert(id: string, performedBy: string) {
+    const lead = await this.prisma.lead.findUnique({
+      where: { id },
+      include: { client: true },
+    });
+
+    if (!lead) {
+      throw new NotFoundException(`Lead with ID "${id}" not found`);
+    }
+
+    if (lead.status !== LeadStatus.WON) {
+      throw new BadRequestException(
+        `Lead must be in WON status to convert (current: ${lead.status})`,
+      );
+    }
+
+    // The lead already references a client, so we return that client
+    // and log the conversion activity
+    await this.prisma.leadActivity.create({
+      data: {
+        leadId: id,
+        type: LeadActivityType.STATUS_CHANGE,
+        description: `Lead converted to client. Client: ${lead.client.firstName} ${lead.client.lastName}`,
+        performedBy,
+      },
+    });
+
+    // Also log in the global activity table
+    await this.prisma.activity.create({
+      data: {
+        type: 'CONVERT',
+        description: `Lead converted to client: ${lead.client.firstName} ${lead.client.lastName}`,
+        entityType: 'LEAD',
+        entityId: id,
+        performedBy,
+        metadata: { clientId: lead.clientId },
+      },
+    });
+
+    return lead.client;
+  }
+
   async addActivity(leadId: string, dto: CreateLeadActivityDto, performedBy: string) {
     await this.ensureExists(leadId);
 
@@ -316,6 +358,7 @@ export class LeadsService {
     if (filter.status) where.status = filter.status;
     if (filter.priority) where.priority = filter.priority;
     if (filter.assignedAgentId) where.assignedAgentId = filter.assignedAgentId;
+    if (filter.source) where.source = { contains: filter.source, mode: 'insensitive' };
 
     if (filter.dateFrom || filter.dateTo) {
       where.createdAt = {

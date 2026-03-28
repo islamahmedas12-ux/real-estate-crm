@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../models/lead.dart';
 import '../../providers/lead_provider.dart';
+import '../../services/leads_service.dart';
 import '../../widgets/lead_status_badge.dart';
 
 class LeadsListScreen extends ConsumerStatefulWidget {
@@ -150,7 +151,7 @@ class _LeadsListScreenState extends ConsumerState<LeadsListScreen> {
                 ),
               );
             }
-            return _LeadListTile(lead: state.leads[index]);
+            return _SwipeableLeadTile(lead: state.leads[index]);
           },
         ),
       ),
@@ -210,6 +211,7 @@ class _SwipeableLeadTile extends ConsumerWidget {
 
   const _SwipeableLeadTile({required this.lead});
 
+  /// Get the next stage when swiping right (forward in pipeline)
   LeadStatus? _nextStage(LeadStatus current) {
     const pipeline = [
       LeadStatus.newLead,
@@ -224,6 +226,7 @@ class _SwipeableLeadTile extends ConsumerWidget {
     return pipeline[idx + 1];
   }
 
+  /// Get the previous stage when swiping left (backward in pipeline)
   LeadStatus? _prevStage(LeadStatus current) {
     const pipeline = [
       LeadStatus.newLead,
@@ -243,6 +246,7 @@ class _SwipeableLeadTile extends ConsumerWidget {
     final next = _nextStage(lead.status);
     final prev = _prevStage(lead.status);
 
+    // If lead is won/lost, no swiping
     if (lead.status == LeadStatus.lost) {
       return _LeadListTile(lead: lead);
     }
@@ -250,7 +254,9 @@ class _SwipeableLeadTile extends ConsumerWidget {
     return Dismissible(
       key: ValueKey('swipe-${lead.id}'),
       confirmDismiss: (direction) async {
-        final targetStatus = direction == DismissDirection.startToEnd ? next : prev;
+        final targetStatus = direction == DismissDirection.startToEnd
+            ? next
+            : prev;
         if (targetStatus == null) return false;
 
         try {
@@ -278,7 +284,7 @@ class _SwipeableLeadTile extends ConsumerWidget {
             );
           }
         }
-        return false;
+        return false; // Don't actually remove the item
       },
       background: next != null
           ? Container(
@@ -290,8 +296,13 @@ class _SwipeableLeadTile extends ConsumerWidget {
                 children: [
                   const Icon(Icons.arrow_forward, color: Colors.white),
                   const SizedBox(width: 8),
-                  Text(next.label,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text(
+                    next.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             )
@@ -304,8 +315,13 @@ class _SwipeableLeadTile extends ConsumerWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(prev.label,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text(
+                    prev.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   const Icon(Icons.arrow_back, color: Colors.white),
                 ],
