@@ -23,7 +23,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=admin-deps /app/admin-ui/node_modules ./admin-ui/node_modules
 COPY --from=agent-deps /app/agent-ui/node_modules ./agent-ui/node_modules
 COPY . .
-# Build UIs
+# Build UIs (Vite picks up .env.production files automatically)
 RUN cd admin-ui && npm run build
 RUN cd agent-ui && npm run build
 # Generate Prisma client and build NestJS
