@@ -70,6 +70,7 @@ export default function LeadDetailPage() {
   const { data: activitiesData } = useLeadActivities(id!)
   const addActivity = useAddLeadActivity()
   const changeStatus = useChangeLeadStatus()
+  const convertLead = useConvertLead()
 
   const [showActivityForm, setShowActivityForm] = useState(false)
   const [activityType, setActivityType] = useState<LeadActivityType>('NOTE')
@@ -143,9 +144,28 @@ export default function LeadDetailPage() {
             </div>
           </div>
         </div>
-        <Button leftIcon={<Edit size={16} />} onClick={() => navigate(`/leads/${id}/edit`)}>
-          Edit Lead
-        </Button>
+        <div className="flex items-center gap-2">
+          {lead.status === 'WON' && (
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                try {
+                  const result = await convertLead.mutateAsync(id!)
+                  toast.success('Lead converted to contract!')
+                  navigate(`/contracts/${result.contractId}`)
+                } catch {
+                  toast.error('Failed to convert lead')
+                }
+              }}
+              loading={convertLead.isPending}
+            >
+              Convert to Contract
+            </Button>
+          )}
+          <Button leftIcon={<Edit size={16} />} onClick={() => navigate(`/leads/${id}/edit`)}>
+            Edit Lead
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

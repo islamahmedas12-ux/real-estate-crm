@@ -219,7 +219,8 @@ export class ContractsService {
 
     // Validate status transitions
     const validTransitions: Record<string, ContractStatus[]> = {
-      DRAFT: [ContractStatus.ACTIVE, ContractStatus.CANCELLED],
+      DRAFT: [ContractStatus.PENDING, ContractStatus.CANCELLED],
+      PENDING: [ContractStatus.ACTIVE, ContractStatus.CANCELLED],
       ACTIVE: [ContractStatus.COMPLETED, ContractStatus.CANCELLED, ContractStatus.EXPIRED],
       COMPLETED: [],
       CANCELLED: [],

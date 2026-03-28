@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../models/lead.dart';
 import '../../providers/lead_provider.dart';
+import '../../services/leads_service.dart';
 import '../../widgets/lead_status_badge.dart';
 
 class LeadsListScreen extends ConsumerStatefulWidget {
@@ -150,7 +151,7 @@ class _LeadsListScreenState extends ConsumerState<LeadsListScreen> {
                 ),
               );
             }
-            return _LeadListTile(lead: state.leads[index]);
+            return _SwipeableLeadTile(lead: state.leads[index]);
           },
         ),
       ),
