@@ -309,13 +309,23 @@ export default function ContractDetailPage() {
                   </span>
                   <ExternalLink size={14} className="text-gray-400 shrink-0" />
                 </a>
-                <button
-                  onClick={() => navigate(`/contracts/${id}/edit`)}
-                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                >
-                  <Upload size={12} />
-                  Update document URL
-                </button>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={contract.documentUrl}
+                    download
+                    className="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                  >
+                    <Download size={12} />
+                    Download
+                  </a>
+                  <button
+                    onClick={() => navigate(`/contracts/${id}/edit`)}
+                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    <Upload size={12} />
+                    Replace
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 py-4 text-center">
@@ -325,7 +335,7 @@ export default function ContractDetailPage() {
                   onClick={() => navigate(`/contracts/${id}/edit`)}
                   className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
                 >
-                  Add document URL
+                  Upload document
                 </button>
               </div>
             )}
