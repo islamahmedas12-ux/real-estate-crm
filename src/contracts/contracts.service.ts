@@ -201,7 +201,7 @@ export class ContractsService {
     });
   }
 
-  async remove(id: string, _user: AuthenticatedUser) {
+  async remove(id: string, user: AuthenticatedUser) {
     const contract = await this.prisma.contract.findUnique({ where: { id } });
     if (!contract) {
       throw new NotFoundException(`Contract ${id} not found`);
