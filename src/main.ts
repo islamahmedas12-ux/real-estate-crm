@@ -10,7 +10,7 @@ import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
 
 // Read version from package.json so Swagger and health endpoint stay in sync.
-const pkg = JSON.parse(readFileSync(join(import.meta.dirname ?? '.', '..', 'package.json'), 'utf-8')) as { version: string };
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8')) as { version: string };
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
