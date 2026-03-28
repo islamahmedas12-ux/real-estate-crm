@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../../models/lead.dart';
 import '../../providers/lead_provider.dart';
+import '../../services/leads_service.dart';
 import '../../widgets/lead_status_badge.dart';
 
 class LeadsListScreen extends ConsumerStatefulWidget {
@@ -150,7 +151,7 @@ class _LeadsListScreenState extends ConsumerState<LeadsListScreen> {
                 ),
               );
             }
-            return _LeadListTile(lead: state.leads[index]);
+            return _SwipeableLeadTile(lead: state.leads[index]);
           },
         ),
       ),
@@ -201,6 +202,133 @@ class _StatusFilterBar extends StatelessWidget {
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: VisualDensity.compact,
       ),
+    );
+  }
+}
+
+class _SwipeableLeadTile extends ConsumerWidget {
+  final Lead lead;
+
+  const _SwipeableLeadTile({required this.lead});
+
+  /// Get the next stage when swiping right (forward in pipeline)
+  LeadStatus? _nextStage(LeadStatus current) {
+    const pipeline = [
+      LeadStatus.newLead,
+      LeadStatus.contacted,
+      LeadStatus.qualified,
+      LeadStatus.proposal,
+      LeadStatus.negotiation,
+      LeadStatus.won,
+    ];
+    final idx = pipeline.indexOf(current);
+    if (idx < 0 || idx >= pipeline.length - 1) return null;
+    return pipeline[idx + 1];
+  }
+
+  /// Get the previous stage when swiping left (backward in pipeline)
+  LeadStatus? _prevStage(LeadStatus current) {
+    const pipeline = [
+      LeadStatus.newLead,
+      LeadStatus.contacted,
+      LeadStatus.qualified,
+      LeadStatus.proposal,
+      LeadStatus.negotiation,
+      LeadStatus.won,
+    ];
+    final idx = pipeline.indexOf(current);
+    if (idx <= 0) return null;
+    return pipeline[idx - 1];
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final next = _nextStage(lead.status);
+    final prev = _prevStage(lead.status);
+
+    // If lead is won/lost, no swiping
+    if (lead.status == LeadStatus.lost) {
+      return _LeadListTile(lead: lead);
+    }
+
+    return Dismissible(
+      key: ValueKey('swipe-${lead.id}'),
+      confirmDismiss: (direction) async {
+        final targetStatus = direction == DismissDirection.startToEnd
+            ? next
+            : prev;
+        if (targetStatus == null) return false;
+
+        try {
+          final service = ref.read(leadsServiceProvider);
+          await service.changeStatus(lead.id, targetStatus.value);
+          ref.read(leadListProvider.notifier).loadLeads();
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Moved to ${targetStatus.label}'),
+                action: SnackBarAction(
+                  label: 'Undo',
+                  onPressed: () async {
+                    await service.changeStatus(lead.id, lead.status.value);
+                    ref.read(leadListProvider.notifier).loadLeads();
+                  },
+                ),
+              ),
+            );
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to change stage: $e')),
+            );
+          }
+        }
+        return false; // Don't actually remove the item
+      },
+      background: next != null
+          ? Container(
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 20),
+              color: Colors.green.shade400,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.arrow_forward, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Text(
+                    next.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
+      secondaryBackground: prev != null
+          ? Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              color: Colors.orange.shade400,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    prev.label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_back, color: Colors.white),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
+      child: _LeadListTile(lead: lead),
     );
   }
 }
