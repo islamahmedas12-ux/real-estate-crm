@@ -1,0 +1,101 @@
+# ==============================================================================
+# Real Estate CRM — QA Server Deployment (uses pre-built GHCR image)
+# ==============================================================================
+#
+# Used by CD pipeline to deploy to QA server (34.24.201.183)
+# Mirrors docker-compose.dev-server.yml but for QA environment.
+#
+# Usage on server:
+#   export APP_IMAGE=ghcr.io/islamahmedas12-ux/real-estate-crm:qa
+#   docker-compose -f docker-compose.qa-server.yml up -d
+# ==============================================================================
+
+services:
+  # NOTE: CRM PostgreSQL QA is the standalone `postgres-qa` container on port 5433
+  # App connects via host.docker.internal:5433 (no separate db service here)
+
+  # ── AuthMe PostgreSQL (QA) ─────────────────────────────────────────────────
+  authme-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    container_name: crm-qa-authme-db
+    environment:
+      POSTGRES_USER: authme
+      POSTGRES_PASSWORD: authme
+      POSTGRES_DB: authme_qa
+    volumes:
+      - authme-pgdata-qa:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authme"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - crm-dev-network
+
+  # ── AuthMe IAM (QA) ────────────────────────────────────────────────────────
+  authme:
+    image: islamawad/authme
+    restart: unless-stopped
+    container_name: crm-qa-authme
+    environment:
+      DATABASE_URL: postgresql://authme:authme@crm-qa-authme-db:5432/authme_qa
+      PORT: "3001"
+      BASE_URL: http://qa-auth.realstate-crm.homes
+      WEBHOOK_SECRET_KEY: qa-webhook-secret-6cc4fb3d383e0e3682dc013ffa533f1322c7cdea
+      WEBHOOK_ENCRYPTION_SALT: qa-encryption-salt-a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4
+    depends_on:
+      authme-db:
+        condition: service_healthy
+    networks:
+      - crm-dev-network
+
+  # ── NestJS Backend (QA — pre-built image from GHCR) ────────────────────────
+  app:
+    image: ${APP_IMAGE:-ghcr.io/islamahmedas12-ux/real-estate-crm:qa}
+    restart: unless-stopped
+    container_name: crm-qa-app
+    environment:
+      NODE_ENV: qa
+      PORT: "3000"
+      DATABASE_URL: postgresql://crm_user:real-estate-qa-password-123@host.docker.internal:5433/real_estate_crm_qa
+      AUTHME_URL: http://crm-qa-authme:3001
+      AUTHME_REALM: real-estate-qa
+      AUTHME_CLIENT_ID: crm-backend
+      AUTHME_CLIENT_SECRET: qa-secret
+      ADMIN_PORTAL_URL: http://qa-admin.realstate-crm.homes
+      AGENT_PORTAL_URL: http://qa-agent.realstate-crm.homes
+      UPLOAD_DIR: /app/uploads
+      JWT_SECRET: qa-jwt-secret-change-in-prod
+      REDIS_URL: redis://crm-qa-redis:6379
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - uploads-qa:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+    networks:
+      - crm-dev-network
+
+  # ── Redis (QA — for queue) ─────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    container_name: crm-qa-redis
+    networks:
+      - crm-dev-network
+
+volumes:
+  authme-pgdata-qa:
+    driver: local
+  uploads-qa:
+    driver: local
+
+networks:
+  crm-dev-network:
+    external: true
+    name: real-estate-crm_crm-dev-network
