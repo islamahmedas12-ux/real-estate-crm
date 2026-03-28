@@ -5,7 +5,6 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
-  Patch,
   Post,
   Put,
   Query,
@@ -82,12 +81,12 @@ export class ClientsController {
     return this.clientsService.remove(id);
   }
 
-  @Patch(':id/assign')
+  @Post(':id/assign-agent')
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Assign client to an agent' })
   @ApiParam({ name: 'id', description: 'Client UUID' })
   @ApiResponse({ status: 200, description: 'Agent assigned' })
-  @ApiResponse({ status: 404, description: 'Client not found' })
+  @ApiResponse({ status: 404, description: 'Client or agent not found' })
   assignAgent(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AssignAgentDto) {
     return this.clientsService.assignAgent(id, dto.agentId);
   }

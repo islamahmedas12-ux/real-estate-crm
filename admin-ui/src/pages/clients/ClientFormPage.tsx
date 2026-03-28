@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { Button, Input, Select, Textarea, LoadingSpinner } from '../../components/ui'
-import { useClientDetail, useCreateClient, useUpdateClient } from '../../hooks/useClients'
+import { useClientDetail, useCreateClient, useUpdateClient, useCheckDuplicates } from '../../hooks/useClients'
+import DuplicateWarning from '../../components/clients/DuplicateWarning'
+import { useDebounce } from '../../hooks/useDebounce'
 import toast from 'react-hot-toast'
 import type { ClientType, ClientSource, CreateClientPayload } from '../../types/client'
 
