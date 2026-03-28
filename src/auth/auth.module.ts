@@ -31,12 +31,13 @@ import { RolesGuard } from './guards/roles.guard.js';
       useFactory: (config: ConfigService) => {
         const authmeUrl = config.getOrThrow<string>('AUTHME_URL');
         const realm = config.getOrThrow<string>('AUTHME_REALM');
+        const issuerBaseUrl = config.get<string>('AUTHME_ISSUER_URL') ?? authmeUrl;
         return {
           // The actual signing key is resolved via JWKS in the strategy.
           // We still configure the module so that @nestjs/jwt utilities work
           // when needed elsewhere (e.g., token introspection helpers).
           verifyOptions: {
-            issuer: `${authmeUrl}/realms/${realm}`,
+            issuer: `${issuerBaseUrl}/realms/${realm}`,
             algorithms: ['RS256'],
           },
         };
