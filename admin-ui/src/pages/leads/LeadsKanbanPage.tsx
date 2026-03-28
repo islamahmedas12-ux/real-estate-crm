@@ -11,6 +11,7 @@ const PIPELINE_STAGES: { status: LeadStatus; label: string; color: string; bg: s
   { status: 'NEW', label: 'New', color: 'border-gray-300 dark:border-gray-600', bg: 'bg-gray-50 dark:bg-gray-800/50' },
   { status: 'CONTACTED', label: 'Contacted', color: 'border-blue-300 dark:border-blue-700', bg: 'bg-blue-50/50 dark:bg-blue-900/10' },
   { status: 'QUALIFIED', label: 'Qualified', color: 'border-indigo-300 dark:border-indigo-700', bg: 'bg-indigo-50/50 dark:bg-indigo-900/10' },
+  { status: 'PROPOSAL', label: 'Proposal', color: 'border-purple-300 dark:border-purple-700', bg: 'bg-purple-50/50 dark:bg-purple-900/10' },
   { status: 'NEGOTIATION', label: 'Negotiation', color: 'border-amber-300 dark:border-amber-700', bg: 'bg-amber-50/50 dark:bg-amber-900/10' },
   { status: 'WON', label: 'Won', color: 'border-green-300 dark:border-green-700', bg: 'bg-green-50/50 dark:bg-green-900/10' },
   { status: 'LOST', label: 'Lost', color: 'border-red-300 dark:border-red-700', bg: 'bg-red-50/50 dark:bg-red-900/10' },
@@ -23,7 +24,7 @@ const priorityDot: Record<string, string> = {
   URGENT: 'bg-red-500',
 }
 
-export default function LeadsKanbanPage() {
+export default function LeadsKanbanPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate()
   const { data: pipeline, isLoading } = useLeadPipeline()
   const changeStatus = useChangeLeadStatus()
@@ -70,26 +71,28 @@ export default function LeadsKanbanPage() {
 
   return (
     <div className="flex flex-col gap-6 h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <UserCheck size={24} className="text-indigo-500" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Lead Pipeline</h1>
+      {/* Header — hidden when embedded */}
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <UserCheck size={24} className="text-indigo-500" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Lead Pipeline</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<List size={16} />}
+              onClick={() => navigate('/leads')}
+            >
+              List View
+            </Button>
+            <Button leftIcon={<Plus size={16} />} onClick={() => navigate('/leads/new')}>
+              Add Lead
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            leftIcon={<List size={16} />}
-            onClick={() => navigate('/leads')}
-          >
-            List View
-          </Button>
-          <Button leftIcon={<Plus size={16} />} onClick={() => navigate('/leads/new')}>
-            Add Lead
-          </Button>
-        </div>
-      </div>
+      )}
 
       {/* Kanban Board */}
       <div className="flex gap-4 overflow-x-auto pb-4 min-h-[500px]">
