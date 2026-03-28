@@ -32,14 +32,24 @@ async function bootstrap() {
     }),
   );
 
-  // CORS — allow both Admin and Agent portals
+  // CORS — allow Admin and Agent portals for all environments
+  const defaultOrigins = [
+    'https://dev-admin.realstate-crm.homes',
+    'https://dev-agent.realstate-crm.homes',
+    'https://qa-admin.realstate-crm.homes',
+    'https://qa-agent.realstate-crm.homes',
+    'https://uat-admin.realstate-crm.homes',
+    'https://uat-agent.realstate-crm.homes',
+    'https://admin.realstate-crm.homes',
+    'https://agent.realstate-crm.homes',
+    'http://localhost:5173',
+    'http://localhost:5174',
+  ];
+  const corsOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+    : defaultOrigins;
   app.enableCors({
-    origin: [
-      'https://dev-admin.realstate-crm.homes',
-      'https://dev-agent.realstate-crm.homes',
-      'http://localhost:5173',
-      'http://localhost:5174',
-    ],
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

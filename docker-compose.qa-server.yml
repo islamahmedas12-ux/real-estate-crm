@@ -63,6 +63,7 @@ services:
       UPLOAD_DIR: /app/uploads
       JWT_SECRET: qa-jwt-secret-unique-value
       REDIS_URL: redis://crm-qa-redis:6379
+      CORS_ORIGINS: https://qa-admin.realstate-crm.homes,https://qa-agent.realstate-crm.homes
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
