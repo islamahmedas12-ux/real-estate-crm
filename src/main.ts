@@ -27,12 +27,15 @@ async function bootstrap() {
   );
 
   // CORS — allow both Admin and Agent portals
-  const adminPortalUrl = process.env['ADMIN_PORTAL_URL'] ?? 'http://localhost:5173';
-  const agentPortalUrl = process.env['AGENT_PORTAL_URL'] ?? 'http://localhost:5174';
   app.enableCors({
-    origin: [adminPortalUrl, agentPortalUrl],
+    origin: [
+      'https://dev-admin.realstate-crm.homes',
+      'https://dev-agent.realstate-crm.homes',
+      'http://localhost:5173',
+      'http://localhost:5174',
+    ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
