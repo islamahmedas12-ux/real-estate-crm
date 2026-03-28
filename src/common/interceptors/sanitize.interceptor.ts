@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 @Injectable()
 export class SanitizeInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const request = context.switchToHttp().getRequest() as { body?: unknown };
+    const request: { body?: unknown } = context.switchToHttp().getRequest();
     if (request.body && typeof request.body === 'object') {
       request.body = this.sanitize(request.body);
     }
