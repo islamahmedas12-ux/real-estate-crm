@@ -358,7 +358,7 @@ export default function ContractDetailPage() {
                   onClick={() => navigate(`/contracts/${id}/edit`)}
                   className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
                 >
-                  Add document URL
+                  Upload document
                 </button>
               </div>
             )}

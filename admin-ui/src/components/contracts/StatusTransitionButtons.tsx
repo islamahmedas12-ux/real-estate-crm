@@ -2,6 +2,7 @@ import { ArrowRight, Ban, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { Button } from '../ui'
 import type { ContractStatus } from '../../types/contract'
 
+// Define valid status transitions
 const VALID_TRANSITIONS: Record<ContractStatus, ContractStatus[]> = {
   DRAFT: ['ACTIVE', 'CANCELLED'],
   ACTIVE: ['COMPLETED', 'CANCELLED', 'EXPIRED'],
