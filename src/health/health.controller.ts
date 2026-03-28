@@ -1,7 +1,11 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+
+const pkg = JSON.parse(readFileSync(join(import.meta.dirname ?? '.', '..', 'package.json'), 'utf-8')) as { version: string };
 
 interface HealthResponse {
   status: 'ok' | 'degraded';
@@ -37,7 +41,7 @@ export class HealthController {
       timestamp: new Date().toISOString(),
       uptime: (Date.now() - this.startTime) / 1000,
       database: dbStatus,
-      version: process.env['npm_package_version'] ?? '0.0.1',
+      version: pkg.version,
     };
   }
 
