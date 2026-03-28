@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
+import { SanitizeNotFoundFilter } from './common/filters/sanitize-not-found.filter.js';
 
 // Read version from package.json so Swagger and health endpoint stay in sync.
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf-8')) as { version: string };
@@ -56,8 +57,8 @@ async function bootstrap() {
     }),
   );
 
-  // Global exception filter
-  app.useGlobalFilters(new HttpExceptionFilter());
+  // Global exception filters
+  app.useGlobalFilters(new SanitizeNotFoundFilter(), new HttpExceptionFilter());
 
   // Swagger / OpenAPI at /api/docs
   const config = new DocumentBuilder()
@@ -84,6 +85,10 @@ async function bootstrap() {
     .addTag('Property Images', 'Upload and manage property images')
     .addTag('Contract Documents', 'Upload contract documents')
     .addTag('File Serving', 'Serve uploaded files')
+    .addTag('Health', 'Health check endpoints')
+    .addTag('Dashboard', 'Dashboard and analytics')
+    .addTag('Email', 'Email service')
+    .addTag('Uploads', 'File uploads')
     .addServer('https://dev-api.realstate-crm.homes', 'Dev')
     .addServer('http://localhost:3000', 'Local')
     .build();

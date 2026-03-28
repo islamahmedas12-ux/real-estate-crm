@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Param,
   ParseEnumPipe,
@@ -70,7 +71,7 @@ export class ActivitiesController {
     return this.activitiesService.findByUser(userId, filter);
   }
 
-  @Get('purge/:days')
+  @Delete('purge/:days')
   @Roles('admin')
   @ApiOperation({ summary: 'Purge activities older than N days (admin only)' })
   @ApiParam({
