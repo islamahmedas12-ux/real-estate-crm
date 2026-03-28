@@ -201,17 +201,14 @@ export class ContractsService {
     });
   }
 
-  async remove(id: string, user: AuthenticatedUser) {
+  async remove(id: string, _user: AuthenticatedUser) {
     const contract = await this.prisma.contract.findUnique({ where: { id } });
     if (!contract) {
       throw new NotFoundException(`Contract ${id} not found`);
     }
 
     // Only allow deletion of DRAFT or CANCELLED contracts
-    if (
-      contract.status !== ContractStatus.DRAFT &&
-      contract.status !== ContractStatus.CANCELLED
-    ) {
+    if (contract.status !== ContractStatus.DRAFT && contract.status !== ContractStatus.CANCELLED) {
       throw new BadRequestException(
         `Cannot delete contract in ${contract.status} status. Only DRAFT or CANCELLED contracts can be deleted.`,
       );

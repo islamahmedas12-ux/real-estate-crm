@@ -99,10 +99,7 @@ export class ContractsController {
   @ApiResponse({ status: 200, description: 'Contract deleted' })
   @ApiResponse({ status: 400, description: 'Cannot delete active/completed contracts' })
   @ApiResponse({ status: 404, description: 'Contract not found' })
-  remove(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.contractsService.remove(id, user);
   }
 

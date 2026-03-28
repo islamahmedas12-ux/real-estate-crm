@@ -12,7 +12,9 @@ import { SanitizeNotFoundFilter } from './common/filters/sanitize-not-found.filt
 import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor.js';
 
 // Read version from package.json so Swagger and health endpoint stay in sync.
-const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8')) as { version: string };
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8')) as {
+  version: string;
+};
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -23,7 +25,13 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            'https://unpkg.com',
+            'https://cdn.jsdelivr.net',
+          ],
           styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
           imgSrc: ["'self'", 'data:', 'blob:', 'https://validator.swagger.io'],
           connectSrc: ["'self'", 'https://dev-api.realstate-crm.homes'],

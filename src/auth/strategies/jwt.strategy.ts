@@ -86,12 +86,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
    * Priority (highest first): admin → manager → agent → AGENT (default)
    */
   private mapRole(realmRoles: string[]): UserRole {
-    if (realmRoles.includes('crm-admin') || realmRoles.includes('admin'))
-      return UserRole.ADMIN;
+    if (realmRoles.includes('crm-admin') || realmRoles.includes('admin')) return UserRole.ADMIN;
     if (realmRoles.includes('crm-manager') || realmRoles.includes('manager'))
       return UserRole.MANAGER;
-    if (realmRoles.includes('crm-agent') || realmRoles.includes('agent'))
-      return UserRole.AGENT;
+    if (realmRoles.includes('crm-agent') || realmRoles.includes('agent')) return UserRole.AGENT;
     // Default to AGENT so any authenticated user can access the system
     return UserRole.AGENT;
   }

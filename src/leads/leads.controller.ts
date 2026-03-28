@@ -142,10 +142,7 @@ export class LeadsController {
   @ApiResponse({ status: 201, description: 'Client created from lead' })
   @ApiResponse({ status: 400, description: 'Lead must be in WON status to convert' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
-  convert(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  convert(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.leadsService.convert(id, user.id);
   }
 

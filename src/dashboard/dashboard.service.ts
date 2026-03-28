@@ -494,50 +494,42 @@ export class DashboardService {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const [
-      myLeads,
-      myClients,
-      myProperties,
-      pendingFollowUps,
-      todayFollowUps,
-      recentActivities,
-    ] = await Promise.all([
-      this.prisma.lead.count({ where: { assignedAgentId: agentId } }),
-      this.prisma.client.count({ where: { assignedAgentId: agentId } }),
-      this.prisma.property.count({ where: { assignedAgentId: agentId } }),
-      this.prisma.lead.count({
-        where: {
-          assignedAgentId: agentId,
-          nextFollowUp: { lte: tomorrow },
-          status: { notIn: [LeadStatus.WON, LeadStatus.LOST] },
-        },
-      }),
-      this.prisma.lead.findMany({
-        where: {
-          assignedAgentId: agentId,
-          nextFollowUp: { gte: today, lt: tomorrow },
-        },
-        include: {
-          client: { select: { firstName: true, lastName: true } },
-          property: { select: { title: true } },
-        },
-        orderBy: { nextFollowUp: 'asc' },
-        take: 20,
-      }),
-      this.prisma.leadActivity.findMany({
-        where: { lead: { assignedAgentId: agentId } },
-        orderBy: { createdAt: 'desc' },
-        take: 15,
-      }),
-    ]);
+    const [myLeads, myClients, myProperties, pendingFollowUps, todayFollowUps, recentActivities] =
+      await Promise.all([
+        this.prisma.lead.count({ where: { assignedAgentId: agentId } }),
+        this.prisma.client.count({ where: { assignedAgentId: agentId } }),
+        this.prisma.property.count({ where: { assignedAgentId: agentId } }),
+        this.prisma.lead.count({
+          where: {
+            assignedAgentId: agentId,
+            nextFollowUp: { lte: tomorrow },
+            status: { notIn: [LeadStatus.WON, LeadStatus.LOST] },
+          },
+        }),
+        this.prisma.lead.findMany({
+          where: {
+            assignedAgentId: agentId,
+            nextFollowUp: { gte: today, lt: tomorrow },
+          },
+          include: {
+            client: { select: { firstName: true, lastName: true } },
+            property: { select: { title: true } },
+          },
+          orderBy: { nextFollowUp: 'asc' },
+          take: 20,
+        }),
+        this.prisma.leadActivity.findMany({
+          where: { lead: { assignedAgentId: agentId } },
+          orderBy: { createdAt: 'desc' },
+          take: 15,
+        }),
+      ]);
 
     return {
       stats: { myLeads, myClients, myProperties, pendingFollowUps },
       todayFollowUps: todayFollowUps.map((fu) => ({
         id: fu.id,
-        clientName: fu.client
-          ? `${fu.client.firstName} ${fu.client.lastName}`
-          : 'Unknown',
+        clientName: fu.client ? `${fu.client.firstName} ${fu.client.lastName}` : 'Unknown',
         propertyTitle: fu.property?.title ?? null,
         leadStatus: fu.status,
         scheduledAt: fu.nextFollowUp?.toISOString() ?? today.toISOString(),
