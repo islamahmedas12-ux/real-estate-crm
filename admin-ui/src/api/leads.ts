@@ -71,4 +71,10 @@ export const leadsApi = {
       })
       .then((r) => r.data)
   },
+
+  convert(id: string) {
+    return apiClient
+      .post<{ contractId: string }>(`${BASE}/${id}/convert`)
+      .then((r) => r.data)
+  },
 }

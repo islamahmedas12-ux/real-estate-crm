@@ -112,6 +112,19 @@ export function useChangeLeadStatus() {
   })
 }
 
+export function useConvertLead() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => leadsApi.convert(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEYS.lists() })
+      qc.invalidateQueries({ queryKey: KEYS.pipeline() })
+      qc.invalidateQueries({ queryKey: KEYS.stats() })
+      qc.invalidateQueries({ queryKey: ['contracts'] })
+    },
+  })
+}
+
 export function useAddLeadActivity() {
   const qc = useQueryClient()
   return useMutation({

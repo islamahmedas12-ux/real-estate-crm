@@ -19,7 +19,7 @@ import {
   Plus,
 } from 'lucide-react'
 import { Button, Select, Textarea, LoadingSpinner } from '../../components/ui'
-import { useLeadDetail, useLeadActivities, useAddLeadActivity, useChangeLeadStatus } from '../../hooks/useLeads'
+import { useLeadDetail, useLeadActivities, useAddLeadActivity, useChangeLeadStatus, useConvertLead } from '../../hooks/useLeads'
 import { formatDate, formatCurrency } from '../../utils'
 import toast from 'react-hot-toast'
 import type { LeadStatus, LeadActivityType } from '../../types/lead'

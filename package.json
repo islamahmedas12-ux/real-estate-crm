@@ -22,8 +22,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
-    "prisma:seed": "npx ts-node prisma/seed.ts",
-    "db:setup": "npx prisma migrate dev && npx ts-node prisma/seed.ts"
+    "prisma:seed": "npx tsx prisma/seed.ts",
+    "db:setup": "npx prisma migrate dev && npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@nestjs/bull": "^11.0.4",
@@ -90,11 +90,12 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "npx tsx prisma/seed.ts"
   },
   "jest": {
     "moduleFileExtensions": [

@@ -43,7 +43,7 @@ const priorityBadge: Record<string, string> = {
   URGENT: 'text-red-600 dark:text-red-400',
 }
 
-export default function LeadsListPage() {
+export default function LeadsListPage({ embedded = false }: { embedded?: boolean }) {
   const navigate = useNavigate()
   const [filter, setFilter] = useState<LeadFilter>({
     page: 1,
@@ -167,26 +167,28 @@ export default function LeadsListPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <UserCheck size={24} className="text-indigo-500" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Leads</h1>
+      {/* Header — hidden when embedded in LeadsPage */}
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <UserCheck size={24} className="text-indigo-500" />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Leads</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<LayoutGrid size={16} />}
+              onClick={() => navigate('/leads/kanban')}
+            >
+              Kanban
+            </Button>
+            <Button leftIcon={<Plus size={16} />} onClick={() => navigate('/leads/new')}>
+              Add Lead
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            leftIcon={<LayoutGrid size={16} />}
-            onClick={() => navigate('/leads/kanban')}
-          >
-            Kanban
-          </Button>
-          <Button leftIcon={<Plus size={16} />} onClick={() => navigate('/leads/new')}>
-            Add Lead
-          </Button>
-        </div>
-      </div>
+      )}
 
       {/* Stats */}
       {stats && (

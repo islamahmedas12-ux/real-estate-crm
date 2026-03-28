@@ -35,7 +35,7 @@ import { useQuery } from '@tanstack/react-query'
 import { cn } from '../utils'
 import { useAuth } from '../context/AuthContext'
 import { StatsCard } from '../components/ui'
-import { NotificationsPanel, UpcomingTasks } from '../components/dashboard'
+import { NotificationsPanel, UpcomingTasks, MyProperties } from '../components/dashboard'
 import {
   fetchAgentOverview,
   fetchAgentLeadsPipeline,
@@ -774,6 +774,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left column */}
         <div className="lg:col-span-2 flex flex-col gap-4">
+          {/* My Assigned Properties */}
+          <MyProperties />
+
           {/* Follow-ups */}
           {followUps.isLoading ? (
             <LoadingSpinner />
