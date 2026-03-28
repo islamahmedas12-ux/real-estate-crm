@@ -60,6 +60,8 @@ class _DashboardContent extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
       children: [
+        _WelcomeHeader(),
+        const SizedBox(height: 12),
         _StatsSection(stats: dashboard.stats),
         const SizedBox(height: 8),
         _QuickActions(),
@@ -69,6 +71,55 @@ class _DashboardContent extends StatelessWidget {
         _RecentActivitiesSection(activities: dashboard.recentActivities),
         const SizedBox(height: 16),
       ],
+    );
+  }
+}
+
+// ─── Welcome Header ─────────────────────────────────────────────────
+
+class _WelcomeHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hour = DateTime.now().hour;
+    String greeting;
+    IconData greetingIcon;
+    if (hour < 12) {
+      greeting = 'Good Morning';
+      greetingIcon = Icons.wb_sunny_outlined;
+    } else if (hour < 17) {
+      greeting = 'Good Afternoon';
+      greetingIcon = Icons.wb_cloudy_outlined;
+    } else {
+      greeting = 'Good Evening';
+      greetingIcon = Icons.nights_stay_outlined;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Icon(greetingIcon, color: theme.colorScheme.primary, size: 28),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                greeting,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                DateFormat('EEEE, MMM d').format(DateTime.now()),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -133,9 +184,62 @@ class _StatsSection extends StatelessWidget {
                   label: 'Follow-ups',
                   value: stats?.pendingFollowUps ?? 0,
                   color: Colors.red,
+                  urgent: (stats?.pendingFollowUps ?? 0) > 5,
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          // Summary row
+          _SummaryBanner(stats: stats),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryBanner extends StatelessWidget {
+  final DashboardStats? stats;
+
+  const _SummaryBanner({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final total = (stats?.myLeads ?? 0) +
+        (stats?.myClients ?? 0) +
+        (stats?.myProperties ?? 0);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary.withAlpha(25),
+            theme.colorScheme.tertiary.withAlpha(15),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.primary.withAlpha(40),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.insights,
+            color: theme.colorScheme.primary,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'You're managing $total active items with ${stats?.pendingFollowUps ?? 0} pending follow-ups.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
           ),
         ],
       ),
@@ -149,6 +253,7 @@ class _StatCard extends StatelessWidget {
   final int value;
   final Color color;
   final String? route;
+  final bool urgent;
 
   const _StatCard({
     required this.icon,
@@ -156,6 +261,7 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.color,
     this.route,
+    this.urgent = false,
   });
 
   @override
@@ -164,6 +270,12 @@ class _StatCard extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: urgent
+            ? BorderSide(color: color.withAlpha(120), width: 1.5)
+            : BorderSide.none,
+      ),
       child: InkWell(
         onTap: route != null ? () => context.push(route!) : null,
         borderRadius: BorderRadius.circular(12),
@@ -184,11 +296,36 @@ class _StatCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '$value',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          '$value',
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (urgent) ...[
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: color.withAlpha(30),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '!',
+                              style: TextStyle(
+                                color: color,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     Text(
                       label,
@@ -228,42 +365,57 @@ class _QuickActions extends StatelessWidget {
         children: [
           Text('Quick Actions', style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _ActionButton(
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _ActionChip(
                   icon: Icons.person_add,
                   label: 'Add Lead',
+                  color: Colors.blue,
                   onTap: () => context.push('/leads/new'),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ActionButton(
+                const SizedBox(width: 8),
+                _ActionChip(
                   icon: Icons.add_home_work,
                   label: 'Add Property',
+                  color: Colors.orange,
                   onTap: () => context.push('/properties/new'),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ActionButton(
+                const SizedBox(width: 8),
+                _ActionChip(
                   icon: Icons.group_add,
                   label: 'Add Client',
+                  color: Colors.green,
                   onTap: () => context.push('/clients/new'),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _ActionButton(
+                const SizedBox(width: 8),
+                _ActionChip(
+                  icon: Icons.event,
+                  label: 'Schedule Viewing',
+                  color: Colors.purple,
+                  onTap: () => context.push('/leads'),
+                ),
+                const SizedBox(width: 8),
+                _ActionChip(
                   icon: Icons.phone,
                   label: 'Log Call',
+                  color: Colors.teal,
                   onTap: () {
                     // TODO: open call log sheet
                   },
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                _ActionChip(
+                  icon: Icons.qr_code_scanner,
+                  label: 'Scan Card',
+                  color: Colors.indigo,
+                  onTap: () {
+                    // TODO: open business card scanner
+                  },
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -271,14 +423,16 @@ class _QuickActions extends StatelessWidget {
   }
 }
 
-class _ActionButton extends StatelessWidget {
+class _ActionChip extends StatelessWidget {
   final IconData icon;
   final String label;
+  final Color color;
   final VoidCallback onTap;
 
-  const _ActionButton({
+  const _ActionChip({
     required this.icon,
     required this.label,
+    required this.color,
     required this.onTap,
   });
 
@@ -286,20 +440,32 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      margin: EdgeInsets.zero,
+    return Material(
+      color: color.withAlpha(20),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: theme.colorScheme.primary),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withAlpha(30),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
               const SizedBox(height: 6),
               Text(
                 label,
-                style: theme.textTheme.labelSmall,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -332,10 +498,19 @@ class _FollowUpsSection extends StatelessWidget {
             children: [
               Text("Today's Follow-ups", style: theme.textTheme.titleMedium),
               if (followUps.isNotEmpty)
-                Text(
-                  '${followUps.length}',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.primary,
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha(25),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${followUps.length}',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
             ],
@@ -356,7 +531,7 @@ class _FollowUpsSection extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'No follow-ups scheduled for today',
+                        'All caught up! No follow-ups for today.',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -372,8 +547,7 @@ class _FollowUpsSection extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 6),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor:
-                        theme.colorScheme.primaryContainer,
+                    backgroundColor: theme.colorScheme.primaryContainer,
                     child: Text(
                       fu.clientName.isNotEmpty
                           ? fu.clientName[0].toUpperCase()
@@ -388,9 +562,25 @@ class _FollowUpsSection extends StatelessWidget {
                     fu.propertyTitle ?? fu.leadStatus,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: Text(
-                    timeFormat.format(fu.scheduledAt),
-                    style: theme.textTheme.bodySmall,
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        timeFormat.format(fu.scheduledAt),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (_isOverdue(fu.scheduledAt))
+                        Text(
+                          'Overdue',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -398,6 +588,10 @@ class _FollowUpsSection extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  bool _isOverdue(DateTime scheduledAt) {
+    return scheduledAt.isBefore(DateTime.now());
   }
 }
 
@@ -427,17 +621,47 @@ class _RecentActivitiesSection extends StatelessWidget {
     }
   }
 
+  Color _colorForType(String type) {
+    switch (type) {
+      case 'CALL':
+        return Colors.blue;
+      case 'EMAIL':
+        return Colors.indigo;
+      case 'MEETING':
+        return Colors.green;
+      case 'VIEWING':
+        return Colors.orange;
+      case 'NOTE':
+        return Colors.grey;
+      case 'STATUS_CHANGE':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final timeFormat = DateFormat.jm();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Recent Activity', style: theme.textTheme.titleMedium),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Recent Activity', style: theme.textTheme.titleMedium),
+              if (activities.length > 10)
+                TextButton(
+                  onPressed: () {
+                    // TODO: navigate to full activity log
+                  },
+                  child: const Text('View All'),
+                ),
+            ],
+          ),
           const SizedBox(height: 8),
           if (activities.isEmpty)
             Card(
@@ -456,31 +680,54 @@ class _RecentActivitiesSection extends StatelessWidget {
             )
           else
             ...activities.take(10).map(
-              (a) => Card(
-                margin: const EdgeInsets.only(bottom: 4),
-                child: ListTile(
-                  dense: true,
-                  leading: Icon(
-                    _iconForType(a.type),
-                    size: 20,
-                    color: theme.colorScheme.onSurfaceVariant,
+              (a) {
+                final color = _colorForType(a.type);
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 4),
+                  child: ListTile(
+                    dense: true,
+                    leading: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: color.withAlpha(25),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        _iconForType(a.type),
+                        size: 18,
+                        color: color,
+                      ),
+                    ),
+                    title: Text(
+                      a.description,
+                      style: theme.textTheme.bodyMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      _formatRelativeTime(a.createdAt),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                  title: Text(
-                    a.description,
-                    style: theme.textTheme.bodyMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Text(
-                    timeFormat.format(a.createdAt),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-              ),
+                );
+              },
             ),
         ],
       ),
     );
+  }
+
+  String _formatRelativeTime(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+
+    if (diff.inMinutes < 1) return 'Just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return DateFormat.MMMd().format(dt);
   }
 }
 
@@ -502,6 +749,9 @@ class _DashboardSkeleton extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Welcome skeleton
+          _SkeletonBox(height: 48),
+          const SizedBox(height: 16),
           // Stats skeleton
           Row(
             children: [
@@ -518,17 +768,11 @@ class _DashboardSkeleton extends StatelessWidget {
               Expanded(child: _SkeletonBox(height: 80)),
             ],
           ),
+          const SizedBox(height: 8),
+          _SkeletonBox(height: 44),
           const SizedBox(height: 24),
           // Quick actions skeleton
-          Row(
-            children: [
-              Expanded(child: _SkeletonBox(height: 64)),
-              const SizedBox(width: 8),
-              Expanded(child: _SkeletonBox(height: 64)),
-              const SizedBox(width: 8),
-              Expanded(child: _SkeletonBox(height: 64)),
-            ],
-          ),
+          _SkeletonBox(height: 80),
           const SizedBox(height: 24),
           // Follow-ups skeleton
           _SkeletonBox(height: 64),
