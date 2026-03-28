@@ -78,6 +78,7 @@ export class PropertiesController {
     return this.propertiesService.findOne(id);
   }
 
+  @Patch(':id')
   @Put(':id')
   @ApiOperation({ summary: 'Update a property' })
   @ApiParam({ name: 'id', description: 'Property UUID' })
@@ -107,6 +108,7 @@ export class PropertiesController {
     return this.propertiesService.changeStatus(id, dto.status);
   }
 
+  @Post(':id/assign')
   @Patch(':id/assign')
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Assign property to an agent' })

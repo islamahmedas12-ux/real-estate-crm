@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
 import { SanitizeNotFoundFilter } from './common/filters/sanitize-not-found.filter.js';
+import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor.js';
 
 // Read version from package.json so Swagger and health endpoint stay in sync.
 const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8')) as { version: string };
@@ -66,6 +67,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Global XSS sanitization interceptor
+  app.useGlobalInterceptors(new SanitizeInterceptor());
 
   // Global exception filters
   app.useGlobalFilters(new HttpExceptionFilter(), new SanitizeNotFoundFilter());
