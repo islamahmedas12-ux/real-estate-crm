@@ -32,6 +32,8 @@ RUN npm run build
 # Copy UI build output into dist
 RUN cp -r admin-ui/dist dist/admin-ui
 RUN cp -r agent-ui/dist dist/agent-ui
+# Ensure email templates are alongside compiled email service
+RUN cp -r src/email/templates dist/src/email/templates 2>/dev/null || true
 
 # Stage 3: Production
 FROM node:24-alpine AS production

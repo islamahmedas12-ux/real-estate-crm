@@ -58,7 +58,7 @@ async function bootstrap() {
   );
 
   // Global exception filters
-  app.useGlobalFilters(new SanitizeNotFoundFilter(), new HttpExceptionFilter());
+  app.useGlobalFilters(new HttpExceptionFilter(), new SanitizeNotFoundFilter());
 
   // Swagger / OpenAPI at /api/docs
   const config = new DocumentBuilder()
