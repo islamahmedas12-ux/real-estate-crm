@@ -50,16 +50,7 @@ export default function LeadsPage() {
       </div>
 
       {/* View Content */}
-      {viewMode === 'list' ? <LeadsListView /> : <LeadsKanbanView />}
+      {viewMode === 'list' ? <LeadsListPage /> : <LeadsKanbanPage />}
     </div>
   )
-}
-
-// Wrapper components to embed without duplicate headers
-function LeadsListView() {
-  return <LeadsListPage embedded />
-}
-
-function LeadsKanbanView() {
-  return <LeadsKanbanPage embedded />
 }
