@@ -97,7 +97,8 @@ export default function ClientsListPage() {
     toast.success(`Exported ${rows.length} clients`)
   }, [data?.data])
 
-  const _toggleSelect = useCallback((id: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const toggleSelect = useCallback((id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
