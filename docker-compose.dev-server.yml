@@ -76,8 +76,8 @@ services:
       AUTHME_REALM: real-estate-dev
       AUTHME_CLIENT_ID: crm-backend
       AUTHME_CLIENT_SECRET: 3d556405eb8c5aed1910239a59d548c195dc7a698f0aaa7b11e84a970eca2d7f
-      ADMIN_PORTAL_URL: http://dev-admin.realstate-crm.homes
-      AGENT_PORTAL_URL: http://dev-agent.realstate-crm.homes
+      ADMIN_PORTAL_URL: https://dev-admin.realstate-crm.homes
+      AGENT_PORTAL_URL: https://dev-agent.realstate-crm.homes
       UPLOAD_DIR: /app/uploads
       JWT_SECRET: dev-jwt-secret-change-in-prod
       REDIS_URL: redis://crm-dev-redis:6379

@@ -20,9 +20,6 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Security middleware — relax CSP for Swagger UI at /api/docs
-  // Build connectSrc from CORS origins so each environment allows its own API
-  const adminUrl = process.env['ADMIN_PORTAL_URL'] ?? 'http://localhost:5173';
-  const agentUrl = process.env['AGENT_PORTAL_URL'] ?? 'http://localhost:5174';
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -37,7 +34,7 @@ async function bootstrap() {
           ],
           styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
           imgSrc: ["'self'", 'data:', 'blob:', 'https://validator.swagger.io'],
-          connectSrc: ["'self'", adminUrl, agentUrl],
+          connectSrc: ["'self'"],
           fontSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
         },
       },
