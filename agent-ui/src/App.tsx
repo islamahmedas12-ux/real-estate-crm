@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ThemeProvider } from './context/ThemeContext'
@@ -52,7 +52,11 @@ export default function App() {
                   <Route path="clients" element={<ClientsPage />} />
                   <Route path="contracts" element={<ContractsPage />} />
                   <Route path="activities" element={<ActivitiesPage />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
+
+                {/* Catch-all for routes outside the layout */}
+                <Route path="*" element={<Navigate to="/login" replace />} />
               </Routes>
             </ErrorBoundary>
 
