@@ -13,6 +13,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # ── Build & Push Docker Image ──────────────────────────────────────────
   build-and-push:
     name: Build & Push to QA
     runs-on: ubuntu-latest
@@ -52,11 +53,49 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # ── Build Frontend SPAs with QA env vars ───────────────────────────────
+  build-frontends:
+    name: Build QA Frontends
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Build Admin UI (QA)
+        working-directory: admin-ui
+        run: |
+          npm ci
+          npm run build -- --mode qa
+
+      - name: Build Agent UI (QA)
+        working-directory: agent-ui
+        run: |
+          npm ci
+          npm run build -- --mode qa
+
+      - name: Upload Admin UI build
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-admin-ui
+          path: admin-ui/dist/
+
+      - name: Upload Agent UI build
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-agent-ui
+          path: agent-ui/dist/
+
+  # ── Database Migration ─────────────────────────────────────────────────
   migrate:
     name: Database Migration (QA)
     runs-on: ubuntu-latest
     needs: build-and-push
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -76,12 +115,25 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.QA_DATABASE_URL }}
 
+  # ── Deploy to QA Environment ───────────────────────────────────────────
   deploy:
     name: Deploy to QA
     runs-on: ubuntu-latest
-    needs: [build-and-push, migrate]
-    
+    needs: [build-and-push, migrate, build-frontends]
+
     steps:
+      - name: Download Admin UI build
+        uses: actions/download-artifact@v4
+        with:
+          name: qa-admin-ui
+          path: qa-admin-ui/
+
+      - name: Download Agent UI build
+        uses: actions/download-artifact@v4
+        with:
+          name: qa-agent-ui
+          path: qa-agent-ui/
+
       - name: SSH Deploy to QA Server
         env:
           SSH_KEY: ${{ secrets.QA_SERVER_SSH_KEY }}
@@ -92,17 +144,30 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
-          
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+
+          # Deploy frontend builds to server
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r qa-admin-ui/* $SSH_USER@$SSH_HOST:/apps/web/qa-admin-ui/
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r qa-agent-ui/* $SSH_USER@$SSH_HOST:/apps/web/qa-agent-ui/
+
+          # Pull and restart backend
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'SSHEOF'
           cd /apps/real-estate-crm
-          docker-compose pull
-          docker-compose up -d
-          EOF
-          
+
+          docker pull ghcr.io/islamahmedas12-ux/real-estate-crm:qa
+
+          export APP_IMAGE="ghcr.io/islamahmedas12-ux/real-estate-crm:qa"
+          docker-compose -f docker-compose.qa-server.yml up -d
+
+          echo "=== Running containers ==="
+          docker-compose -f docker-compose.qa-server.yml ps
+          SSHEOF
+
           rm ~/.ssh/deploy_key
 
-      - name: Notify
-        if: always()
-        run: |
-          STATUS=$([ $? -eq 0 ] && echo "✅ success" || echo "❌ failed")
-          echo "QA deployment $STATUS"
+      - name: Deployment Status
+        if: success()
+        run: echo "✅ QA deployment successful! Commit ${{ github.sha }}"
+
+      - name: Deployment Failed
+        if: failure()
+        run: echo "❌ QA deployment failed! Commit ${{ github.sha }}"
