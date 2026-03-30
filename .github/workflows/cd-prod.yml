@@ -91,7 +91,7 @@ jobs:
           name: prod-agent-ui
           path: agent-ui/dist/
 
-  # ── Database Migration ─────────────────────────────────────────────────
+  # ── Database Migration (via SSH on server) ──────────────────────────────
   migrate:
     name: Database Migration (Production)
     runs-on: ubuntu-latest
@@ -100,21 +100,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma client
-        run: npx prisma generate
-
-      - name: Run migrations
-        run: npx prisma migrate deploy
+      - name: Run migrations on server
         env:
-          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          SSH_KEY: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          SSH_HOST: ${{ secrets.PROD_SERVER_HOST }}
+          SSH_USER: islam
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'SSHEOF'
+          cd /apps/real-estate-crm
+          git fetch origin prod && git checkout prod && git pull origin prod
+          npm ci
+          export DATABASE_URL="postgresql://crm_user:real-estate-prod-password-secure-change-me@localhost:5435/real_estate_crm_prod"
+          npx prisma migrate deploy
+          SSHEOF
+
+          rm ~/.ssh/deploy_key
 
   # ── Deploy to Production ───────────────────────────────────────────────
   deploy:
