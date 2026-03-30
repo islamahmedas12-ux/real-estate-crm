@@ -8,10 +8,13 @@ build/
 **/dist/
 **/build/
 
-# Environment variables
+# Environment variables — NEVER commit secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
 
 # Coverage
 coverage/
