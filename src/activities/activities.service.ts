@@ -65,10 +65,7 @@ export class ActivitiesService {
   /**
    * Get activities performed by a specific user.
    */
-  async findByUser(
-    userId: string,
-    filter: ActivityFilterDto,
-  ): Promise<PaginatedResult<any>> {
+  async findByUser(userId: string, filter: ActivityFilterDto): Promise<PaginatedResult<any>> {
     const where: Prisma.ActivityWhereInput = {
       performedBy: userId,
       ...this.buildDateFilter(filter),

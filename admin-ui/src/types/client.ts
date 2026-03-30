@@ -65,7 +65,7 @@ export interface CreateClientPayload {
   notes?: string
 }
 
-export interface UpdateClientPayload extends Partial<CreateClientPayload> {}
+export type UpdateClientPayload = Partial<CreateClientPayload>
 
 export interface ClientFilter {
   page?: number
@@ -83,4 +83,19 @@ export interface ClientStats {
   byType: Record<ClientType, number>
   bySource: Record<ClientSource, number>
   recentCount: number
+}
+
+export interface DuplicateMatch {
+  id: string
+  firstName: string
+  lastName: string
+  phone: string
+  email?: string | null
+  nationalId?: string | null
+  matchedOn: ('phone' | 'email' | 'nationalId')[]
+}
+
+export interface DuplicateCheckResult {
+  hasDuplicates: boolean
+  matches: DuplicateMatch[]
 }

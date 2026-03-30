@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Upload,
   ExternalLink,
+  Download,
 } from 'lucide-react'
 import { Button, LoadingSpinner, Select } from '../../components/ui'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
@@ -22,6 +23,8 @@ import {
 } from '../../hooks/useContracts'
 import { formatDate, formatCurrency } from '../../utils'
 import toast from 'react-hot-toast'
+import { StatusTimeline } from '../../components/contracts/StatusTimeline'
+import { StatusTransitionButtons } from '../../components/contracts/StatusTransitionButtons'
 import type { ContractStatus, PaymentMethod } from '../../types/contract'
 
 const statusBadge: Record<string, string> = {
@@ -140,16 +143,16 @@ export default function ContractDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => {
-              setNewStatus(contract.status)
-              setStatusDialogOpen(true)
-            }}
-          >
-            Change Status
-          </Button>
+          {contract.documentUrl && (
+            <Button
+              variant="secondary"
+              size="sm"
+              leftIcon={<Download size={14} />}
+              onClick={() => window.open(contract.documentUrl!, '_blank')}
+            >
+              Download PDF
+            </Button>
+          )}
           {contract.status === 'ACTIVE' && (
             <Button
               variant="secondary"
@@ -167,6 +170,26 @@ export default function ContractDetailPage() {
             Edit
           </Button>
         </div>
+      </div>
+
+      {/* Status Timeline */}
+      <StatusTimeline currentStatus={contract.status} />
+
+      {/* Status Transition Actions */}
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Status Actions</h3>
+        <StatusTransitionButtons
+          currentStatus={contract.status}
+          onTransition={async (newStatus) => {
+            try {
+              await changeStatusMutation.mutateAsync({ id: id!, data: { status: newStatus } })
+              toast.success(`Status changed to ${newStatus}`)
+            } catch {
+              toast.error('Failed to change status')
+            }
+          }}
+          loading={changeStatusMutation.isPending}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -309,13 +332,23 @@ export default function ContractDetailPage() {
                   </span>
                   <ExternalLink size={14} className="text-gray-400 shrink-0" />
                 </a>
-                <button
-                  onClick={() => navigate(`/contracts/${id}/edit`)}
-                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                >
-                  <Upload size={12} />
-                  Update document URL
-                </button>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={contract.documentUrl}
+                    download
+                    className="flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                  >
+                    <Download size={12} />
+                    Download
+                  </a>
+                  <button
+                    onClick={() => navigate(`/contracts/${id}/edit`)}
+                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  >
+                    <Upload size={12} />
+                    Replace
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 py-4 text-center">
@@ -325,7 +358,7 @@ export default function ContractDetailPage() {
                   onClick={() => navigate(`/contracts/${id}/edit`)}
                   className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
                 >
-                  Add document URL
+                  Upload document
                 </button>
               </div>
             )}

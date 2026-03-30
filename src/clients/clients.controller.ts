@@ -11,19 +11,16 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ClientsService } from './clients.service.js';
 import { CreateClientDto } from './dto/create-client.dto.js';
 import { UpdateClientDto } from './dto/update-client.dto.js';
 import { ClientFilterDto } from './dto/client-filter.dto.js';
 import { AssignAgentDto } from './dto/assign-agent.dto.js';
-import { CurrentUser, type AuthenticatedUser } from '../common/decorators/current-user.decorator.js';
+import {
+  CurrentUser,
+  type AuthenticatedUser,
+} from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 
@@ -44,22 +41,27 @@ export class ClientsController {
 
   @Get()
   @ApiOperation({ summary: 'List clients with filters and pagination' })
-  findAll(
-    @Query() filter: ClientFilterDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    const isAdminOrManager = user.roles?.some((r) =>
-      ['admin', 'manager'].includes(r),
-    ) ?? false;
+  findAll(@Query() filter: ClientFilterDto, @CurrentUser() user: AuthenticatedUser) {
+    const isAdminOrManager = user.roles?.some((r) => ['admin', 'manager'].includes(r)) ?? false;
     return this.clientsService.findAll(filter, user.id, isAdminOrManager);
+  }
+
+  @Get('check-duplicates')
+  @ApiOperation({ summary: 'Check for duplicate clients by phone, email or nationalId' })
+  @ApiResponse({ status: 200, description: 'Duplicate check result' })
+  checkDuplicates(
+    @Query('phone') phone?: string,
+    @Query('email') email?: string,
+    @Query('nationalId') nationalId?: string,
+    @Query('excludeId') excludeId?: string,
+  ) {
+    return this.clientsService.checkDuplicatesPublic({ phone, email, nationalId, excludeId });
   }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get client statistics' })
   getStats(@CurrentUser() user: AuthenticatedUser) {
-    const isAdminOrManager = user.roles?.some((r) =>
-      ['admin', 'manager'].includes(r),
-    ) ?? false;
+    const isAdminOrManager = user.roles?.some((r) => ['admin', 'manager'].includes(r)) ?? false;
     return this.clientsService.getStats(user.id, isAdminOrManager);
   }
 
@@ -72,16 +74,14 @@ export class ClientsController {
     return this.clientsService.findOne(id);
   }
 
+  @Patch(':id')
   @Put(':id')
   @ApiOperation({ summary: 'Update a client' })
   @ApiParam({ name: 'id', description: 'Client UUID' })
   @ApiResponse({ status: 200, description: 'Client updated' })
   @ApiResponse({ status: 404, description: 'Client not found' })
   @ApiResponse({ status: 409, description: 'Duplicate email or phone' })
-  update(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateClientDto,
-  ) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateClientDto) {
     return this.clientsService.update(id, dto);
   }
 
@@ -95,16 +95,14 @@ export class ClientsController {
     return this.clientsService.remove(id);
   }
 
+  @Post(':id/assign')
   @Patch(':id/assign')
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Assign client to an agent' })
   @ApiParam({ name: 'id', description: 'Client UUID' })
   @ApiResponse({ status: 200, description: 'Agent assigned' })
   @ApiResponse({ status: 404, description: 'Client not found' })
-  assignAgent(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AssignAgentDto,
-  ) {
+  assignAgent(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AssignAgentDto) {
     return this.clientsService.assignAgent(id, dto.agentId);
   }
 

@@ -136,13 +136,13 @@ describe('UploadsService', () => {
     });
 
     it('should throw BadRequestException when no files provided', async () => {
-      await expect(
-        service.uploadPropertyImages(propertyId, []),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.uploadPropertyImages(propertyId, [])).rejects.toThrow(
+        BadRequestException,
+      );
 
-      await expect(
-        service.uploadPropertyImages(propertyId, null as any),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.uploadPropertyImages(propertyId, null as any)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException for invalid file type', async () => {
@@ -151,12 +151,12 @@ describe('UploadsService', () => {
         originalname: 'doc.pdf',
       });
 
-      await expect(
-        service.uploadPropertyImages(propertyId, [invalidFile]),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.uploadPropertyImages(propertyId, [invalidFile]),
-      ).rejects.toThrow('Invalid file type');
+      await expect(service.uploadPropertyImages(propertyId, [invalidFile])).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.uploadPropertyImages(propertyId, [invalidFile])).rejects.toThrow(
+        'Invalid file type',
+      );
     });
 
     it('should throw BadRequestException for oversized file', async () => {
@@ -164,20 +164,20 @@ describe('UploadsService', () => {
         size: 11 * 1024 * 1024, // 11MB
       });
 
-      await expect(
-        service.uploadPropertyImages(propertyId, [largeFile]),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.uploadPropertyImages(propertyId, [largeFile]),
-      ).rejects.toThrow('File too large');
+      await expect(service.uploadPropertyImages(propertyId, [largeFile])).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.uploadPropertyImages(propertyId, [largeFile])).rejects.toThrow(
+        'File too large',
+      );
     });
 
     it('should throw NotFoundException when property does not exist', async () => {
       mockPrisma.property.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.uploadPropertyImages('nonexistent', [mockFile()]),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.uploadPropertyImages('nonexistent', [mockFile()])).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should handle multiple file uploads', async () => {
@@ -270,9 +270,9 @@ describe('UploadsService', () => {
     it('should throw NotFoundException when image does not exist', async () => {
       mockPrisma.propertyImage.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.deletePropertyImage(propertyId, 'nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.deletePropertyImage(propertyId, 'nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should handle missing files on disk gracefully', async () => {
@@ -294,9 +294,9 @@ describe('UploadsService', () => {
     it('should throw NotFoundException when property does not exist', async () => {
       mockPrisma.property.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.deletePropertyImage('nonexistent', imageId),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.deletePropertyImage('nonexistent', imageId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -329,17 +329,17 @@ describe('UploadsService', () => {
     it('should throw NotFoundException when image does not exist', async () => {
       mockPrisma.propertyImage.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.setPrimaryImage(propertyId, 'nonexistent'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.setPrimaryImage(propertyId, 'nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException when property does not exist', async () => {
       mockPrisma.property.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.setPrimaryImage('nonexistent', imageId),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.setPrimaryImage('nonexistent', imageId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -385,9 +385,9 @@ describe('UploadsService', () => {
 
       const file = mockFile({ mimetype: 'application/pdf', originalname: 'doc.pdf' });
 
-      await expect(
-        service.uploadContractDocument('nonexistent', file),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.uploadContractDocument('nonexistent', file)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException for invalid file type', async () => {
@@ -398,12 +398,12 @@ describe('UploadsService', () => {
         originalname: 'photo.jpg',
       });
 
-      await expect(
-        service.uploadContractDocument(contractId, file),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.uploadContractDocument(contractId, file),
-      ).rejects.toThrow('Invalid file type');
+      await expect(service.uploadContractDocument(contractId, file)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.uploadContractDocument(contractId, file)).rejects.toThrow(
+        'Invalid file type',
+      );
     });
 
     it('should throw BadRequestException for oversized document', async () => {
@@ -415,12 +415,12 @@ describe('UploadsService', () => {
         size: 26 * 1024 * 1024, // 26MB
       });
 
-      await expect(
-        service.uploadContractDocument(contractId, file),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.uploadContractDocument(contractId, file),
-      ).rejects.toThrow('File too large');
+      await expect(service.uploadContractDocument(contractId, file)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.uploadContractDocument(contractId, file)).rejects.toThrow(
+        'File too large',
+      );
     });
   });
 
@@ -437,9 +437,7 @@ describe('UploadsService', () => {
     it('should throw NotFoundException for missing file', () => {
       (fs.existsSync as jest.Mock).mockReturnValue(false);
 
-      expect(() => service.getFilePath('images', 'nonexistent.jpg')).toThrow(
-        NotFoundException,
-      );
+      expect(() => service.getFilePath('images', 'nonexistent.jpg')).toThrow(NotFoundException);
     });
 
     it('should sanitize path traversal attempts', () => {

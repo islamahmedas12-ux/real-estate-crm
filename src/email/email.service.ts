@@ -1,7 +1,14 @@
-import { Injectable, Logger, OnModuleInit, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import type { Job, Queue } from 'bull';
+import { Prisma } from '@prisma/client';
 import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import * as Handlebars from 'handlebars';
@@ -106,7 +113,8 @@ export class EmailService implements OnModuleInit {
         to,
         subject,
         template,
-        context: context as any,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        context: (context as any) ?? Prisma.DbNull,
         status: EmailStatus.QUEUED,
       },
     });
@@ -195,7 +203,10 @@ export class EmailService implements OnModuleInit {
       throw new BadRequestException('Only failed emails can be retried');
     }
 
-    const html = this.renderTemplate(emailLog.template, (emailLog.context as Record<string, any>) ?? {});
+    const html = this.renderTemplate(
+      emailLog.template,
+      (emailLog.context as Record<string, any>) ?? {},
+    );
 
     await this.prisma.emailLog.update({
       where: { id: emailLogId },
@@ -246,10 +257,15 @@ export class EmailService implements OnModuleInit {
     agentName: string,
     leads: Array<{ clientName: string; priority: string }>,
   ) {
-    return this.sendEmail(agentEmail, `Follow-Up Reminder: ${leads.length} lead(s) due today`, 'follow-up-reminder', {
-      agentName,
-      leads,
-    });
+    return this.sendEmail(
+      agentEmail,
+      `Follow-Up Reminder: ${leads.length} lead(s) due today`,
+      'follow-up-reminder',
+      {
+        agentName,
+        leads,
+      },
+    );
   }
 
   async sendContractUpdateEmail(
@@ -312,10 +328,15 @@ export class EmailService implements OnModuleInit {
       paymentMethod?: string;
     },
   ) {
-    return this.sendEmail(recipientEmail, `Payment Confirmation: ${invoice.invoiceNumber}`, 'payment-received', {
-      recipientName,
-      invoice,
-    });
+    return this.sendEmail(
+      recipientEmail,
+      `Payment Confirmation: ${invoice.invoiceNumber}`,
+      'payment-received',
+      {
+        recipientName,
+        invoice,
+      },
+    );
   }
 
   async sendWeeklySummaryEmail(

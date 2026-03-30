@@ -31,7 +31,11 @@ export class ContractPdfTemplate extends PdfBaseTemplate {
     this.addLabelValue(doc, 'Title:', contract.property.title);
     this.addLabelValue(doc, 'Type:', contract.property.type);
     this.addLabelValue(doc, 'Address:', contract.property.address);
-    this.addLabelValue(doc, 'City / Region:', `${contract.property.city}, ${contract.property.region}`);
+    this.addLabelValue(
+      doc,
+      'City / Region:',
+      `${contract.property.city}, ${contract.property.region}`,
+    );
     this.addLabelValue(doc, 'Area:', `${contract.property.area} sqm`);
     if (contract.property.bedrooms != null) {
       this.addLabelValue(doc, 'Bedrooms:', String(contract.property.bedrooms));
@@ -58,14 +62,14 @@ export class ContractPdfTemplate extends PdfBaseTemplate {
       this.addSection(doc, 'Payment Terms');
       const terms = contract.paymentTerms as Record<string, unknown>;
       if (terms.installments && Array.isArray(terms.installments)) {
-        const rows = (terms.installments as Array<{ amount?: number; dueDate?: string; description?: string }>).map(
-          (inst, i) => [
-            String(i + 1),
-            inst.description ?? `Installment ${i + 1}`,
-            inst.dueDate ? this.formatDate(inst.dueDate) : '-',
-            inst.amount ? this.formatCurrency(inst.amount) : '-',
-          ],
-        );
+        const rows = (
+          terms.installments as Array<{ amount?: number; dueDate?: string; description?: string }>
+        ).map((inst, i) => [
+          String(i + 1),
+          inst.description ?? `Installment ${i + 1}`,
+          inst.dueDate ? this.formatDate(inst.dueDate) : '-',
+          inst.amount ? this.formatCurrency(inst.amount) : '-',
+        ]);
         this.addTable(doc, ['#', 'Description', 'Due Date', 'Amount'], rows, [30, 200, 130, 130]);
       } else {
         doc

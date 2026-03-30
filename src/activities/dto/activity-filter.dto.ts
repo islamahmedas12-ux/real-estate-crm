@@ -4,22 +4,35 @@ import { ActivityEntityType } from '@prisma/client';
 import { PaginationDto } from '../../common/dto/pagination.dto.js';
 
 export class ActivityFilterDto extends PaginationDto {
-  @ApiPropertyOptional({ description: 'Filter by activity type (e.g. CREATE, UPDATE, DELETE)', example: 'CREATE' })
+  @ApiPropertyOptional({
+    description: 'Filter by activity type (e.g. CREATE, UPDATE, DELETE)',
+    example: 'CREATE',
+  })
   @IsOptional()
   @IsString()
   type?: string;
 
-  @ApiPropertyOptional({ enum: ActivityEntityType, description: 'Filter by entity type', example: 'PROPERTY' })
+  @ApiPropertyOptional({
+    enum: ActivityEntityType,
+    description: 'Filter by entity type',
+    example: 'PROPERTY',
+  })
   @IsOptional()
   @IsEnum(ActivityEntityType)
   entityType?: ActivityEntityType;
 
-  @ApiPropertyOptional({ description: 'Filter by entity ID', example: '550e8400-e29b-41d4-a716-446655440000' })
+  @ApiPropertyOptional({
+    description: 'Filter by entity ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
   @IsOptional()
   @IsString()
   entityId?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by performer ID', example: '550e8400-e29b-41d4-a716-446655440001' })
+  @ApiPropertyOptional({
+    description: 'Filter by performer ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
   @IsOptional()
   @IsString()
   performedBy?: string;

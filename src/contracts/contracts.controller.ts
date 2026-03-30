@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Post,
   Put,
@@ -41,20 +42,14 @@ export class ContractsController {
   @ApiResponse({ status: 201, description: 'Contract created' })
   @ApiResponse({ status: 400, description: 'Validation error or property not available' })
   @ApiResponse({ status: 404, description: 'Property or client not found' })
-  create(
-    @Body() dto: CreateContractDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  create(@Body() dto: CreateContractDto, @CurrentUser() user: AuthenticatedUser) {
     return this.contractsService.create(dto, user);
   }
 
   @Get()
   @ApiOperation({ summary: 'List contracts with filters and pagination' })
   @ApiResponse({ status: 200, description: 'Paginated list of contracts' })
-  findAll(
-    @Query() filter: ContractFilterDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  findAll(@Query() filter: ContractFilterDto, @CurrentUser() user: AuthenticatedUser) {
     return this.contractsService.findAll(filter, user);
   }
 
@@ -69,10 +64,7 @@ export class ContractsController {
   @ApiOperation({ summary: 'Get contracts expiring in the next N days' })
   @ApiQuery({ name: 'days', required: false, type: Number, description: 'Days ahead (default 30)' })
   @ApiResponse({ status: 200, description: 'List of expiring contracts' })
-  getExpiring(
-    @Query('days') days: number,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  getExpiring(@Query('days') days: number, @CurrentUser() user: AuthenticatedUser) {
     return this.contractsService.getExpiring(days ? Number(days) : 30, user);
   }
 
@@ -81,13 +73,11 @@ export class ContractsController {
   @ApiParam({ name: 'id', type: String })
   @ApiResponse({ status: 200, description: 'Contract details' })
   @ApiResponse({ status: 404, description: 'Contract not found' })
-  findOne(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
     return this.contractsService.findOne(id, user);
   }
 
+  @Patch(':id')
   @Put(':id')
   @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Update a contract' })
@@ -100,6 +90,17 @@ export class ContractsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.contractsService.update(id, dto, user);
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Delete a contract (admin only, only DRAFT/CANCELLED)' })
+  @ApiParam({ name: 'id', type: String })
+  @ApiResponse({ status: 200, description: 'Contract deleted' })
+  @ApiResponse({ status: 400, description: 'Cannot delete active/completed contracts' })
+  @ApiResponse({ status: 404, description: 'Contract not found' })
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthenticatedUser) {
+    return this.contractsService.remove(id, user);
   }
 
   @Patch(':id/status')

@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
@@ -46,10 +42,7 @@ export class UploadsService {
     }
   }
 
-  async uploadPropertyImages(
-    propertyId: string,
-    files: Express.Multer.File[],
-  ) {
+  async uploadPropertyImages(propertyId: string, files: Express.Multer.File[]) {
     await this.ensurePropertyExists(propertyId);
 
     if (!files || files.length === 0) {
@@ -63,9 +56,7 @@ export class UploadsService {
         );
       }
       if (file.size > MAX_IMAGE_SIZE) {
-        throw new BadRequestException(
-          `File too large: ${file.originalname}. Max 10MB`,
-        );
+        throw new BadRequestException(`File too large: ${file.originalname}. Max 10MB`);
       }
     }
 
@@ -171,10 +162,7 @@ export class UploadsService {
     return { message: 'Primary image updated' };
   }
 
-  async uploadContractDocument(
-    contractId: string,
-    file: Express.Multer.File,
-  ) {
+  async uploadContractDocument(contractId: string, file: Express.Multer.File) {
     const contract = await this.prisma.contract.findUnique({
       where: { id: contractId },
     });
@@ -184,9 +172,7 @@ export class UploadsService {
     }
 
     if (!ALLOWED_DOC_TYPES.includes(file.mimetype)) {
-      throw new BadRequestException(
-        'Invalid file type. Allowed: pdf, docx',
-      );
+      throw new BadRequestException('Invalid file type. Allowed: pdf, docx');
     }
 
     if (file.size > MAX_DOC_SIZE) {
@@ -207,7 +193,10 @@ export class UploadsService {
     return { documentUrl: updated.documentUrl };
   }
 
-  async getFilePath(type: 'images' | 'thumbnails' | 'documents', filename: string): Promise<string> {
+  async getFilePath(
+    type: 'images' | 'thumbnails' | 'documents',
+    filename: string,
+  ): Promise<string> {
     // Prevent path traversal
     const sanitized = path.basename(filename);
     const filePath = path.join(this.uploadDir, type, sanitized);

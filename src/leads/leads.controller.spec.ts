@@ -222,7 +222,12 @@ describe('LeadsController', () => {
     });
 
     it('should scope stats for agent users', async () => {
-      mockService.getStats.mockResolvedValue({ total: 5, byStatus: [], byPriority: [], bySource: [] });
+      mockService.getStats.mockResolvedValue({
+        total: 5,
+        byStatus: [],
+        byPriority: [],
+        bySource: [],
+      });
 
       await controller.getStats(agentUser);
 
@@ -293,11 +298,7 @@ describe('LeadsController', () => {
       const result = await controller.changeStatus(sampleLead.id, dto, adminUser);
 
       expect(result.status).toBe(LeadStatus.CONTACTED);
-      expect(mockService.changeStatus).toHaveBeenCalledWith(
-        sampleLead.id,
-        dto,
-        adminUser.sub,
-      );
+      expect(mockService.changeStatus).toHaveBeenCalledWith(sampleLead.id, dto, adminUser.sub);
     });
 
     it('should pass notes through when provided', async () => {
@@ -307,24 +308,14 @@ describe('LeadsController', () => {
       const dto = { status: LeadStatus.CONTACTED, notes: 'Spoke on phone' };
       await controller.changeStatus(sampleLead.id, dto, agentUser);
 
-      expect(mockService.changeStatus).toHaveBeenCalledWith(
-        sampleLead.id,
-        dto,
-        agentUser.sub,
-      );
+      expect(mockService.changeStatus).toHaveBeenCalledWith(sampleLead.id, dto, agentUser.sub);
     });
 
     it('should propagate service errors', async () => {
-      mockService.changeStatus.mockRejectedValue(
-        new Error('Cannot transition'),
-      );
+      mockService.changeStatus.mockRejectedValue(new Error('Cannot transition'));
 
       await expect(
-        controller.changeStatus(
-          sampleLead.id,
-          { status: LeadStatus.WON },
-          adminUser,
-        ),
+        controller.changeStatus(sampleLead.id, { status: LeadStatus.WON }, adminUser),
       ).rejects.toThrow('Cannot transition');
     });
   });
@@ -362,11 +353,7 @@ describe('LeadsController', () => {
       const result = await controller.addActivity(sampleLead.id, dto, agentUser);
 
       expect(result).toEqual(activity);
-      expect(mockService.addActivity).toHaveBeenCalledWith(
-        sampleLead.id,
-        dto,
-        agentUser.sub,
-      );
+      expect(mockService.addActivity).toHaveBeenCalledWith(sampleLead.id, dto, agentUser.sub);
     });
   });
 
@@ -410,13 +397,9 @@ describe('LeadsController', () => {
     });
 
     it('should propagate NotFoundException from service', async () => {
-      mockService.getActivities.mockRejectedValue(
-        new Error('Lead not found'),
-      );
+      mockService.getActivities.mockRejectedValue(new Error('Lead not found'));
 
-      await expect(
-        controller.getActivities('nonexistent'),
-      ).rejects.toThrow('Lead not found');
+      await expect(controller.getActivities('nonexistent')).rejects.toThrow('Lead not found');
     });
   });
 });

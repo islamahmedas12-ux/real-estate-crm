@@ -8,6 +8,7 @@ import type {
   ClientStats,
   CreateClientPayload,
   UpdateClientPayload,
+  DuplicateCheckResult,
 } from '../types/client'
 
 const BASE = '/api/clients'
@@ -46,6 +47,12 @@ export const clientsApi = {
   assignAgent(id: string, agentId: string) {
     return apiClient
       .patch<Client>(`${BASE}/${id}/assign`, { agentId })
+      .then((r) => r.data)
+  },
+
+  checkDuplicates(params: { phone?: string; email?: string; nationalId?: string; excludeId?: string }) {
+    return apiClient
+      .get<DuplicateCheckResult>(`${BASE}/check-duplicates`, { params })
       .then((r) => r.data)
   },
 }

@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Param,
-  Body,
-  Res,
-  ParseUUIDPipe,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Res, ParseUUIDPipe, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -35,10 +26,7 @@ export class PdfController {
   @ApiProduces('application/pdf')
   @ApiResponse({ status: 200, description: 'PDF file' })
   @ApiResponse({ status: 404, description: 'Contract not found' })
-  async contractPdf(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Res() res: Response,
-  ) {
+  async contractPdf(@Param('id', ParseUUIDPipe) id: string, @Res() res: Response) {
     const buffer = await this.pdfService.generateContractPdf(id);
     res.set({
       'Content-Type': 'application/pdf',
@@ -54,10 +42,7 @@ export class PdfController {
   @ApiProduces('application/pdf')
   @ApiResponse({ status: 200, description: 'PDF file' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
-  async invoicePdf(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Res() res: Response,
-  ) {
+  async invoicePdf(@Param('id', ParseUUIDPipe) id: string, @Res() res: Response) {
     const buffer = await this.pdfService.generateInvoicePdf(id);
     res.set({
       'Content-Type': 'application/pdf',
@@ -73,10 +58,7 @@ export class PdfController {
   @ApiProduces('application/pdf')
   @ApiResponse({ status: 200, description: 'PDF file' })
   @ApiResponse({ status: 404, description: 'Property not found' })
-  async propertyPdf(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Res() res: Response,
-  ) {
+  async propertyPdf(@Param('id', ParseUUIDPipe) id: string, @Res() res: Response) {
     const buffer = await this.pdfService.generatePropertyPdf(id);
     res.set({
       'Content-Type': 'application/pdf',
@@ -92,15 +74,8 @@ export class PdfController {
   @ApiProduces('application/pdf')
   @ApiResponse({ status: 200, description: 'PDF file' })
   @ApiResponse({ status: 400, description: 'Invalid report parameters' })
-  async generateReport(
-    @Body() dto: GenerateReportDto,
-    @Res() res: Response,
-  ) {
-    const buffer = await this.pdfService.generateReport(
-      dto.type,
-      dto.month,
-      dto.agentId,
-    );
+  async generateReport(@Body() dto: GenerateReportDto, @Res() res: Response) {
+    const buffer = await this.pdfService.generateReport(dto.type, dto.month, dto.agentId);
     const filename = `report-${dto.type}-${dto.month ?? 'current'}.pdf`;
     res.set({
       'Content-Type': 'application/pdf',

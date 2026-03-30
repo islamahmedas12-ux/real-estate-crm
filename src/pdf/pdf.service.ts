@@ -60,11 +60,7 @@ export class PdfService {
     return this.propertyTemplate.generate(property);
   }
 
-  async generateReport(
-    type: ReportType,
-    month?: string,
-    agentId?: string,
-  ): Promise<Buffer> {
+  async generateReport(type: ReportType, month?: string, agentId?: string): Promise<Buffer> {
     // Validate month format if provided
     if (month !== undefined && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
       throw new BadRequestException(
@@ -74,7 +70,8 @@ export class PdfService {
 
     // Default to current month
     const now = new Date();
-    const periodStr = month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const periodStr =
+      month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     const [year, mon] = periodStr.split('-').map(Number);
     const startDate = new Date(year, mon - 1, 1);
     const endDate = new Date(year, mon, 1);

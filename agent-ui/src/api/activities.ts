@@ -17,7 +17,7 @@ export const activitiesApi = {
 
   recent(limit = 20) {
     return apiClient
-      .get<Activity[]>(`${BASE}/recent`, { params: { limit } })
+      .get<PaginatedResponse<Activity>>(`${BASE}/recent`, { params: { limit } })
       .then((r) => r.data)
   },
 

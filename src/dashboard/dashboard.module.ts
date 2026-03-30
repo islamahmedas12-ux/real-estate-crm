@@ -9,7 +9,7 @@ import { PrismaModule } from '../prisma/prisma.module.js';
     PrismaModule,
     CacheModule.register({
       ttl: 60_000, // 60 seconds default TTL for dashboard stats
-      max: 50,     // max cached items
+      max: 50, // max cached items
     }),
   ],
   controllers: [DashboardController],

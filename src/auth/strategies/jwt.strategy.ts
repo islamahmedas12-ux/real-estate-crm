@@ -27,9 +27,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   ) {
     const authmeUrl = configService.getOrThrow<string>('AUTHME_URL');
     const realm = configService.getOrThrow<string>('AUTHME_REALM');
+    // AUTHME_ISSUER_URL overrides the base URL used for JWT issuer validation.
+    // This is needed when the internal AUTHME_URL (e.g. http://authme:3001) differs
+    // from the public URL that Keycloak stamps into tokens (e.g. https://dev-auth.realstate-crm.homes).
+    const issuerBaseUrl = configService.get<string>('AUTHME_ISSUER_URL') ?? authmeUrl;
 
     const jwksUri = `${authmeUrl}/realms/${realm}/protocol/openid-connect/certs`;
-    const issuer = `${authmeUrl}/realms/${realm}`;
+    const issuer = `${issuerBaseUrl}/realms/${realm}`;
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -51,17 +55,18 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
    * the user record in the database.
    */
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    if (!payload.sub || !payload.email) {
-      throw new UnauthorizedException('Malformed token: missing sub or email');
+    const email = payload.email ?? payload.preferred_username ?? payload.sub;
+    if (!payload.sub) {
+      throw new UnauthorizedException('Malformed token: missing sub');
     }
 
     const role = this.mapRole(payload.realm_access?.roles ?? []);
 
     const user = await this.authService.syncUser({
       authmeId: payload.sub,
-      email: payload.email,
-      firstName: payload.given_name ?? null,
-      lastName: payload.family_name ?? null,
+      email,
+      firstName: payload.given_name ?? payload.name?.split(' ')[0] ?? null,
+      lastName: payload.family_name ?? payload.name?.split(' ').slice(1).join(' ') ?? null,
       role,
     });
 
@@ -75,12 +80,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   /**
    * Maps Authme realm roles to the application UserRole enum.
    *
-   * Priority (highest first): crm-admin → crm-manager → crm-agent → AGENT (default)
+   * Supports both prefixed (crm-admin) and unprefixed (admin) role names
+   * so the backend works regardless of how the AuthMe realm roles are named.
+   *
+   * Priority (highest first): admin → manager → agent → AGENT (default)
    */
   private mapRole(realmRoles: string[]): UserRole {
-    if (realmRoles.includes('crm-admin')) return UserRole.ADMIN;
-    if (realmRoles.includes('crm-manager')) return UserRole.MANAGER;
-    if (realmRoles.includes('crm-agent')) return UserRole.AGENT;
+    if (realmRoles.includes('crm-admin') || realmRoles.includes('admin')) return UserRole.ADMIN;
+    if (realmRoles.includes('crm-manager') || realmRoles.includes('manager'))
+      return UserRole.MANAGER;
+    if (realmRoles.includes('crm-agent') || realmRoles.includes('agent')) return UserRole.AGENT;
     // Default to AGENT so any authenticated user can access the system
     return UserRole.AGENT;
   }

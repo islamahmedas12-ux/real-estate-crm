@@ -128,6 +128,60 @@ describe('JwtStrategy', () => {
       );
     });
 
+    it('should map unprefixed "admin" role to UserRole.ADMIN', async () => {
+      authService.syncUser.mockResolvedValue({
+        ...mockAuthenticatedUser,
+        role: UserRole.ADMIN,
+      });
+
+      const payload: JwtPayload = {
+        sub: 'authme-sub-123',
+        email: 'test@example.com',
+        realm_access: { roles: ['admin'] },
+      };
+
+      await strategy.validate(payload);
+
+      expect(authService.syncUser).toHaveBeenCalledWith(
+        expect.objectContaining({ role: UserRole.ADMIN }),
+      );
+    });
+
+    it('should map unprefixed "manager" role to UserRole.MANAGER', async () => {
+      authService.syncUser.mockResolvedValue({
+        ...mockAuthenticatedUser,
+        role: UserRole.MANAGER,
+      });
+
+      const payload: JwtPayload = {
+        sub: 'authme-sub-123',
+        email: 'test@example.com',
+        realm_access: { roles: ['manager'] },
+      };
+
+      await strategy.validate(payload);
+
+      expect(authService.syncUser).toHaveBeenCalledWith(
+        expect.objectContaining({ role: UserRole.MANAGER }),
+      );
+    });
+
+    it('should map unprefixed "agent" role to UserRole.AGENT', async () => {
+      authService.syncUser.mockResolvedValue(mockAuthenticatedUser);
+
+      const payload: JwtPayload = {
+        sub: 'authme-sub-123',
+        email: 'test@example.com',
+        realm_access: { roles: ['agent'] },
+      };
+
+      await strategy.validate(payload);
+
+      expect(authService.syncUser).toHaveBeenCalledWith(
+        expect.objectContaining({ role: UserRole.AGENT }),
+      );
+    });
+
     it('should default to AGENT when no CRM roles are present', async () => {
       authService.syncUser.mockResolvedValue(mockAuthenticatedUser);
 
@@ -180,9 +234,7 @@ describe('JwtStrategy', () => {
     it('should throw UnauthorizedException when sub is missing', async () => {
       const payload = { email: 'test@example.com' } as JwtPayload;
 
-      await expect(strategy.validate(payload)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
       await expect(strategy.validate(payload)).rejects.toThrow(
         'Malformed token: missing sub or email',
       );
@@ -191,9 +243,7 @@ describe('JwtStrategy', () => {
     it('should throw UnauthorizedException when email is missing', async () => {
       const payload = { sub: 'authme-sub-123' } as JwtPayload;
 
-      await expect(strategy.validate(payload)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException when user is deactivated', async () => {
@@ -207,12 +257,8 @@ describe('JwtStrategy', () => {
         email: 'test@example.com',
       };
 
-      await expect(strategy.validate(payload)).rejects.toThrow(
-        UnauthorizedException,
-      );
-      await expect(strategy.validate(payload)).rejects.toThrow(
-        'User account is deactivated',
-      );
+      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate(payload)).rejects.toThrow('User account is deactivated');
     });
   });
 });

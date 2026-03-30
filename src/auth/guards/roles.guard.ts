@@ -23,6 +23,7 @@ export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     const requiredRoles = this.reflector.getAllAndOverride<(UserRole | string)[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),

@@ -35,7 +35,7 @@ import { useQuery } from '@tanstack/react-query'
 import { cn } from '../utils'
 import { useAuth } from '../context/AuthContext'
 import { StatsCard } from '../components/ui'
-import { NotificationsPanel, UpcomingTasks } from '../components/dashboard'
+import { NotificationsPanel, UpcomingTasks, MyProperties } from '../components/dashboard'
 import {
   fetchAgentOverview,
   fetchAgentLeadsPipeline,
@@ -604,10 +604,10 @@ function RecentActivitiesSection() {
         ? activitiesApiClient.byUser(user.id, { pageSize: 5 })
         : activitiesApiClient.recent(5),
     staleTime: 30_000,
-    enabled: true,
+    enabled: !!user?.id,
   })
 
-  const activities = data?.data ?? (Array.isArray(data) ? (data as unknown[]) : [])
+  const activities = Array.isArray(data?.data) ? data.data : []
 
   return (
     <SectionShell>
@@ -774,6 +774,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left column */}
         <div className="lg:col-span-2 flex flex-col gap-4">
+          {/* My Assigned Properties */}
+          <MyProperties />
+
           {/* Follow-ups */}
           {followUps.isLoading ? (
             <LoadingSpinner />

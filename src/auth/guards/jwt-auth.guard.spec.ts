@@ -12,10 +12,7 @@ describe('JwtAuthGuard', () => {
     guard = new JwtAuthGuard(reflector);
   });
 
-  const mockExecutionContext = (
-    handler = jest.fn(),
-    classRef = jest.fn(),
-  ): ExecutionContext =>
+  const mockExecutionContext = (handler = jest.fn(), classRef = jest.fn()): ExecutionContext =>
     ({
       getHandler: () => handler,
       getClass: () => classRef,
@@ -79,9 +76,7 @@ describe('JwtAuthGuard', () => {
     });
 
     it('should throw UnauthorizedException when user is false', () => {
-      expect(() => guard.handleRequest(null, false)).toThrow(
-        UnauthorizedException,
-      );
+      expect(() => guard.handleRequest(null, false)).toThrow(UnauthorizedException);
       expect(() => guard.handleRequest(null, false)).toThrow(
         'Invalid or missing authentication token',
       );
@@ -99,9 +94,7 @@ describe('JwtAuthGuard', () => {
     });
 
     it('should throw UnauthorizedException when user is null/undefined', () => {
-      expect(() => guard.handleRequest(null, null as any)).toThrow(
-        UnauthorizedException,
-      );
+      expect(() => guard.handleRequest(null, null as any)).toThrow(UnauthorizedException);
     });
   });
 });

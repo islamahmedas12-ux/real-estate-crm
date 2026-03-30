@@ -8,6 +8,7 @@ import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 
 import LoginPage from './pages/LoginPage'
+import CallbackPage from './pages/CallbackPage'
 import DashboardPage from './pages/DashboardPage'
 import PropertiesListPage from './pages/properties/PropertiesListPage'
 import PropertyDetailPage from './pages/properties/PropertyDetailPage'
@@ -48,6 +49,7 @@ export default function App() {
               <Routes>
                 {/* Public */}
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/callback" element={<CallbackPage />} />
 
                 {/* Protected — wrapped in Layout */}
                 <Route

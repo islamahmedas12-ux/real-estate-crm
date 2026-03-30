@@ -1,11 +1,123 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, LeadStatus, ContractStatus, InvoiceStatus, PropertyStatus } from '@prisma/client';
+import { LeadStatus, ContractStatus, InvoiceStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { DateRangeDto, DateRangePreset } from './dto/date-range.dto.js';
 
 @Injectable()
 export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
+
+  // ─── Simplified Endpoints (Sprint 3) ─────────────────────────────────
+
+  async getSimpleStats() {
+    const [totalProperties, totalClients, totalLeads, totalContracts, revenueResult] =
+      await Promise.all([
+        this.prisma.property.count(),
+        this.prisma.client.count(),
+        this.prisma.lead.count(),
+        this.prisma.contract.count(),
+        this.prisma.invoice.aggregate({
+          _sum: { amount: true },
+          where: { status: InvoiceStatus.PAID },
+        }),
+      ]);
+
+    return {
+      totalProperties,
+      totalClients,
+      totalLeads,
+      totalContracts,
+      revenue: Number(revenueResult._sum.amount ?? 0),
+    };
+  }
+
+  async getMonthlyRevenue(months = 6) {
+    const now = new Date();
+    const results: { month: string; revenue: number }[] = [];
+
+    for (let i = months - 1; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
+      const label = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}`;
+
+      const agg = await this.prisma.invoice.aggregate({
+        _sum: { amount: true },
+        where: {
+          status: InvoiceStatus.PAID,
+          paidDate: { gte: start, lte: end },
+        },
+      });
+
+      results.push({ month: label, revenue: Number(agg._sum.amount ?? 0) });
+    }
+
+    return results;
+  }
+
+  async getLeadsPipeline() {
+    const byStatus = await this.prisma.lead.groupBy({
+      by: ['status'],
+      _count: true,
+    });
+
+    return byStatus.map((g) => ({ stage: g.status, count: g._count }));
+  }
+
+  async getRecentActivities(limit = 10) {
+    return this.prisma.activity.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  async getTopAgentPerformance() {
+    const wonLeads = await this.prisma.lead.groupBy({
+      by: ['assignedAgentId'],
+      where: {
+        status: LeadStatus.WON,
+        assignedAgentId: { not: null },
+      },
+      _count: true,
+    });
+
+    const contracts = await this.prisma.contract.findMany({
+      where: {
+        status: { in: [ContractStatus.ACTIVE, ContractStatus.COMPLETED] },
+        agentId: { not: null },
+      },
+      select: { agentId: true, totalAmount: true },
+    });
+
+    const revenueByAgent: Record<string, number> = {};
+    for (const c of contracts) {
+      if (c.agentId) {
+        revenueByAgent[c.agentId] = (revenueByAgent[c.agentId] ?? 0) + Number(c.totalAmount);
+      }
+    }
+
+    const agentIds = new Set<string>();
+    wonLeads.forEach((w) => w.assignedAgentId && agentIds.add(w.assignedAgentId));
+    Object.keys(revenueByAgent).forEach((id) => agentIds.add(id));
+
+    const agents = await this.prisma.user.findMany({
+      where: { id: { in: Array.from(agentIds) } },
+      select: { id: true, firstName: true, lastName: true },
+    });
+
+    const agentMap = new Map(agents.map((a) => [a.id, a]));
+
+    const results = Array.from(agentIds).map((agentId) => {
+      const agent = agentMap.get(agentId);
+      return {
+        agentId,
+        name: agent ? `${agent.firstName ?? ''} ${agent.lastName ?? ''}`.trim() : agentId,
+        dealsClosed: wonLeads.find((w) => w.assignedAgentId === agentId)?._count ?? 0,
+        revenue: revenueByAgent[agentId] ?? 0,
+      };
+    });
+
+    return results.sort((a, b) => b.dealsClosed - a.dealsClosed);
+  }
 
   // ─── Admin Endpoints ────────────────────────────────────────────────
 
@@ -123,9 +235,12 @@ export class DashboardService {
     ]);
 
     const total = byStatus.reduce((sum, g) => sum + g._count, 0);
-    const conversionRate = total > 0
-      ? Math.round((byStatus.find((g) => g.status === LeadStatus.WON)?._count ?? 0) / total * 10000) / 100
-      : 0;
+    const conversionRate =
+      total > 0
+        ? Math.round(
+            ((byStatus.find((g) => g.status === LeadStatus.WON)?._count ?? 0) / total) * 10000,
+          ) / 100
+        : 0;
 
     return {
       pipeline: byStatus.map((g) => ({ status: g.status, count: g._count })),
@@ -318,10 +433,18 @@ export class DashboardService {
         where: { assignedAgentId: agentId, createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
       }),
       this.prisma.lead.count({
-        where: { assignedAgentId: agentId, status: LeadStatus.WON, updatedAt: { gte: thisMonthStart } },
+        where: {
+          assignedAgentId: agentId,
+          status: LeadStatus.WON,
+          updatedAt: { gte: thisMonthStart },
+        },
       }),
       this.prisma.lead.count({
-        where: { assignedAgentId: agentId, status: LeadStatus.WON, updatedAt: { gte: lastMonthStart, lte: lastMonthEnd } },
+        where: {
+          assignedAgentId: agentId,
+          status: LeadStatus.WON,
+          updatedAt: { gte: lastMonthStart, lte: lastMonthEnd },
+        },
       }),
       this.prisma.contract.aggregate({
         _sum: { totalAmount: true },
@@ -360,6 +483,65 @@ export class DashboardService {
         won: this.percentChange(lastMonthWon, thisMonthWon),
         revenue: this.percentChange(lastRev, thisRev),
       },
+    };
+  }
+
+  // ─── Mobile Dashboard ────────────────────────────────────────────────
+
+  async getMobileDashboard(agentId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const [myLeads, myClients, myProperties, pendingFollowUps, todayFollowUps, recentActivities] =
+      await Promise.all([
+        this.prisma.lead.count({ where: { assignedAgentId: agentId } }),
+        this.prisma.client.count({ where: { assignedAgentId: agentId } }),
+        this.prisma.property.count({ where: { assignedAgentId: agentId } }),
+        this.prisma.lead.count({
+          where: {
+            assignedAgentId: agentId,
+            nextFollowUp: { lte: tomorrow },
+            status: { notIn: [LeadStatus.WON, LeadStatus.LOST] },
+          },
+        }),
+        this.prisma.lead.findMany({
+          where: {
+            assignedAgentId: agentId,
+            nextFollowUp: { gte: today, lt: tomorrow },
+          },
+          include: {
+            client: { select: { firstName: true, lastName: true } },
+            property: { select: { title: true } },
+          },
+          orderBy: { nextFollowUp: 'asc' },
+          take: 20,
+        }),
+        this.prisma.leadActivity.findMany({
+          where: { lead: { assignedAgentId: agentId } },
+          orderBy: { createdAt: 'desc' },
+          take: 15,
+        }),
+      ]);
+
+    return {
+      stats: { myLeads, myClients, myProperties, pendingFollowUps },
+      todayFollowUps: todayFollowUps.map((fu) => ({
+        id: fu.id,
+        clientName: fu.client ? `${fu.client.firstName} ${fu.client.lastName}` : 'Unknown',
+        propertyTitle: fu.property?.title ?? null,
+        leadStatus: fu.status,
+        scheduledAt: fu.nextFollowUp?.toISOString() ?? today.toISOString(),
+        notes: fu.notes ?? null,
+      })),
+      recentActivities: recentActivities.map((a) => ({
+        id: a.id,
+        type: a.type,
+        description: a.description ?? `${a.type} activity`,
+        entityType: 'LEAD',
+        createdAt: a.createdAt.toISOString(),
+      })),
     };
   }
 

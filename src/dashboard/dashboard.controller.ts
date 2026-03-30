@@ -1,20 +1,12 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { DashboardService } from './dashboard.service.js';
 import { DateRangeDto } from './dto/date-range.dto.js';
-import { CurrentUser, type AuthenticatedUser } from '../common/decorators/current-user.decorator.js';
+import {
+  CurrentUser,
+  type AuthenticatedUser,
+} from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 
@@ -109,6 +101,15 @@ export class DashboardController {
   @ApiResponse({ status: 200, description: 'Follow-up lists' })
   getAgentFollowUps(@CurrentUser() user: AuthenticatedUser) {
     return this.dashboardService.getAgentFollowUps(user.id);
+  }
+
+  // ─── Mobile Dashboard (combined endpoint) ──────────────────────────
+
+  @Get()
+  @ApiOperation({ summary: 'Mobile dashboard — combined stats, follow-ups, recent activity' })
+  @ApiResponse({ status: 200, description: 'Combined dashboard payload for mobile' })
+  getMobileDashboard(@CurrentUser() user: AuthenticatedUser) {
+    return this.dashboardService.getMobileDashboard(user.id);
   }
 
   @Get('agent/performance')

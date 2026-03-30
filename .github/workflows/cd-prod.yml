@@ -1,0 +1,175 @@
+name: CD → Production
+
+on:
+  push:
+    branches: [prod]
+
+concurrency:
+  group: cd-prod
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ── Build & Push Docker Image ──────────────────────────────────────────
+  build-and-push:
+    name: Build & Push to Production
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=prod
+            type=raw,value=latest
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── Build Frontend SPAs with Prod env vars ─────────────────────────────
+  build-frontends:
+    name: Build Production Frontends
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Build Admin UI (Prod)
+        working-directory: admin-ui
+        run: |
+          npm ci
+          npm run build -- --mode prod
+
+      - name: Build Agent UI (Prod)
+        working-directory: agent-ui
+        run: |
+          npm ci
+          npm run build -- --mode prod
+
+      - name: Upload Admin UI build
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-admin-ui
+          path: admin-ui/dist/
+
+      - name: Upload Agent UI build
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-agent-ui
+          path: agent-ui/dist/
+
+  # ── Database Migration ─────────────────────────────────────────────────
+  migrate:
+    name: Database Migration (Production)
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run migrations
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+
+  # ── Deploy to Production ───────────────────────────────────────────────
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-push, migrate, build-frontends]
+
+    steps:
+      - name: Download Admin UI build
+        uses: actions/download-artifact@v4
+        with:
+          name: prod-admin-ui
+          path: prod-admin-ui/
+
+      - name: Download Agent UI build
+        uses: actions/download-artifact@v4
+        with:
+          name: prod-agent-ui
+          path: prod-agent-ui/
+
+      - name: SSH Deploy to Production Server
+        env:
+          SSH_KEY: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          SSH_HOST: ${{ secrets.PROD_SERVER_HOST }}
+          SSH_USER: islam
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+          # Clean old builds and deploy new ones
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "rm -rf /apps/web/prod-admin-ui/* /apps/web/prod-agent-ui/*"
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r prod-admin-ui/* $SSH_USER@$SSH_HOST:/apps/web/prod-admin-ui/
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r prod-agent-ui/* $SSH_USER@$SSH_HOST:/apps/web/prod-agent-ui/
+
+          # Pull and restart backend
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'SSHEOF'
+          cd /apps/real-estate-crm
+
+          docker pull ghcr.io/islamahmedas12-ux/real-estate-crm:prod
+
+          export APP_IMAGE="ghcr.io/islamahmedas12-ux/real-estate-crm:prod"
+          docker-compose -f docker-compose.prod-server.yml up -d
+
+          echo "=== Running containers ==="
+          docker-compose -f docker-compose.prod-server.yml ps
+          SSHEOF
+
+          rm ~/.ssh/deploy_key
+
+      - name: Deployment Status
+        if: success()
+        run: echo "✅ Production deployment successful! Commit ${{ github.sha }}"
+
+      - name: Deployment Failed
+        if: failure()
+        run: echo "❌ Production deployment failed! Commit ${{ github.sha }}"

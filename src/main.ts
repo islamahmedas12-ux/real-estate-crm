@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -6,6 +8,13 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
+import { SanitizeNotFoundFilter } from './common/filters/sanitize-not-found.filter.js';
+import { SanitizeInterceptor } from './common/interceptors/sanitize.interceptor.js';
+
+// Read version from package.json so Swagger and health endpoint stay in sync.
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf-8')) as {
+  version: string;
+};
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -16,22 +25,42 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "'unsafe-eval'",
+            'https://unpkg.com',
+            'https://cdn.jsdelivr.net',
+          ],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
           imgSrc: ["'self'", 'data:', 'blob:', 'https://validator.swagger.io'],
-          connectSrc: ["'self'"],
+          connectSrc: ["'self'", 'https://dev-api.realstate-crm.homes'],
+          fontSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
         },
       },
     }),
   );
 
-  // CORS — allow both Admin and Agent portals
-  const adminPortalUrl = process.env['ADMIN_PORTAL_URL'] ?? 'http://localhost:5173';
-  const agentPortalUrl = process.env['AGENT_PORTAL_URL'] ?? 'http://localhost:5174';
+  // CORS — allow Admin and Agent portals for all environments
+  const defaultOrigins = [
+    'https://dev-admin.realstate-crm.homes',
+    'https://dev-agent.realstate-crm.homes',
+    'https://qa-admin.realstate-crm.homes',
+    'https://qa-agent.realstate-crm.homes',
+    'https://uat-admin.realstate-crm.homes',
+    'https://uat-agent.realstate-crm.homes',
+    'https://admin.realstate-crm.homes',
+    'https://agent.realstate-crm.homes',
+    'http://localhost:5173',
+    'http://localhost:5174',
+  ];
+  const corsOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+    : defaultOrigins;
   app.enableCors({
-    origin: [adminPortalUrl, agentPortalUrl],
+    origin: corsOrigins,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
@@ -47,8 +76,11 @@ async function bootstrap() {
     }),
   );
 
-  // Global exception filter
-  app.useGlobalFilters(new HttpExceptionFilter());
+  // Global XSS sanitization interceptor
+  app.useGlobalInterceptors(new SanitizeInterceptor());
+
+  // Global exception filters
+  app.useGlobalFilters(new HttpExceptionFilter(), new SanitizeNotFoundFilter());
 
   // Swagger / OpenAPI at /api/docs
   const config = new DocumentBuilder()
@@ -58,7 +90,7 @@ async function bootstrap() {
         'Manages properties, clients, leads, contracts, invoices, and agent activities.\n\n' +
         'All protected endpoints require a Bearer token (JWT) from Authme IAM.',
     )
-    .setVersion('1.0.0')
+    .setVersion(pkg.version)
     .setContact('Real Estate CRM', '', '')
     .setLicense('Private', '')
     .addBearerAuth(
@@ -75,16 +107,27 @@ async function bootstrap() {
     .addTag('Property Images', 'Upload and manage property images')
     .addTag('Contract Documents', 'Upload contract documents')
     .addTag('File Serving', 'Serve uploaded files')
+    .addTag('Health', 'Health check endpoints')
+    .addTag('Dashboard', 'Dashboard and analytics')
+    .addTag('Email', 'Email service')
+    .addTag('Uploads', 'File uploads')
+    .addServer('https://dev-api.realstate-crm.homes', 'Dev')
+    .addServer('http://localhost:3000', 'Local')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    customCssUrl: 'https://unpkg.com/swagger-ui-dist@5/swagger-ui.css',
+    customJs: [
+      'https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js',
+      'https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js',
+    ],
+  });
 
   // Warn about insecure default credentials in production
   const dbUrl = process.env['DATABASE_URL'] ?? '';
   const isProduction = process.env['NODE_ENV'] === 'production';
-  const hasDefaultCreds =
-    dbUrl.includes(':postgres@') || dbUrl.includes(':password@');
+  const hasDefaultCreds = dbUrl.includes(':postgres@') || dbUrl.includes(':password@');
   if (isProduction && hasDefaultCreds) {
     console.warn(
       '\n⚠️  WARNING: Database credentials appear to use default/weak values.\n' +
@@ -98,4 +141,4 @@ async function bootstrap() {
   console.log(`Swagger UI: http://localhost:${port}/api/docs`);
 }
 
-bootstrap();
+void bootstrap();
