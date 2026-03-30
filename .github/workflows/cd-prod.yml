@@ -71,12 +71,26 @@ jobs:
         working-directory: admin-ui
         run: |
           npm ci
+          cat > .env.prod <<ENVEOF
+          VITE_API_URL=https://api.realstate-crm.homes
+          VITE_AUTHME_URL=https://auth.realstate-crm.homes
+          VITE_AUTHME_REALM=real-estate
+          VITE_AUTHME_CLIENT_ID=admin-portal
+          VITE_AUTHME_REDIRECT_URI=https://admin.realstate-crm.homes/callback
+          ENVEOF
           npm run build -- --mode prod
 
       - name: Build Agent UI (Prod)
         working-directory: agent-ui
         run: |
           npm ci
+          cat > .env.prod <<ENVEOF
+          VITE_API_URL=https://api.realstate-crm.homes
+          VITE_AUTHME_URL=https://auth.realstate-crm.homes
+          VITE_AUTHME_REALM=real-estate
+          VITE_AUTHME_CLIENT_ID=agent-portal
+          VITE_AUTHME_REDIRECT_URI=https://agent.realstate-crm.homes/callback
+          ENVEOF
           npm run build -- --mode prod
 
       - name: Upload Admin UI build
