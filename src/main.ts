@@ -20,6 +20,9 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Security middleware — relax CSP for Swagger UI at /api/docs
+  // Build connectSrc from CORS origins so each environment allows its own API
+  const adminUrl = process.env['ADMIN_PORTAL_URL'] ?? 'http://localhost:5173';
+  const agentUrl = process.env['AGENT_PORTAL_URL'] ?? 'http://localhost:5174';
   app.use(
     helmet({
       contentSecurityPolicy: {
@@ -34,7 +37,7 @@ async function bootstrap() {
           ],
           styleSrc: ["'self'", "'unsafe-inline'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
           imgSrc: ["'self'", 'data:', 'blob:', 'https://validator.swagger.io'],
-          connectSrc: ["'self'", 'https://dev-api.realstate-crm.homes'],
+          connectSrc: ["'self'", adminUrl, agentUrl],
           fontSrc: ["'self'", 'https://unpkg.com', 'https://cdn.jsdelivr.net'],
         },
       },
@@ -62,6 +65,11 @@ async function bootstrap() {
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
+  // Suppress favicon 404 errors (API server has no favicon)
+  app.use('/favicon.ico', (_req: import('express').Request, res: import('express').Response) => {
+    res.status(204).end();
   });
 
   // Cookie parser
@@ -111,8 +119,7 @@ async function bootstrap() {
     .addTag('Dashboard', 'Dashboard and analytics')
     .addTag('Email', 'Email service')
     .addTag('Uploads', 'File uploads')
-    .addServer('https://dev-api.realstate-crm.homes', 'Dev')
-    .addServer('http://localhost:3000', 'Local')
+    .addServer(`http://localhost:${process.env['PORT'] ?? 3000}`, 'Local')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
