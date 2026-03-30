@@ -153,7 +153,8 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
 
-          # Deploy frontend builds to server
+          # Clean old builds and deploy new ones
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "rm -rf /apps/web/admin-ui/* /apps/web/agent-ui/*"
           scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r dev-admin-ui/* $SSH_USER@$SSH_HOST:/apps/web/admin-ui/
           scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r dev-agent-ui/* $SSH_USER@$SSH_HOST:/apps/web/agent-ui/
 

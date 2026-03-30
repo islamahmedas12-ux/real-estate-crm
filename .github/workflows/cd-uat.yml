@@ -13,6 +13,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  # ── Build & Push Docker Image ──────────────────────────────────────────
   build-and-push:
     name: Build & Push to UAT
     runs-on: ubuntu-latest
@@ -52,11 +53,49 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # ── Build Frontend SPAs with UAT env vars ──────────────────────────────
+  build-frontends:
+    name: Build UAT Frontends
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Build Admin UI (UAT)
+        working-directory: admin-ui
+        run: |
+          npm ci
+          npm run build -- --mode uat
+
+      - name: Build Agent UI (UAT)
+        working-directory: agent-ui
+        run: |
+          npm ci
+          npm run build -- --mode uat
+
+      - name: Upload Admin UI build
+        uses: actions/upload-artifact@v4
+        with:
+          name: uat-admin-ui
+          path: admin-ui/dist/
+
+      - name: Upload Agent UI build
+        uses: actions/upload-artifact@v4
+        with:
+          name: uat-agent-ui
+          path: agent-ui/dist/
+
+  # ── Database Migration ─────────────────────────────────────────────────
   migrate:
     name: Database Migration (UAT)
     runs-on: ubuntu-latest
     needs: build-and-push
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -76,12 +115,25 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.UAT_DATABASE_URL }}
 
+  # ── Deploy to UAT Environment ──────────────────────────────────────────
   deploy:
     name: Deploy to UAT
     runs-on: ubuntu-latest
-    needs: [build-and-push, migrate]
-    
+    needs: [build-and-push, migrate, build-frontends]
+
     steps:
+      - name: Download Admin UI build
+        uses: actions/download-artifact@v4
+        with:
+          name: uat-admin-ui
+          path: uat-admin-ui/
+
+      - name: Download Agent UI build
+        uses: actions/download-artifact@v4
+        with:
+          name: uat-agent-ui
+          path: uat-agent-ui/
+
       - name: SSH Deploy to UAT Server
         env:
           SSH_KEY: ${{ secrets.UAT_SERVER_SSH_KEY }}
@@ -92,11 +144,31 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
-          
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+
+          # Clean old builds and deploy new ones
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "rm -rf /apps/web/uat-admin-ui/* /apps/web/uat-agent-ui/*"
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r uat-admin-ui/* $SSH_USER@$SSH_HOST:/apps/web/uat-admin-ui/
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -r uat-agent-ui/* $SSH_USER@$SSH_HOST:/apps/web/uat-agent-ui/
+
+          # Pull and restart backend
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'SSHEOF'
           cd /apps/real-estate-crm
-          docker-compose pull
-          docker-compose up -d
-          EOF
-          
+
+          docker pull ghcr.io/islamahmedas12-ux/real-estate-crm:uat
+
+          export APP_IMAGE="ghcr.io/islamahmedas12-ux/real-estate-crm:uat"
+          docker-compose -f docker-compose.uat-server.yml up -d
+
+          echo "=== Running containers ==="
+          docker-compose -f docker-compose.uat-server.yml ps
+          SSHEOF
+
           rm ~/.ssh/deploy_key
+
+      - name: Deployment Status
+        if: success()
+        run: echo "✅ UAT deployment successful! Commit ${{ github.sha }}"
+
+      - name: Deployment Failed
+        if: failure()
+        run: echo "❌ UAT deployment failed! Commit ${{ github.sha }}"
