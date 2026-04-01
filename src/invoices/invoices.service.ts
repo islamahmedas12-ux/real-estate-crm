@@ -330,40 +330,46 @@ export class InvoicesService {
       agentFilter.contract = { agentId: user.id };
     }
 
-    const [totalInvoices, totalDue, totalCollected, totalOverdue, byStatus] = await Promise.all([
-      this.prisma.invoice.count({ where: agentFilter }),
-      // Total pending (not yet paid, not cancelled)
-      this.prisma.invoice.aggregate({
-        _sum: { amount: true },
-        where: { ...agentFilter, status: InvoiceStatus.PENDING },
-      }),
-      // Total collected (paid)
-      this.prisma.invoice.aggregate({
-        _sum: { amount: true },
-        where: { ...agentFilter, status: InvoiceStatus.PAID },
-      }),
-      // Total overdue amount
-      this.prisma.invoice.aggregate({
-        _sum: { amount: true },
-        where: {
-          ...agentFilter,
-          status: InvoiceStatus.PENDING,
-          dueDate: { lt: now },
-        },
-      }),
-      this.prisma.invoice.groupBy({
-        by: ['status'],
-        _count: { id: true },
-        _sum: { amount: true },
-        where: agentFilter,
-      }),
-    ]);
+    const overdueWhere: Prisma.InvoiceWhereInput = {
+      ...agentFilter,
+      status: InvoiceStatus.PENDING,
+      dueDate: { lt: now },
+    };
+
+    const [totalInvoices, totalDue, totalCollected, totalOverdue, overdueCount, byStatus] =
+      await Promise.all([
+        this.prisma.invoice.count({ where: agentFilter }),
+        // Total pending (not yet paid, not cancelled)
+        this.prisma.invoice.aggregate({
+          _sum: { amount: true },
+          where: { ...agentFilter, status: InvoiceStatus.PENDING },
+        }),
+        // Total collected (paid)
+        this.prisma.invoice.aggregate({
+          _sum: { amount: true },
+          where: { ...agentFilter, status: InvoiceStatus.PAID },
+        }),
+        // Total overdue amount
+        this.prisma.invoice.aggregate({
+          _sum: { amount: true },
+          where: overdueWhere,
+        }),
+        // Overdue count
+        this.prisma.invoice.count({ where: overdueWhere }),
+        this.prisma.invoice.groupBy({
+          by: ['status'],
+          _count: { id: true },
+          _sum: { amount: true },
+          where: agentFilter,
+        }),
+      ]);
 
     return {
       total: totalInvoices,
       totalDue: totalDue._sum.amount ?? 0,
       totalCollected: totalCollected._sum.amount ?? 0,
       totalOverdue: totalOverdue._sum.amount ?? 0,
+      overdueCount,
       byStatus: Object.fromEntries(
         byStatus.map((s) => [s.status, { count: s._count.id, amount: s._sum.amount ?? 0 }]),
       ),

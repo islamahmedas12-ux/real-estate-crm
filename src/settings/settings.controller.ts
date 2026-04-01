@@ -1,5 +1,6 @@
 import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import type { Prisma } from '@prisma/client';
 import { SettingsService } from './settings.service.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
@@ -20,7 +21,7 @@ export class SettingsController {
 
   @Put('company')
   @ApiOperation({ summary: 'Update company settings' })
-  updateCompany(@Body() data: Record<string, unknown>) {
+  updateCompany(@Body() data: Prisma.InputJsonValue) {
     return this.settingsService.set('company', data);
   }
 
@@ -32,7 +33,7 @@ export class SettingsController {
 
   @Put('property-types')
   @ApiOperation({ summary: 'Update property type config' })
-  updatePropertyTypes(@Body('items') items: unknown[]) {
+  updatePropertyTypes(@Body('items') items: Prisma.InputJsonValue) {
     return this.settingsService.set('property-types', items);
   }
 
@@ -44,7 +45,7 @@ export class SettingsController {
 
   @Put('lead-sources')
   @ApiOperation({ summary: 'Update lead source config' })
-  updateLeadSources(@Body('items') items: unknown[]) {
+  updateLeadSources(@Body('items') items: Prisma.InputJsonValue) {
     return this.settingsService.set('lead-sources', items);
   }
 }
