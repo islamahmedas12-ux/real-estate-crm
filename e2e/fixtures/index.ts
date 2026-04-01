@@ -5,25 +5,25 @@
 
 export const TEST_USERS = {
   admin: {
-    username: process.env.E2E_ADMIN_USERNAME || 'admin@crm.test',
-    password: process.env.E2E_ADMIN_PASSWORD || 'Admin@123!',
-    role: 'crm-admin',
+    username: process.env.E2E_ADMIN_USERNAME || 'admin-test',
+    password: process.env.E2E_ADMIN_PASSWORD || 'Admin123!',
+    role: 'admin',
   },
   manager: {
-    username: process.env.E2E_MANAGER_USERNAME || 'manager@crm.test',
-    password: process.env.E2E_MANAGER_PASSWORD || 'Manager@123!',
-    role: 'crm-manager',
+    username: process.env.E2E_MANAGER_USERNAME || 'manager-test',
+    password: process.env.E2E_MANAGER_PASSWORD || 'Manager123!',
+    role: 'manager',
   },
   agent: {
-    username: process.env.E2E_AGENT_USERNAME || 'agent@crm.test',
-    password: process.env.E2E_AGENT_PASSWORD || 'Agent@123!',
-    role: 'crm-agent',
+    username: process.env.E2E_AGENT_USERNAME || 'agent-test',
+    password: process.env.E2E_AGENT_PASSWORD || 'Agent123!',
+    role: 'agent',
   },
 } as const;
 
-export const API_URL = process.env.E2E_API_URL || 'http://localhost:3000/api';
-export const ADMIN_URL = process.env.E2E_ADMIN_URL || 'http://localhost:5173';
-export const AGENT_URL = process.env.E2E_AGENT_URL || 'http://localhost:5174';
+export const API_URL = process.env.E2E_API_URL || 'https://qa-api.realstate-crm.homes/api';
+export const ADMIN_URL = process.env.E2E_ADMIN_URL || 'https://qa-admin.realstate-crm.homes';
+export const AGENT_URL = process.env.E2E_AGENT_URL || 'https://qa-agent.realstate-crm.homes';
 
 export const SAMPLE_PROPERTY = {
   title: 'E2E Test Property — Luxury Apartment',
