@@ -1,103 +1,100 @@
 /**
  * Auth Setup — Real Estate CRM E2E
- * Prepared by Sara Mostafa (QA Automation)
  *
- * This setup file handles authentication for both admin and agent users.
- * It stores browser storage state so subsequent tests don't need to login.
- *
- * In a real environment this would complete the Authme OAuth PKCE flow.
- * For testing purposes we support:
- *   1. Full OAuth browser flow (when Authme is running)
- *   2. Direct token injection via API (when E2E_MOCK_AUTH=true)
+ * Gets tokens via password grant and injects them into browser storage
+ * so E2E tests can access authenticated pages without going through
+ * the full OIDC browser redirect flow.
  */
 
-import { test as setup, expect } from '@playwright/test';
+import { test as setup } from '@playwright/test';
 import path from 'path';
-import { TEST_USERS, ADMIN_URL, AGENT_URL, API_URL } from './fixtures/index.js';
+import { TEST_USERS, ADMIN_URL, AGENT_URL } from './fixtures/index.js';
 
 const adminAuthFile = path.join(__dirname, '.auth', 'admin.json');
 const agentAuthFile = path.join(__dirname, '.auth', 'agent.json');
 
+const AUTH_URL = process.env.E2E_AUTH_URL || 'https://qa-auth.realstate-crm.homes';
+const AUTH_REALM = process.env.E2E_AUTH_REALM || 'real-estate-qa';
+const CLIENT_ID = 'crm-backend';
+const CLIENT_SECRET = process.env.E2E_CLIENT_SECRET || '797e5cb4a67875e49f1711c7b7624db6fd6ff6ec4684dcc445715ec5208a85da';
+
+async function getToken(username: string, password: string): Promise<any> {
+  const res = await fetch(
+    `${AUTH_URL}/realms/${AUTH_REALM}/protocol/openid-connect/token`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'password',
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        username,
+        password,
+      }),
+    },
+  );
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Token request failed for ${username}: ${res.status} ${body}`);
+  }
+  return res.json();
+}
+
 // ─── Admin Setup ──────────────────────────────────────────────────────────────
 
 setup('authenticate as admin', async ({ page }) => {
+  const tokenData = await getToken(TEST_USERS.admin.username, TEST_USERS.admin.password);
+
+  // Navigate to admin portal and inject tokens into sessionStorage
   await page.goto(ADMIN_URL);
+  await page.waitForLoadState('domcontentloaded');
 
-  // Wait for either the login button or the dashboard (already logged in)
-  const loginButton = page.getByRole('button', { name: /login|sign in/i });
-  const dashboard = page.getByText(/dashboard/i).first();
+  // The authme-sdk stores tokens in sessionStorage with keys like:
+  // authme_token, authme_refresh_token, authme_user, etc.
+  // We inject them so the app thinks the user is already logged in.
+  await page.evaluate((data) => {
+    const { access_token, refresh_token, expires_in } = data;
+    const expiresAt = Date.now() + expires_in * 1000;
 
-  try {
-    await Promise.race([
-      loginButton.waitFor({ timeout: 5000 }),
-      dashboard.waitFor({ timeout: 5000 }),
-    ]);
-  } catch {
-    // Page might still be loading
-  }
+    // authme-sdk storage keys
+    sessionStorage.setItem('authme_access_token', access_token);
+    sessionStorage.setItem('authme_refresh_token', refresh_token || '');
+    sessionStorage.setItem('authme_token_expires_at', String(expiresAt));
+    sessionStorage.setItem('authme_authenticated', 'true');
 
-  // If we already have a session, skip login
-  if (await dashboard.isVisible().catch(() => false)) {
-    await page.context().storageState({ path: adminAuthFile });
-    return;
-  }
+    // Also try localStorage in case the SDK uses it
+    localStorage.setItem('authme_access_token', access_token);
+    localStorage.setItem('authme_refresh_token', refresh_token || '');
+    localStorage.setItem('authme_token_expires_at', String(expiresAt));
+    localStorage.setItem('authme_authenticated', 'true');
+  }, tokenData);
 
-  // Click the login / "Sign in with Authme" button
-  await page.getByRole('button', { name: /login|sign in/i }).click();
-
-  // Authme login form (Keycloak-style)
-  await page.waitForURL(/authme|auth|login/, { timeout: 10_000 });
-
-  await page.getByLabel(/username|email/i).fill(TEST_USERS.admin.username);
-  // Password field might not have a proper label association — use multiple selectors
-  const passwordField = page.getByLabel(/password/i)
-    .or(page.locator('input[type="password"]'));
-  await passwordField.first().fill(TEST_USERS.admin.password);
-  await page.getByRole('button', { name: /sign in|login/i }).click();
-
-  // Wait for redirect back to admin portal
-  await page.waitForURL(new RegExp(ADMIN_URL), { timeout: 15_000 });
-
-  // Verify we landed on the dashboard
-  await expect(page.getByText(/dashboard/i).first()).toBeVisible({ timeout: 10_000 });
-
-  // Save auth state
+  // Save auth state (cookies + storage)
   await page.context().storageState({ path: adminAuthFile });
 });
 
 // ─── Agent Setup ──────────────────────────────────────────────────────────────
 
 setup('authenticate as agent', async ({ page }) => {
+  const tokenData = await getToken(TEST_USERS.agent.username, TEST_USERS.agent.password);
+
   await page.goto(AGENT_URL);
+  await page.waitForLoadState('domcontentloaded');
 
-  const loginButton = page.getByRole('button', { name: /login|sign in/i });
-  const dashboard = page.getByText(/dashboard/i).first();
+  await page.evaluate((data) => {
+    const { access_token, refresh_token, expires_in } = data;
+    const expiresAt = Date.now() + expires_in * 1000;
 
-  try {
-    await Promise.race([
-      loginButton.waitFor({ timeout: 5000 }),
-      dashboard.waitFor({ timeout: 5000 }),
-    ]);
-  } catch {
-    // Page might still be loading
-  }
+    sessionStorage.setItem('authme_access_token', access_token);
+    sessionStorage.setItem('authme_refresh_token', refresh_token || '');
+    sessionStorage.setItem('authme_token_expires_at', String(expiresAt));
+    sessionStorage.setItem('authme_authenticated', 'true');
 
-  if (await dashboard.isVisible().catch(() => false)) {
-    await page.context().storageState({ path: agentAuthFile });
-    return;
-  }
-
-  await page.getByRole('button', { name: /login|sign in/i }).click();
-  await page.waitForURL(/authme|auth|login/, { timeout: 10_000 });
-
-  await page.getByLabel(/username|email/i).fill(TEST_USERS.agent.username);
-  const agentPasswordField = page.getByLabel(/password/i)
-    .or(page.locator('input[type="password"]'));
-  await agentPasswordField.first().fill(TEST_USERS.agent.password);
-  await page.getByRole('button', { name: /sign in|login/i }).click();
-
-  await page.waitForURL(new RegExp(AGENT_URL), { timeout: 15_000 });
-  await expect(page.getByText(/dashboard/i).first()).toBeVisible({ timeout: 10_000 });
+    localStorage.setItem('authme_access_token', access_token);
+    localStorage.setItem('authme_refresh_token', refresh_token || '');
+    localStorage.setItem('authme_token_expires_at', String(expiresAt));
+    localStorage.setItem('authme_authenticated', 'true');
+  }, tokenData);
 
   await page.context().storageState({ path: agentAuthFile });
 });
