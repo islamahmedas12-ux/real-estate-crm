@@ -191,7 +191,7 @@ export default function ReportsPage() {
               <Skeleton height="h-72" />
             ) : revenue.data?.data?.length ? (
               <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <AreaChart data={revenue.data.data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="reportRevenueGrad" x1="0" y1="0" x2="0" y2="1">
@@ -235,7 +235,7 @@ export default function ReportsPage() {
               <Skeleton height="h-64" />
             ) : revenue.data?.data?.length ? (
               <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <BarChart data={revenue.data.data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
                     <XAxis dataKey="period" tick={{ fontSize: 11 }} />
@@ -314,7 +314,7 @@ export default function ReportsPage() {
                 <Skeleton height="h-64" />
               ) : leadConversion.data?.bySource?.length ? (
                 <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart
                       data={leadConversion.data.bySource}
                       layout="vertical"
@@ -350,7 +350,7 @@ export default function ReportsPage() {
                 <Skeleton height="h-64" />
               ) : leadConversion.data?.bySource?.length ? (
                 <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <PieChart>
                       <Pie
                         data={leadConversion.data.bySource}
@@ -461,7 +461,7 @@ export default function ReportsPage() {
                 <Skeleton height="h-64" />
               ) : propertyReport.data?.byType?.length ? (
                 <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <BarChart data={propertyReport.data.byType} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
                       <XAxis dataKey="type" tick={{ fontSize: 11 }} />
@@ -494,7 +494,7 @@ export default function ReportsPage() {
                 <Skeleton height="h-64" />
               ) : propertyReport.data?.byType?.length ? (
                 <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                     <PieChart>
                       <Pie
                         data={propertyReport.data.byType}

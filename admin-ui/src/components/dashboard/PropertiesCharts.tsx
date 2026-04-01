@@ -53,7 +53,7 @@ export function PropertiesCharts({ data, isLoading }: Props) {
           </p>
           <div className="h-52">
             {byStatus.length ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <PieChart>
                   <Pie
                     data={byStatus}
@@ -93,7 +93,7 @@ export function PropertiesCharts({ data, isLoading }: Props) {
           </p>
           <div className="h-52">
             {byType.length ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <PieChart>
                   <Pie
                     data={byType}
