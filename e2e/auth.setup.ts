@@ -49,7 +49,10 @@ setup('authenticate as admin', async ({ page }) => {
   await page.waitForURL(/authme|auth|login/, { timeout: 10_000 });
 
   await page.getByLabel(/username|email/i).fill(TEST_USERS.admin.username);
-  await page.getByLabel(/password/i).fill(TEST_USERS.admin.password);
+  // Password field might not have a proper label association — use multiple selectors
+  const passwordField = page.getByLabel(/password/i)
+    .or(page.locator('input[type="password"]'));
+  await passwordField.first().fill(TEST_USERS.admin.password);
   await page.getByRole('button', { name: /sign in|login/i }).click();
 
   // Wait for redirect back to admin portal
@@ -88,7 +91,9 @@ setup('authenticate as agent', async ({ page }) => {
   await page.waitForURL(/authme|auth|login/, { timeout: 10_000 });
 
   await page.getByLabel(/username|email/i).fill(TEST_USERS.agent.username);
-  await page.getByLabel(/password/i).fill(TEST_USERS.agent.password);
+  const agentPasswordField = page.getByLabel(/password/i)
+    .or(page.locator('input[type="password"]'));
+  await agentPasswordField.first().fill(TEST_USERS.agent.password);
   await page.getByRole('button', { name: /sign in|login/i }).click();
 
   await page.waitForURL(new RegExp(AGENT_URL), { timeout: 15_000 });
