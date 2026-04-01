@@ -82,7 +82,6 @@ export class UsersService {
         assignedLeads: {
           select: {
             id: true,
-            title: true,
             status: true,
             priority: true,
             source: true,
@@ -90,23 +89,17 @@ export class UsersService {
           },
           take: 50,
         },
-        _count: {
-          select: {
-            assignedProperties: true,
-            assignedClients: true,
-            assignedLeads: true,
-          },
-        },
       },
     });
 
     if (!user) throw new NotFoundException('User not found');
 
-    const totalLeads: number = user._count.assignedLeads;
-
-    const [leadsWon, revenueResult] = await Promise.all([
+    const [totalLeads, leadsWon, revenueResult] = await Promise.all([
       this.prisma.lead.count({
-        where: { agentId: id, status: LeadStatus.WON },
+        where: { assignedAgentId: id },
+      }),
+      this.prisma.lead.count({
+        where: { assignedAgentId: id, status: LeadStatus.WON },
       }),
       this.prisma.invoice.aggregate({
         _sum: { amount: true },

@@ -83,7 +83,7 @@ export class ReportsService {
       paidDate: { gte: start, lte: end },
     };
     if (params.agentId) {
-      where.contract = { property: { agentId: params.agentId } };
+      where.contract = { property: { assignedAgentId: params.agentId } };
     }
 
     const invoices = await this.prisma.invoice.findMany({
@@ -123,7 +123,7 @@ export class ReportsService {
     const where: Prisma.LeadWhereInput = {
       createdAt: { gte: start, lte: end },
     };
-    if (params.agentId) where.agentId = params.agentId;
+    if (params.agentId) where.assignedAgentId = params.agentId;
     if (params.source) where.source = params.source;
 
     const leads = await this.prisma.lead.findMany({
