@@ -138,7 +138,10 @@ export class ClientsService {
     const where: Prisma.ClientWhereInput =
       !isAdminOrManager && agentId ? { assignedAgentId: agentId } : {};
 
-    const [total, byType, bySource] = await Promise.all([
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const [total, byType, bySource, recentCount] = await Promise.all([
       this.prisma.client.count({ where }),
       this.prisma.client.groupBy({
         by: ['type'],
@@ -150,12 +153,18 @@ export class ClientsService {
         where,
         _count: true,
       }),
+      this.prisma.client.count({
+        where: { ...where, createdAt: { gte: thirtyDaysAgo } },
+      }),
     ]);
 
     return {
       total,
-      byType: byType.map((g) => ({ type: g.type, count: g._count })),
+      byType: Object.fromEntries(
+        byType.map((g) => [g.type, g._count]),
+      ),
       bySource: bySource.map((g) => ({ source: g.source, count: g._count })),
+      recentCount,
     };
   }
 
