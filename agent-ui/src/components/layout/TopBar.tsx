@@ -5,7 +5,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { Breadcrumbs } from './Breadcrumbs'
 import { cn, getInitials } from '../../utils'
 
-export function TopBar() {
+export function TopBar({ children }: { children?: React.ReactNode }) {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -23,7 +23,8 @@ export function TopBar() {
   }, [])
 
   return (
-    <header className="flex items-center h-16 px-6 gap-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700/60 shrink-0">
+    <header className="flex items-center h-16 px-4 md:px-6 gap-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700/60 shrink-0">
+      {children}
       {/* Breadcrumbs */}
       <div className="flex-1 min-w-0">
         <Breadcrumbs />
