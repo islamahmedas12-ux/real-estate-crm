@@ -27,11 +27,40 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 )
 
-// Response interceptor — handle 401
+// Response interceptor — attempt token refresh on 401 before redirecting
+let isRefreshing = false
+let pendingRequests: ((token: string) => void)[] = []
+
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  async (error) => {
+    const original = error.config
+    if (error.response?.status === 401 && !original._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          pendingRequests.push((token) => {
+            original.headers.Authorization = `Bearer ${token}`
+            resolve(apiClient(original))
+          })
+        })
+      }
+      original._retry = true
+      isRefreshing = true
+      try {
+        const refreshed = await authme.refreshTokens()
+        if (refreshed) {
+          const newToken = authme.getAccessToken()!
+          pendingRequests.forEach((cb) => cb(newToken))
+          pendingRequests = []
+          isRefreshing = false
+          original.headers.Authorization = `Bearer ${newToken}`
+          return apiClient(original)
+        }
+      } catch {
+        // refresh failed
+      }
+      isRefreshing = false
+      pendingRequests = []
       window.location.href = '/login'
     }
     return Promise.reject(error)
