@@ -230,7 +230,7 @@ function LeadPipelineSection({
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
             Pipeline Distribution
           </p>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <BarChart data={chartData} barSize={28}>
               <XAxis
                 dataKey="name"
@@ -266,7 +266,7 @@ function LeadPipelineSection({
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
             Status Breakdown
           </p>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <PieChart>
               <Pie
                 data={pieData}
@@ -505,7 +505,7 @@ function PerformanceSection({
       </div>
 
       <div className="h-48">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart data={barData} barGap={4} barSize={24}>
             <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
             <YAxis allowDecimals={false} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />

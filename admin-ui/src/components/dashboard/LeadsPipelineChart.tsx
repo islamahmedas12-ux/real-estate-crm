@@ -95,7 +95,7 @@ export function LeadsPipelineChart({ data, isLoading }: Props) {
       <div className="h-64">
         {pipeline.length ? (
           mode === 'donut' ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <PieChart>
                 <Pie
                   data={pipeline}
@@ -129,7 +129,7 @@ export function LeadsPipelineChart({ data, isLoading }: Props) {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={pipeline} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
                 <XAxis
