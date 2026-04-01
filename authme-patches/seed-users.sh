@@ -55,6 +55,37 @@ create_user() {
   echo "[seed-users] Created user: ${username}"
 }
 
+# Ensure frontend clients are PUBLIC (SPAs cannot hold secrets, need PKCE only)
+ensure_public_client() {
+  client_id="$1"
+
+  client_info=$(wget -qO- \
+    --header="X-Admin-Api-Key: ${API_KEY}" \
+    "${BASE}/admin/realms/${REALM}/clients/${client_id}" 2>/dev/null || echo "NOT_FOUND")
+
+  if echo "$client_info" | grep -q "NOT_FOUND"; then
+    echo "[seed-users] Client ${client_id} not found — skipping"
+    return 0
+  fi
+
+  if echo "$client_info" | grep -q '"clientType":"PUBLIC"'; then
+    echo "[seed-users] Client ${client_id} already PUBLIC — skipping"
+    return 0
+  fi
+
+  wget -qO- \
+    --header="X-Admin-Api-Key: ${API_KEY}" \
+    --header="Content-Type: application/json" \
+    --method=PATCH \
+    --body-data='{"clientType":"PUBLIC"}' \
+    "${BASE}/admin/realms/${REALM}/clients/${client_id}" 2>/dev/null || true
+
+  echo "[seed-users] Patched client ${client_id} to PUBLIC"
+}
+
+ensure_public_client "admin-portal"
+ensure_public_client "agent-portal"
+
 # Seed test users
 create_user "admin@crm.test"   "Admin@123!" "QA" "Admin"   "admin"
 create_user "agent@crm.test"   "Agent@123!" "QA" "Agent"   "agent"
