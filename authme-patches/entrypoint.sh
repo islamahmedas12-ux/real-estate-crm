@@ -16,5 +16,10 @@ fi
 
 echo "[authme-patches] Applied hotfixes for #87, #92, #93"
 
+# Seed test users in background (non-production only, idempotent)
+if [ -f /patches/seed-users.sh ]; then
+  sh /patches/seed-users.sh &
+fi
+
 # Start the original entrypoint
 exec node dist/main
