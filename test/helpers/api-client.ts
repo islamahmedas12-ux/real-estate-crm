@@ -99,7 +99,7 @@ export function createApiClient(): ApiClient {
   const apiUrl = process.env['TEST_API_URL'] || 'https://qa-api.realstate-crm.homes/api';
   const authUrl = process.env['TEST_AUTH_URL'] || 'https://qa-auth.realstate-crm.homes/realms/real-estate-qa';
   const clientId = process.env['TEST_CLIENT_ID'] || 'crm-backend';
-  const clientSecret = process.env['TEST_CLIENT_SECRET'] || 'dca59cdbd540e2135686a17133d47572712ad68e6596a92a6b8a4b0037295d5c';
+  const clientSecret = process.env['TEST_CLIENT_SECRET'] || '797e5cb4a67875e49f1711c7b7624db6fd6ff6ec4684dcc445715ec5208a85da';
 
   return new ApiClient(apiUrl, authUrl, clientId, clientSecret);
 }

@@ -11,6 +11,8 @@
 #   docker-compose -f docker-compose.dev-server.yml up -d
 # ==============================================================================
 
+name: crm-dev
+
 services:
   # NOTE: CRM PostgreSQL is the standalone `postgres-dev` container on port 5432
   # App connects via host.docker.internal:5432 (no separate db service here)
