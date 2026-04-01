@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserRole } from '@prisma/client';
+import { InvoiceStatus, LeadStatus, UserRole, type Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 interface ListParams {
@@ -17,18 +17,15 @@ export class UsersService {
     const { page, limit, search, role } = params;
     const skip = (page - 1) * limit;
 
-    const where = {
-      ...(role ? { role: role as UserRole } : {}),
-      ...(search
-        ? {
-            OR: [
-              { email: { contains: search, mode: 'insensitive' as const } },
-              { firstName: { contains: search, mode: 'insensitive' as const } },
-              { lastName: { contains: search, mode: 'insensitive' as const } },
-            ],
-          }
-        : {}),
-    };
+    const where: Prisma.UserWhereInput = {};
+    if (role) where.role = role as UserRole;
+    if (search) {
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
     const [data, total] = await Promise.all([
       this.prisma.user.findMany({
@@ -63,11 +60,23 @@ export class UsersService {
       where: { id },
       include: {
         assignedProperties: {
-          select: { id: true, title: true, status: true, price: true, type: true },
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            price: true,
+            type: true,
+          },
           take: 50,
         },
         assignedClients: {
-          select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
           take: 50,
         },
         assignedLeads: {
@@ -93,21 +102,21 @@ export class UsersService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    // Compute performance metrics
+    const totalLeads: number = user._count.assignedLeads;
+
     const [leadsWon, revenueResult] = await Promise.all([
       this.prisma.lead.count({
-        where: { agentId: id, status: 'WON' },
+        where: { agentId: id, status: LeadStatus.WON },
       }),
       this.prisma.invoice.aggregate({
         _sum: { amount: true },
         where: {
-          status: 'PAID',
+          status: InvoiceStatus.PAID,
           contract: { agentId: id },
         },
       }),
     ]);
 
-    const totalLeads = user._count.assignedLeads;
     const revenue = Number(revenueResult._sum.amount ?? 0);
 
     return {
