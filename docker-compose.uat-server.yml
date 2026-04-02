@@ -1,0 +1,99 @@
+# ==============================================================================
+# Real Estate CRM — UAT Server Deployment
+# ==============================================================================
+
+name: crm-uat
+
+services:
+  # ── AuthMe PostgreSQL (UAT) ──────────────────────────────────────────────
+  authme-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    container_name: crm-uat-authme-db
+    environment:
+      POSTGRES_USER: authme
+      POSTGRES_PASSWORD: authme-uat
+      POSTGRES_DB: authme_uat
+    volumes:
+      - authme-pgdata-uat:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authme"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - crm-uat-network
+
+  # ── AuthMe IAM (UAT) ────────────────────────────────────────────────────
+  authme:
+    image: islamawad/authme
+    restart: unless-stopped
+    container_name: crm-uat-authme
+    environment:
+      DATABASE_URL: postgresql://authme:authme-uat@authme-db:5432/authme_uat
+      PORT: "3001"
+      NODE_ENV: production
+      BASE_URL: https://uat-auth.realstate-crm.homes
+      TRUSTED_PROXIES: "*"
+      ADMIN_API_KEY: uat-authme-admin-key-c9h5d1e6g8h0i2j4k6l8m1n3o5p7q9r1
+      WEBHOOK_SECRET_KEY: uat-webhook-secret-8ee6hd5f505g2g5804fe235hhc755h3544e9effc
+      WEBHOOK_ENCRYPTION_SALT: uat-encryption-salt-c3d4e5f6g7h8c3d4e5f6g7h8c3d4e5f6
+    volumes:
+      - ./authme-patches:/patches:ro
+    entrypoint: ["/bin/sh", "/patches/entrypoint.sh"]
+    depends_on:
+      authme-db:
+        condition: service_healthy
+    networks:
+      - crm-uat-network
+
+  # ── NestJS Backend (UAT) ─────────────────────────────────────────────────
+  app:
+    image: ${APP_IMAGE:-ghcr.io/islamahmedas12-ux/real-estate-crm:uat}
+    restart: unless-stopped
+    container_name: crm-uat-app
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgresql://crm_user:real-estate-uat-password-123@host.docker.internal:5434/real_estate_crm_uat
+      AUTHME_URL: http://crm-uat-authme:3001
+      AUTHME_ISSUER_URL: https://uat-auth.realstate-crm.homes
+      AUTHME_REALM: real-estate-uat
+      AUTHME_CLIENT_ID: crm-backend
+      AUTHME_CLIENT_SECRET: change-me-after-setup
+      ADMIN_PORTAL_URL: https://uat-admin.realstate-crm.homes
+      AGENT_PORTAL_URL: https://uat-agent.realstate-crm.homes
+      UPLOAD_DIR: /app/uploads
+      JWT_SECRET: uat-jwt-secret-unique-value
+      REDIS_URL: redis://crm-uat-redis:6379
+      CORS_ORIGINS: https://uat-admin.realstate-crm.homes,https://uat-agent.realstate-crm.homes
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - uploads-uat:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+    networks:
+      - crm-uat-network
+
+  # ── Redis (UAT) ──────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    container_name: crm-uat-redis
+    networks:
+      - crm-uat-network
+
+volumes:
+  authme-pgdata-uat:
+    driver: local
+  uploads-uat:
+    driver: local
+
+networks:
+  crm-uat-network:
+    driver: bridge
