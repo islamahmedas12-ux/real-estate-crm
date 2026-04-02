@@ -1,0 +1,102 @@
+# ==============================================================================
+# Real Estate CRM — Production Server Deployment
+# ==============================================================================
+
+name: crm-prod
+
+services:
+  # ── AuthMe PostgreSQL (Prod) ─────────────────────────────────────────────
+  authme-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    container_name: crm-prod-authme-db
+    environment:
+      POSTGRES_USER: authme
+      POSTGRES_PASSWORD: authme-prod-secure-change-me
+      POSTGRES_DB: authme_prod
+    volumes:
+      - authme-pgdata-prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U authme"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - crm-prod-network
+
+  # ── AuthMe IAM (Prod) ───────────────────────────────────────────────────
+  authme:
+    image: islamawad/authme
+    restart: unless-stopped
+    container_name: crm-prod-authme
+    environment:
+      DATABASE_URL: postgresql://authme:authme-prod-secure-change-me@authme-db:5432/authme_prod
+      PORT: "3001"
+      NODE_ENV: production
+      BASE_URL: https://auth.realstate-crm.homes
+      TRUSTED_PROXIES: "*"
+      ADMIN_API_KEY: prod-authme-admin-key-d0i6e2f7h9i1j3k5l7m9n0o2p4q6r8s0
+      WEBHOOK_SECRET_KEY: prod-webhook-secret-9ff7ie6g616h3h6915gf346iid866i4655f0fggd
+      WEBHOOK_ENCRYPTION_SALT: prod-encryption-salt-d4e5f6g7h8i9d4e5f6g7h8i9d4e5f6g7
+    volumes:
+      - ./authme-patches:/patches:ro
+    entrypoint: ["/bin/sh", "/patches/entrypoint.sh"]
+    depends_on:
+      authme-db:
+        condition: service_healthy
+    networks:
+      - crm-prod-network
+
+  # ── NestJS Backend (Prod) ────────────────────────────────────────────────
+  app:
+    image: ${APP_IMAGE:-ghcr.io/islamahmedas12-ux/real-estate-crm:prod}
+    restart: unless-stopped
+    container_name: crm-prod-app
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgresql://crm_user:real-estate-prod-password-secure-change-me@host.docker.internal:5435/real_estate_crm_prod
+      AUTHME_URL: http://crm-prod-authme:3001
+      AUTHME_ISSUER_URL: https://auth.realstate-crm.homes
+      AUTHME_REALM: real-estate
+      AUTHME_CLIENT_ID: crm-backend
+      AUTHME_CLIENT_SECRET: change-me-after-setup
+      ADMIN_PORTAL_URL: https://admin.realstate-crm.homes
+      AGENT_PORTAL_URL: https://agent.realstate-crm.homes
+      UPLOAD_DIR: /app/uploads
+      JWT_SECRET: prod-jwt-secret-generate-with-openssl-rand
+      REDIS_URL: redis://crm-prod-redis:6379
+      CORS_ORIGINS: https://admin.realstate-crm.homes,https://agent.realstate-crm.homes
+      THROTTLE_TTL: "60000"
+      THROTTLE_LIMIT: "60"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - uploads-prod:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+    networks:
+      - crm-prod-network
+
+  # ── Redis (Prod) ─────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    container_name: crm-prod-redis
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - crm-prod-network
+
+volumes:
+  authme-pgdata-prod:
+    driver: local
+  uploads-prod:
+    driver: local
+
+networks:
+  crm-prod-network:
+    driver: bridge
