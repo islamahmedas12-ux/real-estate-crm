@@ -1,0 +1,62 @@
+name: Performance
+
+on:
+  pull_request:
+    branches: [dev, qa, uat, prod]
+  push:
+    branches: [dev]
+  schedule:
+    # Run nightly at 3am UTC
+    - cron: '0 3 * * *'
+
+concurrency:
+  group: perf-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+  TEST_API_URL: ${{ vars.TEST_API_URL || 'https://qa-api.realestate-crm.homes/api' }}
+  TEST_AUTH_URL: ${{ vars.TEST_AUTH_URL || 'https://qa-auth.realestate-crm.homes' }}
+  TEST_CLIENT_ID: ${{ vars.TEST_CLIENT_ID || 'crm-backend' }}
+  TEST_CLIENT_SECRET: ${{ secrets.TEST_CLIENT_SECRET }}
+
+jobs:
+  perf-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run performance tests
+        run: npx tsx test/performance.test.ts
+        env:
+          TEST_API_URL: ${{ env.TEST_API_URL }}
+          TEST_AUTH_URL: ${{ env.TEST_AUTH_URL }}
+          TEST_CLIENT_ID: ${{ env.TEST_CLIENT_ID }}
+          TEST_CLIENT_SECRET: ${{ env.TEST_CLIENT_SECRET }}
+
+      - name: Upload perf results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-test-results
+          path: |
+            test/perf-results/
+          retention-days: 30
+          overwrite: true
+
+      - name: Report perf status
+        if: failure()
+        run: |
+          echo "❌ Performance regression detected"
+          echo "API P95 threshold: 200ms | Dashboard P95 threshold: 500ms"
+          exit 1
