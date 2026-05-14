@@ -20,6 +20,7 @@ import { HealthModule } from './health/health.module.js';
 import { ReportsModule } from './reports/reports.module.js';
 import { UsersModule } from './users/users.module.js';
 import { SettingsModule } from './settings/settings.module.js';
+import { IdempotencyModule } from './idempotency/idempotency.module.js';
 import { CorrelationIdMiddleware } from './common/middleware/correlation-id.middleware.js';
 
 @Module({
@@ -49,6 +50,7 @@ import { CorrelationIdMiddleware } from './common/middleware/correlation-id.midd
     ReportsModule,
     UsersModule,
     SettingsModule,
+    IdempotencyModule,
   ],
   providers: [
     // Rate limiting — applied first, before auth

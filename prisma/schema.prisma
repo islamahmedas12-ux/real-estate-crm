@@ -360,6 +360,21 @@ model Setting {
   @@map("settings")
 }
 
+// ─── Idempotency ─────────────────────────────────────────────────────
+
+model IdempotencyKey {
+  id         String   @id @default(uuid())
+  key        String
+  endpoint   String
+  userId     String?
+  response   Json
+  createdAt  DateTime @default(now())
+
+  @@unique([key, endpoint])
+  @@index([createdAt])
+  @@map("idempotency_keys")
+}
+
 // ─── Email ──────────────────────────────────────────────────────────
 
 enum EmailStatus {
