@@ -53,6 +53,25 @@ export default tseslint.config(
       '@typescript-eslint/unbound-method': 'off',
     },
   },
+  // E2E tests outside tsconfig project — use allowDefaultProject
+  {
+    files: ['e2e/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+        allowDefaultProject: ['e2e/**/*.ts'],
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/await-thenable': 'off',
+    },
+  },
   // PDFKit chainable API produces 'any' typed calls — suppress in pdf templates
   {
     files: ['src/pdf/**/*.ts'],
