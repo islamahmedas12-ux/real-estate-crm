@@ -27,13 +27,7 @@ export class PdfController {
   @ApiResponse({ status: 200, description: 'PDF file' })
   @ApiResponse({ status: 404, description: 'Contract not found' })
   async contractPdf(@Param('id', ParseUUIDPipe) id: string, @Res() res: Response) {
-    const buffer = await this.pdfService.generateContractPdf(id);
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="contract-${id}.pdf"`,
-      'Content-Length': buffer.length,
-    });
-    res.end(buffer);
+    await this.pdfService.streamContractPdf(id, res);
   }
 
   @Get('invoices/:id/pdf')
@@ -43,13 +37,7 @@ export class PdfController {
   @ApiResponse({ status: 200, description: 'PDF file' })
   @ApiResponse({ status: 404, description: 'Invoice not found' })
   async invoicePdf(@Param('id', ParseUUIDPipe) id: string, @Res() res: Response) {
-    const buffer = await this.pdfService.generateInvoicePdf(id);
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="invoice-${id}.pdf"`,
-      'Content-Length': buffer.length,
-    });
-    res.end(buffer);
+    await this.pdfService.streamInvoicePdf(id, res);
   }
 
   @Get('properties/:id/pdf')
@@ -59,13 +47,7 @@ export class PdfController {
   @ApiResponse({ status: 200, description: 'PDF file' })
   @ApiResponse({ status: 404, description: 'Property not found' })
   async propertyPdf(@Param('id', ParseUUIDPipe) id: string, @Res() res: Response) {
-    const buffer = await this.pdfService.generatePropertyPdf(id);
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="property-${id}.pdf"`,
-      'Content-Length': buffer.length,
-    });
-    res.end(buffer);
+    await this.pdfService.streamPropertyPdf(id, res);
   }
 
   @Post('reports/generate-pdf')
@@ -75,13 +57,7 @@ export class PdfController {
   @ApiResponse({ status: 200, description: 'PDF file' })
   @ApiResponse({ status: 400, description: 'Invalid report parameters' })
   async generateReport(@Body() dto: GenerateReportDto, @Res() res: Response) {
-    const buffer = await this.pdfService.generateReport(dto.type, dto.month, dto.agentId);
     const filename = `report-${dto.type}-${dto.month ?? 'current'}.pdf`;
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="${filename}"`,
-      'Content-Length': buffer.length,
-    });
-    res.end(buffer);
+    await this.pdfService.streamReport(dto.type, dto.month, dto.agentId, res, filename);
   }
 }

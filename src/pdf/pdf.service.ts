@@ -61,14 +61,12 @@ export class PdfService {
   }
 
   async generateReport(type: ReportType, month?: string, agentId?: string): Promise<Buffer> {
-    // Validate month format if provided
     if (month !== undefined && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
       throw new BadRequestException(
         `Invalid month format: "${month}". Expected YYYY-MM (e.g. "2026-03")`,
       );
     }
 
-    // Default to current month
     const now = new Date();
     const periodStr =
       month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -89,12 +87,89 @@ export class PdfService {
     }
   }
 
+  async streamContractPdf(contractId: string, res: import('express').Response): Promise<void> {
+    const contract = await this.prisma.contract.findUnique({
+      where: { id: contractId },
+      include: { property: true, client: true },
+    });
+
+    if (!contract) {
+      throw new NotFoundException(`Contract ${contractId} not found`);
+    }
+
+    await this.contractTemplate.stream(contract, res, `contract-${contractId}.pdf`);
+  }
+
+  async streamInvoicePdf(invoiceId: string, res: import('express').Response): Promise<void> {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      include: {
+        contract: {
+          include: { property: true, client: true },
+        },
+      },
+    });
+
+    if (!invoice) {
+      throw new NotFoundException(`Invoice ${invoiceId} not found`);
+    }
+
+    await this.invoiceTemplate.stream(invoice, res, `invoice-${invoiceId}.pdf`);
+  }
+
+  async streamPropertyPdf(propertyId: string, res: import('express').Response): Promise<void> {
+    const property = await this.prisma.property.findUnique({
+      where: { id: propertyId },
+      include: { images: { orderBy: { order: 'asc' } } },
+    });
+
+    if (!property) {
+      throw new NotFoundException(`Property ${propertyId} not found`);
+    }
+
+    await this.propertyTemplate.stream(property, res, `property-${propertyId}.pdf`);
+  }
+
+  async streamReport(
+    type: ReportType,
+    month: string | undefined,
+    agentId: string | undefined,
+    res: import('express').Response,
+    filename: string,
+  ): Promise<void> {
+    if (month !== undefined && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
+      throw new BadRequestException(
+        `Invalid month format: "${month}". Expected YYYY-MM (e.g. "2026-03")`,
+      );
+    }
+
+    const now = new Date();
+    const periodStr =
+      month ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const [year, mon] = periodStr.split('-').map(Number);
+    const startDate = new Date(year, mon - 1, 1);
+    const endDate = new Date(year, mon, 1);
+
+    switch (type) {
+      case ReportType.MONTHLY_REVENUE:
+        await this.streamMonthlyRevenueReport(periodStr, startDate, endDate, res, filename);
+        break;
+      case ReportType.AGENT_PERFORMANCE:
+        if (!agentId) {
+          throw new BadRequestException('agentId is required for agent_performance report');
+        }
+        await this.streamAgentPerformanceReport(agentId, periodStr, startDate, endDate, res, filename);
+        break;
+      default:
+        throw new BadRequestException(`Unknown report type: ${type}`);
+    }
+  }
+
   private async generateMonthlyRevenueReport(
     period: string,
     startDate: Date,
     endDate: Date,
   ): Promise<Buffer> {
-    // Invoices created in the period
     const invoices = await this.prisma.invoice.findMany({
       where: {
         createdAt: { gte: startDate, lt: endDate },
@@ -113,7 +188,6 @@ export class PdfService {
       .filter((i) => i.status === 'PENDING' && new Date(i.dueDate) < now)
       .reduce((sum, i) => sum + Number(i.amount), 0);
 
-    // Group by status
     const statusMap = new Map<string, { count: number; amount: number }>();
     for (const inv of invoices) {
       const entry = statusMap.get(inv.status) ?? { count: 0, amount: 0 };
@@ -122,7 +196,6 @@ export class PdfService {
       statusMap.set(inv.status, entry);
     }
 
-    // Top properties
     const propertyRevMap = new Map<string, { title: string; revenue: number }>();
     for (const inv of invoices.filter((i) => i.status === 'PAID')) {
       const key = inv.contract.propertyId;
@@ -200,5 +273,119 @@ export class PdfService {
     };
 
     return this.reportTemplate.generateAgentPerformance(data);
+  }
+
+  private async streamMonthlyRevenueReport(
+    period: string,
+    startDate: Date,
+    endDate: Date,
+    res: import('express').Response,
+    filename: string,
+  ): Promise<void> {
+    const invoices = await this.prisma.invoice.findMany({
+      where: {
+        createdAt: { gte: startDate, lt: endDate },
+      },
+      include: {
+        contract: { include: { property: true } },
+      },
+    });
+
+    const totalInvoiced = invoices.reduce((sum, i) => sum + Number(i.amount), 0);
+    const totalCollected = invoices
+      .filter((i) => i.status === 'PAID')
+      .reduce((sum, i) => sum + Number(i.amount), 0);
+    const now = new Date();
+    const totalOverdue = invoices
+      .filter((i) => i.status === 'PENDING' && new Date(i.dueDate) < now)
+      .reduce((sum, i) => sum + Number(i.amount), 0);
+
+    const statusMap = new Map<string, { count: number; amount: number }>();
+    for (const inv of invoices) {
+      const entry = statusMap.get(inv.status) ?? { count: 0, amount: 0 };
+      entry.count++;
+      entry.amount += Number(inv.amount);
+      statusMap.set(inv.status, entry);
+    }
+
+    const propertyRevMap = new Map<string, { title: string; revenue: number }>();
+    for (const inv of invoices.filter((i) => i.status === 'PAID')) {
+      const key = inv.contract.propertyId;
+      const entry = propertyRevMap.get(key) ?? {
+        title: inv.contract.property.title,
+        revenue: 0,
+      };
+      entry.revenue += Number(inv.amount);
+      propertyRevMap.set(key, entry);
+    }
+
+    const data: MonthlyRevenueData = {
+      period,
+      totalInvoiced,
+      totalCollected,
+      totalOverdue,
+      invoicesByStatus: Array.from(statusMap.entries()).map(([status, v]) => ({
+        status,
+        ...v,
+      })),
+      topProperties: Array.from(propertyRevMap.values())
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 10),
+    };
+
+    await this.reportTemplate.streamMonthlyRevenue(data, res, filename);
+  }
+
+  private async streamAgentPerformanceReport(
+    agentId: string,
+    period: string,
+    startDate: Date,
+    endDate: Date,
+    res: import('express').Response,
+    filename: string,
+  ): Promise<void> {
+    const [agent, leads, contracts, activities] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: agentId },
+        select: { firstName: true, lastName: true },
+      }),
+      this.prisma.lead.findMany({
+        where: {
+          assignedAgentId: agentId,
+          createdAt: { gte: startDate, lt: endDate },
+        },
+      }),
+      this.prisma.contract.findMany({
+        where: {
+          agentId,
+          createdAt: { gte: startDate, lt: endDate },
+        },
+      }),
+      this.prisma.leadActivity.findMany({
+        where: {
+          performedBy: agentId,
+          createdAt: { gte: startDate, lt: endDate },
+        },
+      }),
+    ]);
+
+    const leadsWon = leads.filter((l) => l.status === 'WON').length;
+    const leadsLost = leads.filter((l) => l.status === 'LOST').length;
+    const totalRevenue = contracts.reduce((sum, c) => sum + Number(c.totalAmount), 0);
+
+    const data: AgentPerformanceData = {
+      agentId,
+      agentName: agent ? [agent.firstName, agent.lastName].filter(Boolean).join(' ') : agentId,
+      period,
+      leadsAssigned: leads.length,
+      leadsWon,
+      leadsLost,
+      conversionRate: leads.length > 0 ? (leadsWon / leads.length) * 100 : 0,
+      contractsClosed: contracts.filter((c) => c.status === 'COMPLETED').length,
+      totalRevenue,
+      activitiesLogged: activities.length,
+    };
+
+    await this.reportTemplate.streamAgentPerformance(data, res, filename);
   }
 }
