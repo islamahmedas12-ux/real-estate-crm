@@ -167,6 +167,21 @@ services:
           cpus: "0.5"
           memory: 512M
 
+  # ── MailHog (SMTP catch-all for development) ──────────────────────────────
+  mailhog:
+    image: mailhog/mailhog:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025"   # SMTP server for apps to send mail
+      - "127.0.0.1:8025:8025"   # Web UI (open http://localhost:8025)
+    networks:
+      - crm-dev-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+
 volumes:
   pgdata:
     driver: local

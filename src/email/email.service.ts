@@ -31,6 +31,7 @@ export class EmailService implements OnModuleInit {
   private transporter!: Transporter;
   private templates: Map<string, Handlebars.TemplateDelegate> = new Map();
   private baseTemplate!: Handlebars.TemplateDelegate;
+  private testMode: 'off' | 'log' | 'mailhog';
 
   constructor(
     private readonly config: ConfigService,
@@ -44,16 +45,43 @@ export class EmailService implements OnModuleInit {
   }
 
   private initTransporter() {
-    this.transporter = nodemailer.createTransport({
-      host: this.config.get<string>('SMTP_HOST', 'localhost'),
-      port: this.config.get<number>('SMTP_PORT', 587),
-      secure: this.config.get<number>('SMTP_PORT', 587) === 465,
-      auth: {
-        user: this.config.get<string>('SMTP_USER', ''),
-        pass: this.config.get<string>('SMTP_PASS', ''),
-      },
-    });
-    this.logger.log('SMTP transporter initialized');
+    const nodeEnv = this.config.get<string>('NODE_ENV', 'development');
+    this.testMode = this.resolveTestMode(nodeEnv);
+
+    const from = this.config.get<string>('EMAIL_FROM', 'noreply@realestate-crm.com');
+
+    if (this.testMode === 'mailhog') {
+      this.transporter = nodemailer.createTransport({
+        host: 'mailhog',
+        port: 1025,
+        secure: false,
+      });
+      this.logger.log('Email mode: mailhog (captures to MailHog UI at http://localhost:8025)');
+    } else if (this.testMode === 'log') {
+      this.transporter = nodemailer.createTransport({
+        host: 'mailhog',
+        port: 1025,
+        secure: false,
+      });
+      this.logger.log('Email mode: log (emails written to logger, no SMTP send)');
+    } else {
+      this.transporter = nodemailer.createTransport({
+        host: this.config.get<string>('SMTP_HOST', 'localhost'),
+        port: this.config.get<number>('SMTP_PORT', 587),
+        secure: this.config.get<number>('SMTP_PORT', 587) === 465,
+        auth: {
+          user: this.config.get<string>('SMTP_USER', ''),
+          pass: this.config.get<string>('SMTP_PASS', ''),
+        },
+      });
+      this.logger.log(`Email mode: live (SMTP: ${this.config.get('SMTP_HOST')}) — real emails will be sent`);
+    }
+  }
+
+  private resolveTestMode(nodeEnv: string): 'off' | 'log' | 'mailhog' {
+    const configured = this.config.get<'off' | 'log' | 'mailhog'>('EMAIL_TEST_MODE');
+    if (configured) return configured;
+    return nodeEnv === 'production' ? 'off' : 'log';
   }
 
   private loadTemplates() {
@@ -156,6 +184,19 @@ export class EmailService implements OnModuleInit {
       });
 
       const from = this.config.get<string>('EMAIL_FROM', 'noreply@realestate-crm.com');
+
+      if (this.testMode === 'log') {
+        this.logger.log(`[EMAIL TEST MODE — not sent] From: ${from} | To: ${to} | Subject: ${subject}`);
+        this.logger.debug(`[EMAIL TEST MODE] Body:\n${html}`);
+        await this.prisma.emailLog.update({
+          where: { id: emailLogId },
+          data: {
+            status: EmailStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+        return;
+      }
 
       await this.transporter.sendMail({
         from,
