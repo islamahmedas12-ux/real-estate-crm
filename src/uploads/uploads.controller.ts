@@ -137,13 +137,15 @@ export class UploadsController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    // Documents require authentication - reject unauthenticated requests
     const reqWithUser = req as Request & { user?: unknown };
     if (type === FileType.DOCUMENTS && !reqWithUser.user) {
       throw new ForbiddenException('Documents require authentication');
     }
 
-    const filePath = await this.uploadsService.getFilePath(type, filename);
-    return res.sendFile(filePath);
+    const result = await this.uploadsService.getFilePath(type, filename);
+    if (result.startsWith('http')) {
+      return res.redirect(302, result);
+    }
+    return res.sendFile(result);
   }
 }

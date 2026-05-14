@@ -5,6 +5,9 @@ import * as fsPromises from 'fs/promises';
 import * as path from 'path';
 import sharp from 'sharp';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { LocalDiskProvider } from './providers/local-disk.provider.js';
+import { S3Provider } from './providers/s3.provider.js';
+import type { StorageProvider } from './interfaces/storage-provider.interface.js';
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const ALLOWED_DOC_TYPES = [
@@ -19,13 +22,26 @@ const THUMBNAIL_HEIGHT = 200;
 @Injectable()
 export class UploadsService {
   private readonly uploadDir: string;
+  private readonly storageProvider: StorageProvider;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
   ) {
-    this.uploadDir = this.config.get<string>('UPLOAD_DIR') || path.join(process.cwd(), 'uploads');
-    this.ensureDirectories();
+    const storageDriver = this.config.get<string>('STORAGE_DRIVER') || 'local';
+
+    if (storageDriver === 's3') {
+      const bucket = this.config.get<string>('S3_BUCKET')!;
+      const region = this.config.get<string>('S3_REGION') || 'us-east-1';
+      const accessKeyId = this.config.get<string>('S3_ACCESS_KEY')!;
+      const secretAccessKey = this.config.get<string>('S3_SECRET_KEY')!;
+      const endpoint = this.config.get<string>('S3_ENDPOINT');
+      this.storageProvider = new S3Provider(bucket, region, accessKeyId, secretAccessKey, endpoint);
+    } else {
+      this.uploadDir = this.config.get<string>('UPLOAD_DIR') || path.join(process.cwd(), 'uploads');
+      this.storageProvider = new LocalDiskProvider(this.uploadDir);
+      this.ensureDirectories();
+    }
   }
 
   private ensureDirectories() {
@@ -60,7 +76,6 @@ export class UploadsService {
       }
     }
 
-    // Check if property already has images (for isPrimary logic)
     const existingCount = await this.prisma.propertyImage.count({
       where: { propertyId },
     });
@@ -70,20 +85,21 @@ export class UploadsService {
       const file = files[i];
       const filename = `${propertyId}-${Date.now()}-${i}${path.extname(file.originalname)}`;
 
-      // Process and save main image
-      await sharp(file.buffer)
+      const mainBuffer = await sharp(file.buffer)
         .resize(1920, 1080, { fit: 'inside', withoutEnlargement: true })
-        .toFile(path.join(this.uploadDir, 'images', filename));
+        .toBuffer();
 
-      // Generate thumbnail
-      await sharp(file.buffer)
+      const thumbBuffer = await sharp(file.buffer)
         .resize(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, { fit: 'cover' })
-        .toFile(path.join(this.uploadDir, 'thumbnails', filename));
+        .toBuffer();
+
+      await this.storageProvider.upload(`images/${filename}`, mainBuffer, file.mimetype);
+      await this.storageProvider.upload(`thumbnails/${filename}`, thumbBuffer, file.mimetype);
 
       const image = await this.prisma.propertyImage.create({
         data: {
           propertyId,
-          url: `/api/uploads/images/${filename}`,
+          url: filename,
           isPrimary: existingCount === 0 && i === 0,
           order: existingCount + i,
         },
@@ -106,19 +122,13 @@ export class UploadsService {
       throw new NotFoundException('Image not found');
     }
 
-    // Extract filename from URL
-    const filename = path.basename(image.url);
+    const filename = image.url;
 
-    // Delete files from disk
-    const imagePath = path.join(this.uploadDir, 'images', filename);
-    const thumbPath = path.join(this.uploadDir, 'thumbnails', filename);
-
-    await fsPromises.unlink(imagePath).catch(() => {});
-    await fsPromises.unlink(thumbPath).catch(() => {});
+    await this.storageProvider.delete(`images/${filename}`);
+    await this.storageProvider.delete(`thumbnails/${filename}`);
 
     await this.prisma.propertyImage.delete({ where: { id: imageId } });
 
-    // If deleted image was primary, set the next one as primary
     if (image.isPrimary) {
       const nextImage = await this.prisma.propertyImage.findFirst({
         where: { propertyId },
@@ -146,8 +156,6 @@ export class UploadsService {
       throw new NotFoundException('Image not found');
     }
 
-    // Use transaction to ensure atomicity - prevents race conditions
-    // where concurrent calls could leave zero or multiple primaries
     await this.prisma.$transaction([
       this.prisma.propertyImage.updateMany({
         where: { propertyId, isPrimary: true },
@@ -180,14 +188,12 @@ export class UploadsService {
     }
 
     const filename = `${contractId}-${Date.now()}${path.extname(file.originalname)}`;
-    const filePath = path.join(this.uploadDir, 'documents', filename);
 
-    await fsPromises.writeFile(filePath, file.buffer);
+    await this.storageProvider.upload(`documents/${filename}`, file.buffer, file.mimetype);
 
-    // Update contract with document URL
     const updated = await this.prisma.contract.update({
       where: { id: contractId },
-      data: { documentUrl: `/api/uploads/documents/${filename}` },
+      data: { documentUrl: filename },
     });
 
     return { documentUrl: updated.documentUrl };
@@ -197,17 +203,20 @@ export class UploadsService {
     type: 'images' | 'thumbnails' | 'documents',
     filename: string,
   ): Promise<string> {
-    // Prevent path traversal
     const sanitized = path.basename(filename);
-    const filePath = path.join(this.uploadDir, type, sanitized);
 
-    try {
-      await fsPromises.access(filePath);
-    } catch {
-      throw new NotFoundException('File not found');
+    if (this.storageProvider instanceof LocalDiskProvider) {
+      const filePath = path.join(this.uploadDir, type, sanitized);
+      try {
+        await fsPromises.access(filePath);
+      } catch {
+        throw new NotFoundException('File not found');
+      }
+      return filePath;
     }
 
-    return filePath;
+    const url = await this.storageProvider.getSignedUrl(`${type}/${sanitized}`, 3600);
+    return url;
   }
 
   private async ensurePropertyExists(propertyId: string) {
