@@ -16,7 +16,7 @@ A comprehensive CRM system for real estate companies to manage properties, clien
 | PDF Generation | PDFKit |
 | Email | Nodemailer + Handlebars templates |
 | Deployment | Docker Compose |
-| CI/CD | GitHub Actions |
+| CI/CD | [![CI](https://github.com/islamahmedas12-ux/real-estate-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/islamahmedas12-ux/real-estate-crm/actions/workflows/ci.yml) |
 
 ## Features
 
