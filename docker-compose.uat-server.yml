@@ -12,7 +12,7 @@ services:
     container_name: crm-uat-authme-db
     environment:
       POSTGRES_USER: authme
-      POSTGRES_PASSWORD: authme-uat
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in env}
       POSTGRES_DB: authme_uat
     volumes:
       - authme-pgdata-uat:/var/lib/postgresql/data
@@ -30,14 +30,14 @@ services:
     restart: unless-stopped
     container_name: crm-uat-authme
     environment:
-      DATABASE_URL: postgresql://authme:authme-uat@authme-db:5432/authme_uat
+      DATABASE_URL: postgresql://authme:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in env}@authme-db:5432/authme_uat
       PORT: "3001"
       NODE_ENV: production
       BASE_URL: https://uat-auth.realstate-crm.homes
       TRUSTED_PROXIES: "*"
-      ADMIN_API_KEY: uat-authme-admin-key-c9h5d1e6g8h0i2j4k6l8m1n3o5p7q9r1
-      WEBHOOK_SECRET_KEY: uat-webhook-secret-8ee6hd5f505g2g5804fe235hhc755h3544e9effc
-      WEBHOOK_ENCRYPTION_SALT: uat-encryption-salt-c3d4e5f6g7h8c3d4e5f6g7h8c3d4e5f6
+      ADMIN_API_KEY: ${ADMIN_API_KEY:?Set ADMIN_API_KEY in env}
+      WEBHOOK_SECRET_KEY: ${WEBHOOK_SECRET_KEY:?Set WEBHOOK_SECRET_KEY in env}
+      WEBHOOK_ENCRYPTION_SALT: ${WEBHOOK_ENCRYPTION_SALT:?Set WEBHOOK_ENCRYPTION_SALT in env}
     volumes:
       - ./authme-patches:/patches:ro
     entrypoint: ["/bin/sh", "/patches/entrypoint.sh"]
@@ -55,16 +55,16 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
-      DATABASE_URL: postgresql://crm_user:real-estate-uat-password-123@host.docker.internal:5434/real_estate_crm_uat
+      DATABASE_URL: postgresql://crm_user:${DB_PASSWORD:?Set DB_PASSWORD in env}@host.docker.internal:5434/real_estate_crm_uat
       AUTHME_URL: http://crm-uat-authme:3001
       AUTHME_ISSUER_URL: https://uat-auth.realstate-crm.homes
       AUTHME_REALM: real-estate-uat
       AUTHME_CLIENT_ID: crm-backend
-      AUTHME_CLIENT_SECRET: change-me-after-setup
+      AUTHME_CLIENT_SECRET: ${AUTHME_CLIENT_SECRET:?Set AUTHME_CLIENT_SECRET in env}
       ADMIN_PORTAL_URL: https://uat-admin.realstate-crm.homes
       AGENT_PORTAL_URL: https://uat-agent.realstate-crm.homes
       UPLOAD_DIR: /app/uploads
-      JWT_SECRET: uat-jwt-secret-unique-value
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in env}
       REDIS_URL: redis://crm-uat-redis:6379
       CORS_ORIGINS: https://uat-admin.realstate-crm.homes,https://uat-agent.realstate-crm.homes
     extra_hosts:

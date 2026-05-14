@@ -12,7 +12,7 @@ services:
     container_name: crm-prod-authme-db
     environment:
       POSTGRES_USER: authme
-      POSTGRES_PASSWORD: authme-prod-secure-change-me
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in env}
       POSTGRES_DB: authme_prod
     volumes:
       - authme-pgdata-prod:/var/lib/postgresql/data
@@ -30,14 +30,14 @@ services:
     restart: unless-stopped
     container_name: crm-prod-authme
     environment:
-      DATABASE_URL: postgresql://authme:authme-prod-secure-change-me@authme-db:5432/authme_prod
+      DATABASE_URL: postgresql://authme:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in env}@authme-db:5432/authme_prod
       PORT: "3001"
       NODE_ENV: production
       BASE_URL: https://auth.realstate-crm.homes
       TRUSTED_PROXIES: "*"
-      ADMIN_API_KEY: prod-authme-admin-key-d0i6e2f7h9i1j3k5l7m9n0o2p4q6r8s0
-      WEBHOOK_SECRET_KEY: prod-webhook-secret-9ff7ie6g616h3h6915gf346iid866i4655f0fggd
-      WEBHOOK_ENCRYPTION_SALT: prod-encryption-salt-d4e5f6g7h8i9d4e5f6g7h8i9d4e5f6g7
+      ADMIN_API_KEY: ${ADMIN_API_KEY:?Set ADMIN_API_KEY in env}
+      WEBHOOK_SECRET_KEY: ${WEBHOOK_SECRET_KEY:?Set WEBHOOK_SECRET_KEY in env}
+      WEBHOOK_ENCRYPTION_SALT: ${WEBHOOK_ENCRYPTION_SALT:?Set WEBHOOK_ENCRYPTION_SALT in env}
     volumes:
       - ./authme-patches:/patches:ro
     entrypoint: ["/bin/sh", "/patches/entrypoint.sh"]
@@ -55,16 +55,16 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
-      DATABASE_URL: postgresql://crm_user:real-estate-prod-password-secure-change-me@host.docker.internal:5435/real_estate_crm_prod
+      DATABASE_URL: postgresql://crm_user:${DB_PASSWORD:?Set DB_PASSWORD in env}@host.docker.internal:5435/real_estate_crm_prod
       AUTHME_URL: http://crm-prod-authme:3001
       AUTHME_ISSUER_URL: https://auth.realstate-crm.homes
       AUTHME_REALM: real-estate
       AUTHME_CLIENT_ID: crm-backend
-      AUTHME_CLIENT_SECRET: change-me-after-setup
+      AUTHME_CLIENT_SECRET: ${AUTHME_CLIENT_SECRET:?Set AUTHME_CLIENT_SECRET in env}
       ADMIN_PORTAL_URL: https://admin.realstate-crm.homes
       AGENT_PORTAL_URL: https://agent.realstate-crm.homes
       UPLOAD_DIR: /app/uploads
-      JWT_SECRET: prod-jwt-secret-generate-with-openssl-rand
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in env}
       REDIS_URL: redis://crm-prod-redis:6379
       CORS_ORIGINS: https://admin.realstate-crm.homes,https://agent.realstate-crm.homes
       THROTTLE_TTL: "60000"
