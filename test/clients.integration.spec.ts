@@ -18,7 +18,7 @@
  *  - Error handling (404, 400, 401, 409)
  */
 
-import { createApiClient, ApiClient } from './helpers/api-client.js';
+import { createApiClient, ApiClient, trackEntity, cleanupAll } from './helpers/api-client.js';
 
 let api: ApiClient;
 let createdClientId: string;
@@ -26,6 +26,10 @@ let validAgentId: string;
 
 beforeAll(async () => {
   api = createApiClient();
+});
+
+afterAll(async () => {
+  await cleanupAll(api);
 });
 
 // ─── Unauthenticated Access ──────────────────────────────────────────────────
@@ -121,6 +125,7 @@ describe('Clients API — Admin CRUD', () => {
     expect(res.body.phone).toBe('+201099999999');
     expect(res.body.email).toBe('integration-test@crm-test.com');
     createdClientId = res.body.id;
+    trackEntity('clients', createdClientId);
   });
 
   it('POST /api/clients rejects invalid phone format', async () => {
@@ -321,6 +326,7 @@ describe('Clients API — Manager role', () => {
     });
     expect(res.status).toBe(201);
     managerClientId = res.body.id;
+    trackEntity('clients', managerClientId);
   });
 
   it('POST /api/clients/:id/assign works for manager', async () => {
@@ -332,10 +338,6 @@ describe('Clients API — Manager role', () => {
   });
 
   afterAll(async () => {
-    // Cleanup — delete as admin
-    if (managerClientId) {
-      await api.loginAs('admin');
-      await api.delete(`/clients/${managerClientId}`);
-    }
+    // Manager entity will be cleaned up by cleanupAll at the top level
   });
 });
