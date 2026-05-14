@@ -25,6 +25,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    const isProduction = process.env.NODE_ENV === 'production';
+
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Internal server error';
     let error = 'Internal Server Error';
@@ -34,17 +36,31 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const exceptionResponse = exception.getResponse();
 
       if (typeof exceptionResponse === 'string') {
-        message = exceptionResponse;
+        message = isProduction ? 'Internal server error' : exceptionResponse;
         error = exception.name;
       } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
         const resp = exceptionResponse as Record<string, unknown>;
-        message = (resp['message'] as string | string[]) ?? exception.message;
+        message = isProduction
+          ? 'Internal server error'
+          : ((resp['message'] as string | string[]) ?? exception.message);
         error = (resp['error'] as string) ?? exception.name;
       }
     } else if (exception instanceof Error) {
       this.logger.error(`Unhandled exception: ${exception.message}`, exception.stack);
+      if (isProduction) {
+        message = 'Internal server error';
+        error = 'Internal Server Error';
+      } else {
+        message = exception.message;
+        error = exception.name;
+      }
     } else {
       this.logger.error('Unknown exception', String(exception));
+    }
+
+    if (isProduction) {
+      message = 'Internal server error';
+      error = 'Internal Server Error';
     }
 
     const body: ErrorResponse = {
