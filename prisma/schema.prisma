@@ -244,6 +244,7 @@ model Lead {
   activities      LeadActivity[]
 
   @@index([status, assignedAgentId])
+  @@index([clientId])
   @@index([priority])
   @@index([nextFollowUp])
   @@index([createdAt])
@@ -289,6 +290,8 @@ model Contract {
   invoices     Invoice[]
 
   @@index([status])
+  @@index([startDate])
+  @@index([endDate])
   @@index([propertyId])
   @@index([clientId])
   @@index([agentId])
