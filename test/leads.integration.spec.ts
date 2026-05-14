@@ -18,7 +18,7 @@
  *  - Auth, role-based access, error handling
  */
 
-import { createApiClient, ApiClient } from './helpers/api-client.js';
+import { createApiClient, ApiClient, trackEntity, cleanupAll } from './helpers/api-client.js';
 
 let api: ApiClient;
 let createdLeadId: string;
@@ -27,6 +27,10 @@ let existingPropertyId: string;
 
 beforeAll(async () => {
   api = createApiClient();
+});
+
+afterAll(async () => {
+  await cleanupAll(api);
 });
 
 // ─── Unauthenticated ─────────────────────────────────────────────────────────
@@ -126,6 +130,7 @@ describe('Leads API — Admin CRUD', () => {
     expect(res.body.status).toBe('NEW');
     expect(res.body.priority).toBe('MEDIUM');
     createdLeadId = res.body.id;
+    trackEntity('leads', createdLeadId);
   });
 
   it('POST /api/leads rejects missing required fields', async () => {

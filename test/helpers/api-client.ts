@@ -2,7 +2,7 @@
  * Integration test helper — makes authenticated API calls against a running server.
  *
  * Usage:
- *   const api = new ApiClient('http://localhost:3000/api');
+ *   const api = createApiClient();
  *   await api.loginAs('admin');
  *   const res = await api.get('/clients');
  */
@@ -19,9 +19,18 @@ export class ApiClient {
 
   async loginAs(role: 'admin' | 'manager' | 'agent'): Promise<void> {
     const credentials: Record<string, { username: string; password: string }> = {
-      admin: { username: 'admin-test', password: 'Admin123!' },
-      manager: { username: 'manager-test', password: 'Manager123!' },
-      agent: { username: 'agent-test', password: 'Agent123!' },
+      admin: {
+        username: process.env['TEST_USER_ADMIN'] ?? 'admin-test',
+        password: process.env['TEST_PASS_ADMIN'] ?? 'Admin123!',
+      },
+      manager: {
+        username: process.env['TEST_USER_MANAGER'] ?? 'manager-test',
+        password: process.env['TEST_PASS_MANAGER'] ?? 'Manager123!',
+      },
+      agent: {
+        username: process.env['TEST_USER_AGENT'] ?? 'agent-test',
+        password: process.env['TEST_PASS_AGENT'] ?? 'Agent123!',
+      },
     };
 
     const cred = credentials[role];
@@ -62,7 +71,7 @@ export class ApiClient {
     return { status: res.status, body };
   }
 
-  async post(path: string, data: any): Promise<{ status: number; body: any }> {
+  async post(path: string, data: unknown): Promise<{ status: number; body: any }> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
       headers: this.headers(),
@@ -72,7 +81,7 @@ export class ApiClient {
     return { status: res.status, body };
   }
 
-  async patch(path: string, data: any): Promise<{ status: number; body: any }> {
+  async patch(path: string, data: unknown): Promise<{ status: number; body: any }> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: 'PATCH',
       headers: this.headers(),
@@ -93,13 +102,40 @@ export class ApiClient {
 }
 
 /**
- * Create an ApiClient configured for the QA environment (or override via env vars).
+ * Create an ApiClient configured via environment variables.
+ * All values can be overridden via TEST_* env vars.
  */
 export function createApiClient(): ApiClient {
-  const apiUrl = process.env['TEST_API_URL'] || 'https://qa-api.realstate-crm.homes/api';
-  const authUrl = process.env['TEST_AUTH_URL'] || 'https://qa-auth.realstate-crm.homes/realms/real-estate-qa';
+  const apiUrl = process.env['TEST_API_URL'] || 'http://localhost:3000/api';
+  const authUrl = process.env['TEST_AUTH_URL'] || 'http://localhost:3001/realms/real-estate';
   const clientId = process.env['TEST_CLIENT_ID'] || 'crm-backend';
-  const clientSecret = process.env['TEST_CLIENT_SECRET'] || '797e5cb4a67875e49f1711c7b7624db6fd6ff6ec4684dcc445715ec5208a85da';
+  const clientSecret = process.env['TEST_CLIENT_SECRET'] || '';
+
+  if (!clientSecret) {
+    throw new Error('TEST_CLIENT_SECRET environment variable is required');
+  }
 
   return new ApiClient(apiUrl, authUrl, clientId, clientSecret);
+}
+
+/**
+ * Entity tracking for integration test cleanup.
+ * Use trackEntity('clients', id) after POST creates a resource.
+ * Call cleanupAll(api) in afterAll to delete tracked entities.
+ */
+const createdEntities: Array<{ type: string; id: string }> = [];
+
+export function trackEntity(type: string, id: string): void {
+  createdEntities.push({ type, id });
+}
+
+export async function cleanupAll(api: ApiClient): Promise<void> {
+  for (const entity of [...createdEntities].reverse()) {
+    try {
+      await api.delete(`/${entity.type}/${entity.id}`);
+    } catch {
+      // Best-effort cleanup
+    }
+  }
+  createdEntities.length = 0;
 }

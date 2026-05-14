@@ -13,12 +13,16 @@
  *  - Auth (401 for unauthenticated)
  */
 
-import { createApiClient, ApiClient } from './helpers/api-client.js';
+import { createApiClient, ApiClient, cleanupAll } from './helpers/api-client.js';
 
 let api: ApiClient;
 
 beforeAll(async () => {
   api = createApiClient();
+});
+
+afterAll(async () => {
+  await cleanupAll(api);
 });
 
 // ─── Unauthenticated ─────────────────────────────────────────────────────────

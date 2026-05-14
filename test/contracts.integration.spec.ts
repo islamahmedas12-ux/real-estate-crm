@@ -16,13 +16,17 @@
  *  - Auth & role-based access
  */
 
-import { createApiClient, ApiClient } from './helpers/api-client.js';
+import { createApiClient, ApiClient, cleanupAll } from './helpers/api-client.js';
 
 let api: ApiClient;
 let existingContractId: string;
 
 beforeAll(async () => {
   api = createApiClient();
+});
+
+afterAll(async () => {
+  await cleanupAll(api);
 });
 
 // ─── Unauthenticated ─────────────────────────────────────────────────────────
