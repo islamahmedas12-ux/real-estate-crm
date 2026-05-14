@@ -82,7 +82,3 @@ mobile/ios/Flutter/.last_build_id
 .autobuild-progress.md
 .autobuild-order.txt
 
-# autobuild local state (not tracked)
-.autobuild-goal.md
-.autobuild-progress.md
-.autobuild-order.txt
