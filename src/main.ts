@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import * as Sentry from '@sentry/node';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module.js';
@@ -16,8 +17,34 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'),
   version: string;
 };
 
+// Initialize Sentry before any other module
+Sentry.init({
+  dsn: process.env['SENTRY_DSN'],
+  environment: process.env['NODE_ENV'],
+  release: `real-estate-crm@${pkg.version}`,
+  // Mask PII fields before sending
+  beforeSend: (event) => {
+    if (event.request) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const headers = { ...event.request.headers };
+      delete headers['Authorization'];
+      delete headers['authorization'];
+      event.request.headers = headers;
+    }
+    // Remove email and phone from user context
+    if (event.user) {
+      delete event.user.email;
+      delete (event.user as Record<string, unknown>)['phone'];
+    }
+    return event;
+  },
+});
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Sentry request handler — must be first
+  app.use(Sentry.requestsHandler());
 
   // Security middleware — relax CSP for Swagger UI at /api/docs
   app.use(
@@ -86,6 +113,9 @@ async function bootstrap() {
 
   // Global exception filters
   app.useGlobalFilters(new HttpExceptionFilter(), new SanitizeNotFoundFilter());
+
+  // Sentry error handler — must be after exception filters
+  app.use(Sentry.errorHandler());
 
   // Swagger / OpenAPI at /api/docs
   const config = new DocumentBuilder()
