@@ -44,6 +44,11 @@ describe('Clients API — Unauthenticated', () => {
     const res = await api.post('/clients', { firstName: 'Test' });
     expect(res.status).toBe(401);
   });
+
+  it('GET /api/clients/check-duplicates returns 401 without token', async () => {
+    const res = await api.get('/clients/check-duplicates?phone=%2B201099999999');
+    expect(res.status).toBe(401);
+  });
 });
 
 // ─── Admin CRUD Operations ───────────────────────────────────────────────────
