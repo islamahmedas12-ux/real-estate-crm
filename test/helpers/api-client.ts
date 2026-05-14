@@ -91,6 +91,16 @@ export class ApiClient {
     return { status: res.status, body };
   }
 
+  async put(path: string, data: unknown): Promise<{ status: number; body: any }> {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: 'PUT',
+      headers: this.headers(),
+      body: JSON.stringify(data),
+    });
+    const body = await res.json().catch(() => null);
+    return { status: res.status, body };
+  }
+
   async delete(path: string): Promise<{ status: number; body: any }> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method: 'DELETE',
