@@ -195,4 +195,18 @@ export abstract class PdfBaseTemplate {
       doc.end();
     });
   }
+
+  protected pipeToResponse(
+    doc: typeof PDFDocument.prototype,
+    res: import('express').Response,
+    filename: string,
+  ): void {
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Transfer-Encoding': 'chunked',
+    });
+    doc.pipe(res);
+    doc.end();
+  }
 }
