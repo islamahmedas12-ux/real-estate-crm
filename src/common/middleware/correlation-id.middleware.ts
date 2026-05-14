@@ -2,13 +2,15 @@ import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { randomUUID } from 'crypto';
 
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
-  interface Express {
+  namespace Express {
     interface Request {
       id: string;
     }
   }
 }
+/* eslint-enable @typescript-eslint/no-namespace */
 
 @Injectable()
 export class CorrelationIdMiddleware implements NestMiddleware {
