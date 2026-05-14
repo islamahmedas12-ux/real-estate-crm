@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createRequire } from 'node:module';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -16,11 +17,13 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'),
   version: string;
 };
 
-// Initialize Sentry conditionally — only if @sentry/node is installed and SENTRY_DSN is set
-function initSentry() {
+// Sentry is initialized lazily at runtime if @sentry/node is in node_modules and SENTRY_DSN is set
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Sentry: any = null;
+if (process.env['SENTRY_DSN']) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const Sentry = require('@sentry/node') as typeof import('@sentry/node');
+    const require2 = createRequire(import.meta.url);
+    Sentry = require2('@sentry/node');
     Sentry.init({
       dsn: process.env['SENTRY_DSN'],
       environment: process.env['NODE_ENV'],
@@ -38,13 +41,10 @@ function initSentry() {
         return event;
       },
     });
-    return Sentry;
   } catch {
-    return null;
+    // Sentry not installed — skip
   }
 }
-
-const Sentry = initSentry();
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
