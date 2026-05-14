@@ -76,3 +76,8 @@ mobile/ios/Flutter/.last_build_id
 /e2e/.auth/
 /playwright-report/
 /test-results/
+
+# autobuild local state (not tracked)
+.autobuild-goal.md
+.autobuild-progress.md
+.autobuild-order.txt
