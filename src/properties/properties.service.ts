@@ -172,13 +172,6 @@ export class PropertiesService {
       return { data: [], nextCursor: null, hasMore: false };
     }
 
-    // Convert to tsquery format: split words and join with &
-    const tsquery = sanitized
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((w) => `${w}:*`)
-      .join(' & ');
-
     const agentFilter =
       !isAdminOrManager && agentId
         ? Prisma.sql`AND p."assignedAgentId" = ${agentId}`
@@ -188,24 +181,9 @@ export class PropertiesService {
 
     const results = await this.prisma.$queryRaw<any[]>`
       SELECT p.*,
-             ts_rank(
-               to_tsvector('english',
-                 coalesce(p."title", '') || ' ' ||
-                 coalesce(p."description", '') || ' ' ||
-                 coalesce(p."address", '') || ' ' ||
-                 coalesce(p."city", '') || ' ' ||
-                 coalesce(p."region", '')
-               ),
-               to_tsquery('english', ${tsquery})
-             ) AS rank
+             ts_rank(p."searchVector", websearch_to_tsquery('english', ${sanitized})) AS rank
       FROM properties p
-      WHERE to_tsvector('english',
-              coalesce(p."title", '') || ' ' ||
-              coalesce(p."description", '') || ' ' ||
-              coalesce(p."address", '') || ' ' ||
-              coalesce(p."city", '') || ' ' ||
-              coalesce(p."region", '')
-            ) @@ to_tsquery('english', ${tsquery})
+      WHERE p."searchVector" @@ websearch_to_tsquery('english', ${sanitized})
         ${agentFilter}
         ${cursorFilter}
       ORDER BY rank DESC, p."createdAt" DESC
