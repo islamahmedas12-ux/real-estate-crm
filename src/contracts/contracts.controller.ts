@@ -28,6 +28,7 @@ import { ChangeContractStatusDto } from './dto/change-status.dto.js';
 import { GenerateInvoicesDto } from './dto/generate-invoices.dto.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { CurrentUser } from '../common/decorators/current-user.decorator.js';
+import { Idempotent } from '../common/decorators/idempotent.decorator.js';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator.js';
 
 @ApiTags('Contracts')
@@ -38,6 +39,7 @@ export class ContractsController {
 
   @Post()
   @Roles('admin', 'manager')
+  @Idempotent()
   @ApiOperation({ summary: 'Create a new contract' })
   @ApiResponse({ status: 201, description: 'Contract created' })
   @ApiResponse({ status: 400, description: 'Validation error or property not available' })
@@ -132,6 +134,7 @@ export class ContractsController {
 
   @Post(':id/generate-invoices')
   @Roles('admin', 'manager')
+  @Idempotent()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Auto-generate invoices from payment terms' })
   @ApiParam({ name: 'id', type: String })
