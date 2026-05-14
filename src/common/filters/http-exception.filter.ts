@@ -7,7 +7,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import * as Sentry from '@sentry/node';
 
 interface ErrorResponse {
   statusCode: number;
@@ -25,14 +24,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const req = request as Request & { id?: string; user?: { id?: string; role?: string } };
+    const req = request as Request & { id?: string };
     const reqId = req.id;
     const isProduction = process.env.NODE_ENV === 'production';
-
-    // Set user context for Sentry
-    if (req.user?.id) {
-      Sentry.setUser({ id: req.user.id, role: req.user.role });
-    }
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Internal server error';
