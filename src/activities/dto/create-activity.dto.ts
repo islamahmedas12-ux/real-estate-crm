@@ -45,6 +45,14 @@ export class CreateActivityDto {
   performedBy: string;
 
   @ApiPropertyOptional({
+    description: 'UUID of the user who performed the action (FK)',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  @IsOptional()
+  @IsString()
+  performedById?: string;
+
+  @ApiPropertyOptional({
     description: 'Additional metadata (e.g. old/new values)',
     example: { oldStatus: 'AVAILABLE', newStatus: 'SOLD' },
   })

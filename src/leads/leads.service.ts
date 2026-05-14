@@ -56,6 +56,7 @@ export class LeadsService {
         type: LeadActivityType.STATUS_CHANGE,
         description: `Lead created with status ${lead.status}`,
         performedBy,
+        performedById: performedBy,
       },
     });
 
@@ -159,6 +160,7 @@ export class LeadsService {
             ? `Status changed from ${lead.status} to ${dto.status}: ${dto.notes}`
             : `Status changed from ${lead.status} to ${dto.status}`,
           performedBy,
+          performedById: performedBy,
         },
       }),
     ]);
@@ -207,6 +209,7 @@ export class LeadsService {
         type: LeadActivityType.STATUS_CHANGE,
         description: `Lead converted to client. Client: ${lead.client.firstName} ${lead.client.lastName}`,
         performedBy,
+        performedById: performedBy,
       },
     });
 
@@ -218,6 +221,7 @@ export class LeadsService {
         entityType: 'LEAD',
         entityId: id,
         performedBy,
+        performedById: performedBy,
         metadata: { clientId: lead.clientId },
       },
     });
@@ -234,6 +238,7 @@ export class LeadsService {
         type: dto.type,
         description: dto.description,
         performedBy,
+        performedById: performedBy,
       },
     });
   }
