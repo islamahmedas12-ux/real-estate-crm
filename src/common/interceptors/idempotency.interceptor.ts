@@ -6,8 +6,8 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Observable, from, throwError, of } from 'rxjs';
-import { concatMap, tap, catchError } from 'rxjs/operators';
+import { Observable, throwError, of } from 'rxjs';
+import { concatMap, catchError } from 'rxjs/operators';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 @Injectable()
