@@ -24,7 +24,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-
+    const req = request as Request & { id?: string };
+    const reqId = req.id;
     const isProduction = process.env.NODE_ENV === 'production';
 
     let statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -46,7 +47,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         error = (resp['error'] as string) ?? exception.name;
       }
     } else if (exception instanceof Error) {
-      this.logger.error(`Unhandled exception: ${exception.message}`, exception.stack);
+      this.logger.error({ reqId, err: exception.message }, exception.stack);
       if (isProduction) {
         message = 'Internal server error';
         error = 'Internal Server Error';
@@ -55,7 +56,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         error = exception.name;
       }
     } else {
-      this.logger.error('Unknown exception', String(exception));
+      this.logger.error({ reqId }, 'Unknown exception');
     }
 
     if (isProduction) {
