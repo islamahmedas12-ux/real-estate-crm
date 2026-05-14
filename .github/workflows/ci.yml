@@ -171,3 +171,20 @@ jobs:
           tags: real-estate-crm:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # ── Markdown Links ─────────────────────────────────────────────────────
+  docs-links:
+    name: CI / Docs (link check)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install markdown-link-check
+        run: npm install -g markdown-link-check
+
+      - name: Check README links
+        run: markdown-link-check README.md || true
+
+      - name: Check docs links
+        run: find docs -name "*.md" -exec markdown-link-check {} \; || true
