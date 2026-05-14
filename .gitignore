@@ -44,7 +44,6 @@ Thumbs.db
 tsconfig.tsbuildinfo
 
 # Prisma
-prisma/migrations/
 
 # Flutter
 mobile/.dart_tool/
