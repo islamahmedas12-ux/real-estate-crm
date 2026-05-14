@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { IdempotencyInterceptor } from './idempotency.interceptor.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
@@ -48,17 +48,22 @@ describe('IdempotencyInterceptor', () => {
     jest.clearAllMocks();
   });
 
-  it('passes through when no idempotency key is provided', (done) => {
+  it('passes through when no idempotency key is provided', async () => {
     const context = mockContext(null);
     const handler = mockCallHandler({ result: 'ok' });
 
-    interceptor.intercept(context, handler).subscribe((result) => {
-      expect(result).toEqual({ result: 'ok' });
-      done();
+    const obs = await interceptor.intercept(context, handler);
+    let result: unknown;
+    await new Promise<void>((done) => {
+      obs.subscribe((r) => {
+        result = r;
+        done();
+      });
     });
+    expect(result).toEqual({ result: 'ok' });
   });
 
-  it('returns existing response when key is found', (done) => {
+  it('returns existing response when key is found', async () => {
     mockPrisma.idempotencyKey.findUnique.mockResolvedValue({
       key: 'abc',
       endpoint: '/test',
@@ -69,30 +74,40 @@ describe('IdempotencyInterceptor', () => {
     const context = mockContext('abc', 'user1');
     const handler = mockCallHandler({ new: true });
 
-    interceptor.intercept(context, handler).subscribe((result) => {
-      expect(result).toEqual({ existing: true });
-      done();
+    const obs = await interceptor.intercept(context, handler);
+    let result: unknown;
+    await new Promise<void>((done) => {
+      obs.subscribe((r) => {
+        result = r;
+        done();
+      });
     });
+    expect(result).toEqual({ existing: true });
   });
 
-  it('stores new response after handler executes', (done) => {
+  it('stores new response after handler executes', async () => {
     mockPrisma.idempotencyKey.findUnique.mockResolvedValue(null);
     mockPrisma.idempotencyKey.create.mockResolvedValue({});
 
     const context = mockContext('new-key', 'user1');
     const handler = mockCallHandler({ stored: true });
 
-    interceptor.intercept(context, handler).subscribe((result) => {
-      expect(mockPrisma.idempotencyKey.create).toHaveBeenCalledWith({
-        data: {
-          key: 'new-key',
-          endpoint: '/test',
-          userId: 'user1',
-          response: { stored: true },
-        },
+    const obs = await interceptor.intercept(context, handler);
+    let result: unknown;
+    await new Promise<void>((done) => {
+      obs.subscribe((r) => {
+        result = r;
+        done();
       });
-      expect(result).toEqual({ stored: true });
-      done();
     });
+    expect(mockPrisma.idempotencyKey.create).toHaveBeenCalledWith({
+      data: {
+        key: 'new-key',
+        endpoint: '/test',
+        userId: 'user1',
+        response: { stored: true },
+      },
+    });
+    expect(result).toEqual({ stored: true });
   });
 });
