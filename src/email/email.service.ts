@@ -48,8 +48,6 @@ export class EmailService implements OnModuleInit {
     const nodeEnv = this.config.get<string>('NODE_ENV', 'development');
     this.testMode = this.resolveTestMode(nodeEnv);
 
-    const from = this.config.get<string>('EMAIL_FROM', 'noreply@realestate-crm.com');
-
     if (this.testMode === 'mailhog') {
       this.transporter = nodemailer.createTransport({
         host: 'mailhog',
