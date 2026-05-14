@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createRequire } from 'node:module';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -16,8 +17,42 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'),
   version: string;
 };
 
+// Sentry is initialized lazily at runtime if @sentry/node is in node_modules and SENTRY_DSN is set
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Sentry: any = null;
+if (process.env['SENTRY_DSN']) {
+  try {
+    const require2 = createRequire(import.meta.url);
+    Sentry = require2('@sentry/node');
+    Sentry.init({
+      dsn: process.env['SENTRY_DSN'],
+      environment: process.env['NODE_ENV'],
+      release: `real-estate-crm@${pkg.version}`,
+      // Mask PII fields before sending
+      beforeSend: (event: { request?: { headers: Record<string, string> }; user?: Record<string, unknown> }) => {
+        if (event.request) {
+          delete event.request.headers['Authorization'];
+          delete event.request.headers['authorization'];
+        }
+        if (event.user) {
+          delete event.user.email;
+          delete event.user['phone'];
+        }
+        return event;
+      },
+    });
+  } catch {
+    // Sentry not installed — skip
+  }
+}
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Sentry request handler — must be first (if Sentry is enabled)
+  if (Sentry) {
+    app.use(Sentry.requestsHandler());
+  }
 
   // Security middleware — relax CSP for Swagger UI at /api/docs
   app.use(
@@ -86,6 +121,11 @@ async function bootstrap() {
 
   // Global exception filters
   app.useGlobalFilters(new HttpExceptionFilter(), new SanitizeNotFoundFilter());
+
+  // Sentry error handler — must be after exception filters (if Sentry is enabled)
+  if (Sentry) {
+    app.use(Sentry.errorHandler());
+  }
 
   // Swagger / OpenAPI at /api/docs
   const config = new DocumentBuilder()
