@@ -139,6 +139,8 @@ model User {
   assignedLeads      Lead[]     @relation("LeadAgent")
   assignedContracts  Contract[] @relation("ContractAgent")
   emailPreference    EmailPreference?
+  performedActivities Activity[] @relation("ActivityPerformedBy")
+  performedLeadActivities LeadActivity[] @relation("LeadActivityPerformedBy")
 
   @@index([authmeId])
   @@index([role])
@@ -257,13 +259,16 @@ model LeadActivity {
   type        LeadActivityType
   description String
   performedBy String
+  performedById String?
 
   createdAt   DateTime         @default(now())
 
   lead        Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  performedByUser User?       @relation("LeadActivityPerformedBy", fields: [performedById], references: [id], onDelete: SetNull)
 
   @@index([leadId])
   @@index([createdAt])
+  @@index([performedById])
   @@map("lead_activities")
 }
 
@@ -330,12 +335,15 @@ model Activity {
   entityType  ActivityEntityType
   entityId    String
   performedBy String
-  metadata    Json?
+  performedById String?
 
   createdAt   DateTime           @default(now())
 
+  performedByUser User?         @relation("ActivityPerformedBy", fields: [performedById], references: [id], onDelete: SetNull)
+
   @@index([entityType, entityId])
   @@index([performedBy])
+  @@index([performedById])
   @@index([createdAt])
   @@map("activities")
 }
