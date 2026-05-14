@@ -14,6 +14,3 @@ CREATE UNIQUE INDEX "idempotency_keys_key_endpoint_unique" ON "idempotency_keys"
 
 -- Index for TTL cleanup queries
 CREATE INDEX "idempotency_keys_createdAt_idx" ON "idempotency_keys"("createdAt");
-
-ALTER TABLE "idempotency_keys" ADD CONSTRAINT "idempotency_keys_userId_fkey"
-  FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL;

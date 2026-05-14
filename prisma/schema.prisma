@@ -370,8 +370,6 @@ model IdempotencyKey {
   response   Json
   createdAt  DateTime @default(now())
 
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-
   @@unique([key, endpoint])
   @@index([createdAt])
   @@map("idempotency_keys")
