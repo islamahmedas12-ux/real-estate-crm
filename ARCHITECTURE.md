@@ -313,7 +313,58 @@ lib/
 
 ## Monitoring
 
-- **Metrics:** Prometheus endpoint (`/metrics`)
-- **Dashboards:** Grafana
-- **Error Tracking:** Sentry
-- **Logs:** Structured JSON (Pino) → log aggregation
+### Metrics (`/metrics`)
+
+The NestJS backend exposes a Prometheus-compatible `/metrics` endpoint (public, no auth required).
+
+Metrics collected:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `crm_logins_total` | Counter | User login events |
+| `crm_contracts_created_total` | Counter | Contracts created |
+| `crm_payments_recorded_total` | Counter | Payments recorded |
+| `crm_queue_email_pending` | Gauge | Pending email queue jobs |
+| `crm_queue_email_active` | Gauge | Active email queue jobs |
+| `crm_queue_email_failed` | Gauge | Failed email queue jobs |
+| `process_cpu_*`, `process_memory_*`, `nodejs_*` | Gauge | Default Node.js process metrics |
+| `http_server_requests_seconds_*` | Histogram | HTTP request latency (if enabled via `prom-client`) |
+
+### Alert Rules (Prometheus)
+
+- **HighErrorRate**: 5xx error rate > 1% for 2 minutes
+- **QueueBacklogHigh**: Email queue pending > 100 for 5 minutes
+- **QueueFailedJobs**: Failed email jobs > 10
+- **HighLatency**: API p99 latency > 2 seconds
+
+### Grafana Dashboards
+
+Located in `monitoring/provisioning/dashboards/api.json`:
+
+- API Latency (p50 / p95 / p99)
+- Error Rate (5xx / total)
+- Email Queue Depth (pending / active / failed)
+- Business Metrics Rate (logins, contracts, payments per minute)
+
+Access Grafana at `http://localhost:3001` (default credentials: `admin` / `admin`).
+
+### Stack
+
+```yaml
+prometheus: :9090   # Scrape engine + TSDB
+grafana:    :3001    # Dashboards (provisioned via monitoring/provisioning/)
+```
+
+To start the monitoring stack:
+
+```bash
+docker compose -f docker-compose-monitoring.yml up -d
+```
+
+### Error Tracking
+
+[Sentry](https://sentry.io) is integrated for backend error tracking. Configure `SENTRY_DSN` environment variable to enable. Errors are sanitized before sending (Authorization headers and PII fields are stripped via `beforeSend`).
+
+### Structured Logging
+
+All backend logs are structured JSON via Pino. Configure `LOG_LEVEL` (default: `info`). Logs include a `correlationId` for request tracing across services.
