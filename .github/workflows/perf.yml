@@ -15,10 +15,15 @@ concurrency:
 
 env:
   NODE_VERSION: "24"
+  CI: "true"
   TEST_API_URL: ${{ vars.TEST_API_URL || 'https://qa-api.realestate-crm.homes/api' }}
   TEST_AUTH_URL: ${{ vars.TEST_AUTH_URL || 'https://qa-auth.realestate-crm.homes' }}
   TEST_CLIENT_ID: ${{ vars.TEST_CLIENT_ID || 'crm-backend' }}
   TEST_CLIENT_SECRET: ${{ secrets.TEST_CLIENT_SECRET }}
+  TEST_USER_ADMIN: ${{ vars.TEST_USER_ADMIN || 'admin-test' }}
+  TEST_PASS_ADMIN: ${{ secrets.TEST_PASS_ADMIN }}
+  TEST_USER_AGENT: ${{ vars.TEST_USER_AGENT || 'agent-test' }}
+  TEST_PASS_AGENT: ${{ secrets.TEST_PASS_AGENT }}
 
 jobs:
   perf-tests:
@@ -39,10 +44,15 @@ jobs:
       - name: Run performance tests
         run: npx tsx test/performance.test.ts
         env:
+          CI: ${{ env.CI }}
           TEST_API_URL: ${{ env.TEST_API_URL }}
           TEST_AUTH_URL: ${{ env.TEST_AUTH_URL }}
           TEST_CLIENT_ID: ${{ env.TEST_CLIENT_ID }}
           TEST_CLIENT_SECRET: ${{ env.TEST_CLIENT_SECRET }}
+          TEST_USER_ADMIN: ${{ env.TEST_USER_ADMIN }}
+          TEST_PASS_ADMIN: ${{ env.TEST_PASS_ADMIN }}
+          TEST_USER_AGENT: ${{ env.TEST_USER_AGENT }}
+          TEST_PASS_AGENT: ${{ env.TEST_PASS_AGENT }}
 
       - name: Upload perf results
         if: always()
