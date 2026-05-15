@@ -1,0 +1,18 @@
+{
+  "title": "لوحة التحكم",
+  "welcome": "مرحباً بعودتك",
+  "today": "اليوم",
+  "thisWeek": "هذا الأسبوع",
+  "thisMonth": "هذا الشهر",
+  "quickActions": "إجراءات سريعة",
+  "upcomingTasks": "المهام القادمة",
+  "todayFollowUps": "متابعات اليوم",
+  "recentActivities": "الأنشطة الأخيرة",
+  "leadPipeline": "قاد المبيعات",
+  "myProperties": "عقاراتي",
+  "performanceComparison": "مقارنة الأداء",
+  "notifications": "الإشعارات",
+  "noActivities": "لا توجد أنشطة حديثة",
+  "noTasks": "لا توجد مهام قادمة",
+  "noFollowUps": "لا توجد متابعات لليوم"
+}

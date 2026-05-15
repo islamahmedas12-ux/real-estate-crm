@@ -1,0 +1,64 @@
+{
+  "app": {
+    "name": "Estate CRM",
+    "agentPortal": "Agent Portal"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "properties": "Properties",
+    "leads": "Leads",
+    "clients": "Clients",
+    "contracts": "Contracts",
+    "activities": "Activities"
+  },
+  "common": {
+    "search": "Search anything…",
+    "signOut": "Sign out",
+    "profile": "Profile",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "view": "View",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading…",
+    "noData": "No data available",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "actions": "Actions",
+    "status": "Status",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "active": "Active",
+    "inactive": "Inactive",
+    "all": "All",
+    "filter": "Filter",
+    "export": "Export",
+    "refresh": "Refresh",
+    "collapse": "Collapse",
+    "expand": "Expand"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "loggingIn": "Signing in…"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address"
+  },
+  "notifications": {
+    "saved": "Saved successfully",
+    "deleted": "Deleted successfully",
+    "error": "An error occurred"
+  }
+}

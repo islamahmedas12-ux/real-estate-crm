@@ -1,0 +1,28 @@
+{
+  "title": "Properties",
+  "noProperties": "No properties found",
+  "addProperty": "Add Property",
+  "viewProperty": "View Property",
+  "fields": {
+    "title": "Title",
+    "price": "Price",
+    "area": "Area",
+    "location": "Location",
+    "type": "Type",
+    "status": "Status",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms"
+  },
+  "types": {
+    "apartment": "Apartment",
+    "villa": "Villa",
+    "land": "Land",
+    "commercial": "Commercial"
+  },
+  "status": {
+    "available": "Available",
+    "sold": "Sold",
+    "reserved": "Reserved",
+    "rented": "Rented"
+  }
+}

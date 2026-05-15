@@ -1,0 +1,27 @@
+{
+  "title": "Contracts",
+  "title_one": "Contract",
+  "contractDetails": "Contract Details",
+  "noContracts": "No contracts found",
+  "fields": {
+    "title": "Title",
+    "type": "Type",
+    "client": "Client",
+    "property": "Property",
+    "value": "Value",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "status": "Status"
+  },
+  "types": {
+    "sale": "Sale",
+    "rental": "Rental"
+  },
+  "status": {
+    "draft": "Draft",
+    "pending": "Pending",
+    "active": "Active",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  }
+}

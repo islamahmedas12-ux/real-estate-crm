@@ -1,0 +1,64 @@
+{
+  "app": {
+    "name": "منصة إدارة العقارات",
+    "agentPortal": "بوابة المندوب"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "properties": "العقارات",
+    "leads": "العملاء المحتملون",
+    "clients": "العملاء",
+    "contracts": "العقود",
+    "activities": "الأنشطة"
+  },
+  "common": {
+    "search": "ابحث عن أي شيء…",
+    "signOut": "تسجيل الخروج",
+    "profile": "الملف الشخصي",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "view": "عرض",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "loading": "جارٍ التحميل…",
+    "noData": "لا توجد بيانات",
+    "confirm": "تأكيد",
+    "yes": "نعم",
+    "no": "لا",
+    "actions": "الإجراءات",
+    "status": "الحالة",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "createdAt": "تاريخ الإنشاء",
+    "updatedAt": "تاريخ التحديث",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "all": "الكل",
+    "filter": "تصفية",
+    "export": "تصدير",
+    "refresh": "تحديث",
+    "collapse": "طي",
+    "expand": "توسيع"
+  },
+  "auth": {
+    "signIn": "تسجيل الدخول",
+    "signOut": "تسجيل الخروج",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "loggingIn": "جارٍ تسجيل الدخول…"
+  },
+  "validation": {
+    "required": "هذا الحقل مطلوب",
+    "invalidEmail": "البريد الإلكتروني غير صالح"
+  },
+  "notifications": {
+    "saved": "تم الحفظ بنجاح",
+    "deleted": "تم الحذف بنجاح",
+    "error": "حدث خطأ"
+  }
+}

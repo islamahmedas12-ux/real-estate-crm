@@ -1,0 +1,22 @@
+{
+  "title": "العملاء",
+  "title_one": "العميل",
+  "addClient": "إضافة عميل",
+  "editClient": "تعديل العميل",
+  "clientDetails": "تفاصيل العميل",
+  "noClients": "لا يوجد عملاء",
+  "fields": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "type": "النوع",
+    "budget": "الميزانية",
+    "notes": "ملاحظات"
+  },
+  "types": {
+    "buyer": "مشتري",
+    "seller": "بائع",
+    "renter": "مستأجر",
+    "tenant": "مؤجر"
+  }
+}
