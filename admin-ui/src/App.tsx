@@ -51,7 +51,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <BrowserRouter>
-          <AuthProvider>
+          <AuthProvider queryClient={queryClient}>
             <ErrorBoundary>
               <Routes>
                 {/* Public */}
