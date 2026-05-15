@@ -1,0 +1,37 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+title: "feat: [short description]"
+labels: ["type:feat"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Context
+        Describe the problem or opportunity this feature addresses.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feature Description
+      description: What should happen?
+      placeholder: |
+        As a [role], I want [goal] so that [benefit].
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Subtasks
+        - [ ] Design solution
+        - [ ] Implement feature
+        - [ ] Add tests
+        - [ ] Update docs
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Acceptance criteria
+        - [ ] Feature works as described
+        - [ ] Tests pass
+        - [ ] Docs updated if needed
