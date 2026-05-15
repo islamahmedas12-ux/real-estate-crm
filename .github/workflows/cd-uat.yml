@@ -61,14 +61,14 @@ jobs:
       deploy_enabled: ${{ steps.check.outputs.enabled }}
     steps:
       - id: check
-        env:
-          SSH_KEY: ${{ secrets.UAT_SERVER_SSH_KEY }}
         run: |
-          if [ -n "$SSH_KEY" ]; then
+          # Auto-deploy is opt-in. Stays OFF until repo variable
+          # UAT_DEPLOY_ENABLED is set to 'true' (Settings → Variables).
+          if [ "${{ vars.UAT_DEPLOY_ENABLED }}" = "true" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::UAT_SERVER_SSH_KEY not configured — skipping migrate/deploy. Build & push still runs."
+            echo "::notice::Auto-deploy disabled — set repo variable UAT_DEPLOY_ENABLED=true to enable. Build & push still runs."
           fi
 
   # ── Build Frontend SPAs with UAT env vars ──────────────────────────────
