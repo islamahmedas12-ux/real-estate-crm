@@ -9,9 +9,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Building,
+  LogOut,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../../utils'
+import { useAuth } from '../../context/AuthContext'
 
 const NAV_ITEMS = [
   { labelKey: 'nav.dashboard',  path: '/',            icon: LayoutDashboard, exact: true },
@@ -29,6 +31,7 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { t } = useTranslation()
+  const { logout } = useAuth()
 
   return (
     <aside
@@ -106,6 +109,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <span>{t('common.collapse')}</span>
             </>
           )}
+        </button>
+        <button
+          onClick={logout}
+          className={cn(
+            'flex items-center w-full rounded-lg px-2.5 py-2 text-sm text-red-600 dark:text-red-400',
+            'hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors',
+            collapsed ? 'justify-center' : 'gap-3',
+          )}
+          title={collapsed ? t('common.signOut') : undefined}
+        >
+          <LogOut size={18} />
+          {!collapsed && <span>{t('common.signOut')}</span>}
         </button>
       </div>
     </aside>
