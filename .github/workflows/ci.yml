@@ -97,6 +97,9 @@ jobs:
       - name: Type check & Build
         run: npm run build
 
+      - name: Test
+        run: npm test
+
   # ── Agent UI ───────────────────────────────────────────────────────────
   agent-ui:
     name: CI / Frontend Agent UI
