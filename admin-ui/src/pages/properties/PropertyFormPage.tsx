@@ -1,29 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Save, Plus, X } from 'lucide-react'
 import { propertiesApi } from '../../api/properties'
 import { Button, Input, Select, Textarea, LoadingSpinner } from '../../components/ui'
 import { PROPERTY_TYPES } from '../../types/property'
 import type { CreatePropertyPayload } from '../../types/property'
-
-const EMPTY_FORM: CreatePropertyPayload = {
-  title: '',
-  description: '',
-  type: 'APARTMENT',
-  price: '',
-  area: '',
-  bedrooms: undefined,
-  bathrooms: undefined,
-  floor: undefined,
-  address: '',
-  city: '',
-  region: '',
-  latitude: '',
-  longitude: '',
-  features: [],
-}
+import { propertySchema, type PropertyFormData } from '../../schemas'
 
 export default function PropertyFormPage() {
   const { id } = useParams<{ id: string }>()
@@ -31,11 +17,35 @@ export default function PropertyFormPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  const [form, setForm] = useState<CreatePropertyPayload>(EMPTY_FORM)
-  const [featureInput, setFeatureInput] = useState('')
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<PropertyFormData>({
+    resolver: zodResolver(propertySchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      type: 'APARTMENT',
+      price: '',
+      area: '',
+      bedrooms: undefined,
+      bathrooms: undefined,
+      floor: undefined,
+      address: '',
+      city: '',
+      region: '',
+      latitude: '',
+      longitude: '',
+      features: [],
+    },
+  })
 
-  // Load existing property for edit
+  const [featureInput, setFeatureInput] = useState('')
+  const features = watch('features') ?? []
+
   const { data: existing, isLoading: loadingExisting } = useQuery({
     queryKey: ['property', id],
     queryFn: () => propertiesApi.get(id!),
@@ -44,24 +54,22 @@ export default function PropertyFormPage() {
 
   useEffect(() => {
     if (existing) {
-      setForm({
-        title: existing.title,
-        description: existing.description ?? '',
-        type: existing.type,
-        price: existing.price,
-        area: existing.area,
-        bedrooms: existing.bedrooms ?? undefined,
-        bathrooms: existing.bathrooms ?? undefined,
-        floor: existing.floor ?? undefined,
-        address: existing.address,
-        city: existing.city,
-        region: existing.region,
-        latitude: existing.latitude ?? '',
-        longitude: existing.longitude ?? '',
-        features: existing.features ?? [],
-      })
+      setValue('title', existing.title)
+      setValue('description', existing.description ?? '')
+      setValue('type', existing.type as PropertyFormData['type'])
+      setValue('price', existing.price)
+      setValue('area', existing.area)
+      setValue('bedrooms', existing.bedrooms ?? undefined)
+      setValue('bathrooms', existing.bathrooms ?? undefined)
+      setValue('floor', existing.floor ?? undefined)
+      setValue('address', existing.address)
+      setValue('city', existing.city)
+      setValue('region', existing.region)
+      setValue('latitude', existing.latitude ?? '')
+      setValue('longitude', existing.longitude ?? '')
+      setValue('features', existing.features ?? [])
     }
-  }, [existing])
+  }, [existing, setValue])
 
   const createMutation = useMutation({
     mutationFn: (data: CreatePropertyPayload) => propertiesApi.create(data),
@@ -86,36 +94,17 @@ export default function PropertyFormPage() {
 
   const saving = createMutation.isPending || updateMutation.isPending
 
-  function validate(): boolean {
-    const errs: Record<string, string> = {}
-    if (!form.title.trim()) errs.title = 'Title is required'
-    if (!form.price) errs.price = 'Price is required'
-    if (!form.area) errs.area = 'Area is required'
-    if (!form.address.trim()) errs.address = 'Address is required'
-    if (!form.city.trim()) errs.city = 'City is required'
-    if (!form.region.trim()) errs.region = 'Region is required'
-    setErrors(errs)
-    return Object.keys(errs).length === 0
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!validate()) return
-
-    // Clean optional fields
-    const payload: CreatePropertyPayload = {
-      ...form,
-      price: form.price,
-      area: form.area,
-      bedrooms: form.bedrooms || undefined,
-      bathrooms: form.bathrooms || undefined,
-      floor: form.floor || undefined,
-      latitude: form.latitude || undefined,
-      longitude: form.longitude || undefined,
-      features: form.features?.length ? form.features : undefined,
-      description: form.description?.trim() || undefined,
-    }
-
+  function onSubmit(data: PropertyFormData) {
+    const payload = {
+      ...data,
+      bedrooms: data.bedrooms || undefined,
+      bathrooms: data.bathrooms || undefined,
+      floor: data.floor || undefined,
+      latitude: data.latitude || undefined,
+      longitude: data.longitude || undefined,
+      features: data.features?.length ? data.features : undefined,
+      description: data.description?.trim() || undefined,
+    } as CreatePropertyPayload
     if (isEdit) {
       updateMutation.mutate(payload)
     } else {
@@ -123,21 +112,16 @@ export default function PropertyFormPage() {
     }
   }
 
-  function updateField<K extends keyof CreatePropertyPayload>(key: K, value: CreatePropertyPayload[K]) {
-    setForm((f) => ({ ...f, [key]: value }))
-    if (errors[key]) setErrors((e) => ({ ...e, [key]: '' }))
-  }
-
   function addFeature() {
     const trimmed = featureInput.trim()
-    if (trimmed && !form.features?.includes(trimmed)) {
-      updateField('features', [...(form.features ?? []), trimmed])
+    if (trimmed && !features.includes(trimmed)) {
+      setValue('features', [...features, trimmed])
       setFeatureInput('')
     }
   }
 
   function removeFeature(feature: string) {
-    updateField('features', (form.features ?? []).filter((f) => f !== feature))
+    setValue('features', features.filter((f) => f !== feature))
   }
 
   if (isEdit && loadingExisting) return <LoadingSpinner message="Loading property..." />
@@ -158,7 +142,7 @@ export default function PropertyFormPage() {
         {isEdit ? 'Edit Property' : 'New Property'}
       </h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         {/* Basic Info */}
         <section className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
           <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
@@ -169,9 +153,8 @@ export default function PropertyFormPage() {
               <Input
                 label="Title"
                 required
-                value={form.title}
-                onChange={(e) => updateField('title', e.target.value)}
-                error={errors.title}
+                {...register('title')}
+                error={errors.title?.message}
                 placeholder="e.g. Luxury 3BR Apartment in Zamalek"
               />
             </div>
@@ -179,8 +162,7 @@ export default function PropertyFormPage() {
             <Select
               label="Property Type"
               required
-              value={form.type}
-              onChange={(e) => updateField('type', e.target.value as CreatePropertyPayload['type'])}
+              {...register('type')}
               options={PROPERTY_TYPES}
             />
 
@@ -190,9 +172,8 @@ export default function PropertyFormPage() {
               type="number"
               min={0}
               step="0.01"
-              value={form.price}
-              onChange={(e) => updateField('price', e.target.value)}
-              error={errors.price}
+              {...register('price')}
+              error={errors.price?.message}
               placeholder="2500000"
             />
 
@@ -202,9 +183,8 @@ export default function PropertyFormPage() {
               type="number"
               min={0}
               step="0.01"
-              value={form.area}
-              onChange={(e) => updateField('area', e.target.value)}
-              error={errors.area}
+              {...register('area')}
+              error={errors.area?.message}
               placeholder="180"
             />
 
@@ -212,8 +192,7 @@ export default function PropertyFormPage() {
               label="Bedrooms"
               type="number"
               min={0}
-              value={form.bedrooms ?? ''}
-              onChange={(e) => updateField('bedrooms', e.target.value ? Number(e.target.value) : undefined)}
+              {...register('bedrooms', { valueAsNumber: true })}
               placeholder="3"
             />
 
@@ -221,24 +200,21 @@ export default function PropertyFormPage() {
               label="Bathrooms"
               type="number"
               min={0}
-              value={form.bathrooms ?? ''}
-              onChange={(e) => updateField('bathrooms', e.target.value ? Number(e.target.value) : undefined)}
+              {...register('bathrooms', { valueAsNumber: true })}
               placeholder="2"
             />
 
             <Input
               label="Floor"
               type="number"
-              value={form.floor ?? ''}
-              onChange={(e) => updateField('floor', e.target.value ? Number(e.target.value) : undefined)}
+              {...register('floor', { valueAsNumber: true })}
               placeholder="5"
             />
 
             <div className="sm:col-span-2">
               <Textarea
                 label="Description"
-                value={form.description ?? ''}
-                onChange={(e) => updateField('description', e.target.value)}
+                {...register('description')}
                 placeholder="Detailed description of the property..."
               />
             </div>
@@ -255,42 +231,37 @@ export default function PropertyFormPage() {
               <Input
                 label="Address"
                 required
-                value={form.address}
-                onChange={(e) => updateField('address', e.target.value)}
-                error={errors.address}
+                {...register('address')}
+                error={errors.address?.message}
                 placeholder="15 Abu El Feda St"
               />
             </div>
             <Input
               label="City"
               required
-              value={form.city}
-              onChange={(e) => updateField('city', e.target.value)}
-              error={errors.city}
+              {...register('city')}
+              error={errors.city?.message}
               placeholder="Cairo"
             />
             <Input
               label="Region / District"
               required
-              value={form.region}
-              onChange={(e) => updateField('region', e.target.value)}
-              error={errors.region}
+              {...register('region')}
+              error={errors.region?.message}
               placeholder="Zamalek"
             />
             <Input
               label="Latitude"
               type="number"
               step="0.0000001"
-              value={form.latitude ?? ''}
-              onChange={(e) => updateField('latitude', e.target.value)}
+              {...register('latitude')}
               placeholder="30.0561000"
             />
             <Input
               label="Longitude"
               type="number"
               step="0.0000001"
-              value={form.longitude ?? ''}
-              onChange={(e) => updateField('longitude', e.target.value)}
+              {...register('longitude')}
               placeholder="31.2243000"
             />
           </div>
@@ -301,7 +272,7 @@ export default function PropertyFormPage() {
           <h2 className="mb-4 text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
             Features
           </h2>
-          <div className="flex gap-2">
+          <div className="mt-2 flex gap-2">
             <Input
               value={featureInput}
               onChange={(e) => setFeatureInput(e.target.value)}
@@ -317,9 +288,9 @@ export default function PropertyFormPage() {
               Add
             </Button>
           </div>
-          {form.features && form.features.length > 0 && (
+          {features.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {form.features.map((f) => (
+              {features.map((f) => (
                 <span
                   key={f}
                   className="inline-flex items-center gap-1 rounded-full bg-indigo-50 ps-3 pe-1.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
