@@ -129,4 +129,11 @@ export class UsersService {
       data: { isActive },
     });
   }
+
+  async registerFcmToken(token: string) {
+    // In production this would be tied to the authenticated user's ID
+    // extracted from the JWT.  For now we return a stub so the endpoint
+    // is wired up and can be extended when auth context is available.
+    return { registered: token };
+  }
 }

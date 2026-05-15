@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Patch,
-  Query,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Param, Patch, Post, Query, Body, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
@@ -48,5 +40,11 @@ export class UsersController {
   @ApiOperation({ summary: 'Toggle user active status' })
   toggleActive(@Param('id') id: string, @Body('isActive') isActive: boolean) {
     return this.usersService.toggleActive(id, isActive);
+  }
+
+  @Post('me/fcm-tokens')
+  @ApiOperation({ summary: 'Register or refresh an FCM push token' })
+  registerFcmToken(@Body('token') token: string) {
+    return this.usersService.registerFcmToken(token);
   }
 }
