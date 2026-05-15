@@ -171,6 +171,8 @@ model Property {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
+  searchVector    Unsupported("tsvector")?
+
   images          PropertyImage[]
   leads           Lead[]
   contracts       Contract[]
