@@ -365,7 +365,7 @@ export default function ClientDetailPage() {
                 <div className="relative pl-6 border-l-2 border-gray-200 dark:border-gray-700 space-y-4">
                   {history.leads.map((lead) => (
                     <div key={`lead-${lead.id}`} className="relative">
-                      <div className="absolute -left-[1.65rem] top-1 w-3 h-3 rounded-full bg-indigo-500" />
+                      <div className="absolute -start-[1.65rem] top-1 w-3 h-3 rounded-full bg-indigo-500" />
                       <p className="text-sm text-gray-700 dark:text-gray-300">
                         Lead created &mdash; {lead.status} priority {lead.priority}
                       </p>
@@ -377,7 +377,7 @@ export default function ClientDetailPage() {
                   ))}
                   {history.contracts.map((c) => (
                     <div key={`contract-${c.id}`} className="relative">
-                      <div className="absolute -left-[1.65rem] top-1 w-3 h-3 rounded-full bg-green-500" />
+                      <div className="absolute -start-[1.65rem] top-1 w-3 h-3 rounded-full bg-green-500" />
                       <p className="text-sm text-gray-700 dark:text-gray-300">
                         Contract ({c.type}) &mdash; {formatCurrency(c.totalAmount)}
                       </p>

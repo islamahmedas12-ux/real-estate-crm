@@ -19,7 +19,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             className="text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-red-500 ms-1">*</span>}
           </label>
         )}
         <textarea

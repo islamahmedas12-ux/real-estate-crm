@@ -80,7 +80,7 @@ export function RecentActivities() {
 
       <div className="relative">
         {/* Timeline line */}
-        <div className="absolute left-[15px] top-2 bottom-2 w-px bg-gray-200 dark:bg-gray-700" />
+        <div className="absolute start-[15px] top-2 bottom-2 w-px bg-gray-200 dark:bg-gray-700" />
 
         <div className="space-y-4">
           {ACTIVITIES.map((activity) => {

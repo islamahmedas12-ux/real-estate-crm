@@ -78,7 +78,7 @@ export function QuickLogActivity({ entityType, entityId, className }: QuickLogAc
   }
 
   return (
-    <div className={cn('fixed bottom-6 right-6 z-40', className)} ref={panelRef}>
+    <div className={cn('fixed bottom-6 end-6 z-40', className)} ref={panelRef}>
       {/* Expanded panel */}
       {open && (
         <div className="mb-3 w-80 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl p-4 animate-in fade-in slide-in-from-bottom-2">

@@ -315,7 +315,7 @@ export default function LeadDetailPage() {
               <div className="relative pl-8 border-l-2 border-gray-200 dark:border-gray-700 space-y-6">
                 {activities.map((act) => (
                   <div key={act.id} className="relative">
-                    <div className="absolute -left-[2.35rem] top-0.5 flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-500">
+                    <div className="absolute -start-[2.35rem] top-0.5 flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-500">
                       {activityIcon[act.type] ?? <FileText size={14} />}
                     </div>
                     <div>

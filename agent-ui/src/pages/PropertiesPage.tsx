@@ -196,10 +196,10 @@ function PropertyCard({
             <MapPin size={32} />
           </div>
         )}
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-2 start-2">
           <PropertyStatusBadge status={property.status} />
         </div>
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 end-2">
           <Badge variant="gray">{property.type}</Badge>
         </div>
       </div>

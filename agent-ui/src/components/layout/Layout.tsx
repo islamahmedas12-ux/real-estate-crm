@@ -47,7 +47,7 @@ export function Layout() {
       <div
         className={
           isMobile
-            ? `fixed inset-y-0 left-0 z-40 transition-transform duration-300 ${
+            ? `fixed inset-y-0 start-0 z-40 transition-transform duration-300 ${
                 mobileOpen ? 'translate-x-0' : '-translate-x-full'
               }`
             : ''
@@ -67,7 +67,7 @@ export function Layout() {
           {isMobile && (
             <button
               onClick={() => setMobileOpen((o) => !o)}
-              className="mr-2 p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="me-2 p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
               aria-label="Toggle menu"
             >
               <Menu size={20} />
