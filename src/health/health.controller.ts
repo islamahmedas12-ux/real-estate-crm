@@ -5,9 +5,26 @@ import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
-const pkg = JSON.parse(
-  readFileSync(join(__dirname, '..', '..', '..', 'package.json'), 'utf-8'),
-) as { version: string };
+function resolveVersion(): string {
+  // __dirname differs between dist (dist/src/health) and ts-jest (src/health),
+  // so probe a few candidate locations and fall back gracefully.
+  for (const rel of [
+    ['..', '..', '..'],
+    ['..', '..', '..', '..'],
+    ['..', '..'],
+  ]) {
+    try {
+      const raw = readFileSync(join(__dirname, ...rel, 'package.json'), 'utf-8');
+      const parsed = JSON.parse(raw) as { name?: string; version?: string };
+      if (parsed.name === 'real-estate-crm' && parsed.version) return parsed.version;
+    } catch {
+      // try next candidate
+    }
+  }
+  return process.env['npm_package_version'] ?? '0.0.0';
+}
+
+const pkg = { version: resolveVersion() };
 
 interface HealthResponse {
   status: 'ok' | 'degraded';
