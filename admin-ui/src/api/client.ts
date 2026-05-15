@@ -47,7 +47,10 @@ apiClient.interceptors.response.use(
       original._retry = true
       isRefreshing = true
       try {
-        const refreshed = await authme.refreshTokens()
+        const refreshed = await Promise.race([
+          authme.refreshTokens(),
+          new Promise<false>((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
+        ])
         if (refreshed) {
           const newToken = authme.getAccessToken()!
           pendingRequests.forEach((cb) => cb(newToken))
@@ -57,7 +60,7 @@ apiClient.interceptors.response.use(
           return apiClient(original)
         }
       } catch {
-        // refresh failed
+        // refresh failed or timed out
       }
       isRefreshing = false
       pendingRequests = []
