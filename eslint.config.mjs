@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs'],
+    ignores: ['eslint.config.mjs', 'packages/**', 'admin-ui/**', 'agent-ui/**', 'mobile/**'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,

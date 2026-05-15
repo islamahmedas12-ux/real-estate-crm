@@ -16,7 +16,12 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@crm/shared-types": ["../../packages/shared-types/src/index.ts"],
+      "@crm/shared-components": ["../../packages/shared-components/src/index.ts"],
+      "@crm/shared-api": ["../../packages/shared-api/src/index.ts"]
+    }
   },
   "include": ["src"]
 }

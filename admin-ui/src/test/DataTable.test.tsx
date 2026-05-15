@@ -1,8 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import React from 'react'
 import { DataTable } from '../components/ui/DataTable'
-import type { Column } from '../../types'
+import type { Column } from '../types'
 
 const mockColumns: Column<{ id: string; name: string; status: string }>[] = [
   { key: 'name', header: 'Name', sortable: true },
