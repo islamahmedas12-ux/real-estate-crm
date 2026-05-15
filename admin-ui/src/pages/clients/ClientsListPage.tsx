@@ -4,7 +4,7 @@ import { Users, Plus, Mail, Phone, AlertTriangle, Download, Filter, X } from 'lu
 import { Button, DataTable, SearchBar, Select, StatsCard } from '../../components/ui'
 import { useClientsList, useClientStats, useDeleteClient } from '../../hooks/useClients'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
-import { formatDate } from '../../utils'
+import { formatDate, toCsv } from '../../utils'
 import toast from 'react-hot-toast'
 import type { ClientType, ClientSource, ClientFilter } from '../../types/client'
 import type { Column } from '../../types'
@@ -73,21 +73,18 @@ export default function ClientsListPage() {
       toast.error('No clients to export')
       return
     }
-    const headers = ['Name', 'Email', 'Phone', 'Type', 'Source', 'Created']
-    const csvRows = [
-      headers.join(','),
-      ...rows.map((r) =>
-        [
-          `"${String(r.firstName)} ${String(r.lastName)}"`,
-          `"${String(r.email ?? '')}"`,
-          `"${String(r.phone)}"`,
-          String(r.type),
-          String(r.source ?? ''),
-          formatDate(String(r.createdAt)),
-        ].join(',')
-      ),
-    ]
-    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' })
+    const csv = toCsv(
+      rows.map((r) => ({
+        Name: `${r.firstName} ${r.lastName}`,
+        Email: r.email ?? '',
+        Phone: r.phone,
+        Type: r.type,
+        Source: r.source ?? '',
+        Created: formatDate(String(r.createdAt)),
+      })),
+      ['Name', 'Email', 'Phone', 'Type', 'Source', 'Created'],
+    )
+    const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
