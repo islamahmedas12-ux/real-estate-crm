@@ -38,10 +38,7 @@ describe('IdempotencyInterceptor', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        IdempotencyInterceptor,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [IdempotencyInterceptor, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     interceptor = module.get<IdempotencyInterceptor>(IdempotencyInterceptor);

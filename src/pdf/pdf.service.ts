@@ -158,7 +158,14 @@ export class PdfService {
         if (!agentId) {
           throw new BadRequestException('agentId is required for agent_performance report');
         }
-        await this.streamAgentPerformanceReport(agentId, periodStr, startDate, endDate, res, filename);
+        await this.streamAgentPerformanceReport(
+          agentId,
+          periodStr,
+          startDate,
+          endDate,
+          res,
+          filename,
+        );
         break;
       default:
         throw new BadRequestException(`Unknown report type: ${type}`);

@@ -40,7 +40,11 @@ export class IdempotencyInterceptor implements NestInterceptor {
       // Check if belongs to same user
       if (userId && existing.userId && existing.userId !== userId) {
         return throwError(
-          () => new HttpException('Idempotency key already used by different user', HttpStatus.CONFLICT),
+          () =>
+            new HttpException(
+              'Idempotency key already used by different user',
+              HttpStatus.CONFLICT,
+            ),
         );
       }
       response.setHeader('Idempotency-Status', 'replayed');

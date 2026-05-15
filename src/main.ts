@@ -18,7 +18,7 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'),
 };
 
 // Sentry is initialized lazily at runtime if @sentry/node is in node_modules and SENTRY_DSN is set
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 let Sentry: any = null;
 if (process.env['SENTRY_DSN']) {
   try {
@@ -29,7 +29,10 @@ if (process.env['SENTRY_DSN']) {
       environment: process.env['NODE_ENV'],
       release: `real-estate-crm@${pkg.version}`,
       // Mask PII fields before sending
-      beforeSend: (event: { request?: { headers: Record<string, string> }; user?: Record<string, unknown> }) => {
+      beforeSend: (event: {
+        request?: { headers: Record<string, string> };
+        user?: Record<string, unknown>;
+      }) => {
         if (event.request) {
           delete event.request.headers['Authorization'];
           delete event.request.headers['authorization'];

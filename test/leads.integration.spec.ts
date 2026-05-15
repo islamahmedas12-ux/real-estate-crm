@@ -18,7 +18,13 @@
  *  - Auth, role-based access, error handling
  */
 
-import { createApiClient, ApiClient, trackEntity, cleanupAll } from './helpers/api-client.js';
+import {
+  createApiClient,
+  ApiClient,
+  trackEntity,
+  cleanupAll,
+  resetTracking,
+} from './helpers/api-client.js';
 
 let api: ApiClient;
 let createdLeadId: string;
@@ -26,6 +32,7 @@ let existingClientId: string;
 let existingPropertyId: string;
 
 beforeAll(async () => {
+  resetTracking();
   api = createApiClient();
 });
 

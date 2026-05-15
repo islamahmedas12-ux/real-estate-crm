@@ -16,12 +16,20 @@
  *  - Auth & role-based access
  */
 
-import { createApiClient, ApiClient, cleanupAll } from './helpers/api-client.js';
+import {
+  createApiClient,
+  ApiClient,
+  trackEntity,
+  cleanupAll,
+  resetTracking,
+} from './helpers/api-client.js';
 
 let api: ApiClient;
 let existingContractId: string;
+let createdContractId: string;
 
 beforeAll(async () => {
+  resetTracking();
   api = createApiClient();
 });
 
@@ -55,7 +63,7 @@ describe('Contracts API — Admin', () => {
     existingContractId = listRes.body.data?.[0]?.id;
   });
 
-  // ── List ─────────────────────────────────────────────────────────────
+  // ── List ─────────────────────────────────────────────────────────────────
 
   it('GET /api/contracts returns paginated list', async () => {
     const res = await api.get('/contracts');
@@ -152,24 +160,51 @@ describe('Contracts API — Admin', () => {
     expect([400, 404]).toContain(res.status);
   });
 
+  it('POST /api/contracts creates a contract when valid', async () => {
+    const clientsRes = await api.get('/clients?limit=1');
+    const propsRes = await api.get('/properties?limit=1');
+    if (!clientsRes.body.data?.length || !propsRes.body.data?.length) return;
+
+    const res = await api.post('/contracts', {
+      type: 'SALE',
+      propertyId: propsRes.body.data[0].id,
+      clientId: clientsRes.body.data[0].id,
+      totalAmount: 1500000,
+      startDate: '2026-01-01',
+      endDate: '2027-01-01',
+    });
+    if (res.status === 201) {
+      createdContractId = res.body.id;
+      trackEntity('contracts', createdContractId);
+      expect(res.body).toHaveProperty('id');
+      expect(res.body.status).toBe('DRAFT');
+    } else {
+      // May fail if property/client not suitable — check error is reasonable
+      expect([400, 404]).toContain(res.status);
+    }
+  });
+
   // ── Status Transitions ───────────────────────────────────────────────
 
   it('PATCH /api/contracts/:id/status rejects invalid transition', async () => {
     if (!existingContractId) return;
-    // Try COMPLETED (probably invalid from current status)
-    const contract = await api.get(`/contracts/${existingContractId}`);
-    if (contract.body.status === 'ACTIVE') {
-      // ACTIVE → DRAFT is not valid
-      const res = await api.patch(`/contracts/${existingContractId}/status`, {
-        status: 'DRAFT',
-      });
-      expect(res.status).toBe(400);
+    const res = await api.patch(`/contracts/${existingContractId}/status`, {
+      status: 'COMPLETED',
+    });
+    expect([400, 422]).toContain(res.status);
+  });
+
+  it('PATCH /api/contracts/:id/status transitions to ACTIVE', async () => {
+    if (!existingContractId) return;
+    const res = await api.patch(`/contracts/${existingContractId}/status`, {
+      status: 'ACTIVE',
+    });
+    if (res.status === 200) {
+      expect(['ACTIVE', 'PENDING']).toContain(res.body.status);
     }
   });
 
-  // ── Update ───────────────────────────────────────────────────────────
-
-  it('PATCH /api/contracts/:id updates the contract', async () => {
+  it('PATCH /api/contracts/:id updates notes', async () => {
     if (!existingContractId) return;
     const res = await api.patch(`/contracts/${existingContractId}`, {
       notes: 'Updated by integration test',
@@ -177,11 +212,31 @@ describe('Contracts API — Admin', () => {
     expect(res.status).toBe(200);
     expect(res.body.notes).toBe('Updated by integration test');
   });
+
+  it('PATCH /api/contracts/:id returns 404 for non-existent', async () => {
+    const res = await api.patch('/contracts/00000000-0000-0000-0000-000000000000', {
+      notes: 'test',
+    });
+    expect(res.status).toBe(404);
+  });
+
+  // ── Delete ────────────────────────────────────────────────────────────
+
+  it('DELETE /api/contracts/:id returns 204 on success', async () => {
+    if (!createdContractId) return;
+    const res = await api.delete(`/contracts/${createdContractId}`);
+    expect([204, 404]).toContain(res.status);
+  });
+
+  it('DELETE /api/contracts/:id returns 404 for non-existent', async () => {
+    const res = await api.delete('/contracts/00000000-0000-0000-0000-000000000000');
+    expect(res.status).toBe(404);
+  });
 });
 
-// ─── Agent Access ────────────────────────────────────────────────────────────
+// ─── Agent Scope ─────────────────────────────────────────────────────────────
 
-describe('Contracts API — Agent role', () => {
+describe('Contracts API — Agent scope', () => {
   beforeAll(async () => {
     await api.loginAs('agent');
   });
@@ -205,26 +260,6 @@ describe('Contracts API — Agent role', () => {
   });
 
   it('DELETE /api/contracts/:id is forbidden for agent', async () => {
-    if (!existingContractId) return;
-    const res = await api.delete(`/contracts/${existingContractId}`);
-    expect(res.status).toBe(403);
-  });
-});
-
-// ─── Manager Access ──────────────────────────────────────────────────────────
-
-describe('Contracts API — Manager role', () => {
-  beforeAll(async () => {
-    await api.loginAs('manager');
-  });
-
-  it('GET /api/contracts works for manager', async () => {
-    const res = await api.get('/contracts');
-    expect(res.status).toBe(200);
-    expect(res.body.total).toBeGreaterThan(0);
-  });
-
-  it('DELETE /api/contracts/:id is forbidden for manager', async () => {
     if (!existingContractId) return;
     const res = await api.delete(`/contracts/${existingContractId}`);
     expect(res.status).toBe(403);

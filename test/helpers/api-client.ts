@@ -139,6 +139,10 @@ export function trackEntity(type: string, id: string): void {
   createdEntities.push({ type, id });
 }
 
+export function resetTracking(): void {
+  createdEntities.length = 0;
+}
+
 export async function cleanupAll(api: ApiClient): Promise<void> {
   for (const entity of [...createdEntities].reverse()) {
     try {
