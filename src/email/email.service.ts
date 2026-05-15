@@ -142,7 +142,7 @@ export class EmailService implements OnModuleInit {
         subject,
         template,
 
-        context: (context as any) ?? Prisma.DbNull,
+        context: context ?? Prisma.DbNull,
         status: EmailStatus.QUEUED,
       },
     });
