@@ -1,103 +1,101 @@
-import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import { Button, Input, Select, Textarea } from '../ui'
 import { leadsApi } from '../../api/leads'
-import type { CreateLeadPayload } from '../../types'
+import { leadFormSchema, type LeadFormData } from '../../schemas'
 
 interface LeadFormProps {
   onSuccess: () => void
   onCancel: () => void
 }
 
-const sourceOptions = [
-  { value: 'REFERRAL', label: 'Referral' },
-  { value: 'WEBSITE', label: 'Website' },
-  { value: 'SOCIAL_MEDIA', label: 'Social Media' },
-  { value: 'WALK_IN', label: 'Walk-in' },
-  { value: 'PHONE', label: 'Phone' },
-  { value: 'ADVERTISEMENT', label: 'Advertisement' },
-  { value: 'OTHER', label: 'Other' },
-]
-
-const priorityOptions = [
-  { value: 'LOW', label: 'Low' },
-  { value: 'MEDIUM', label: 'Medium' },
-  { value: 'HIGH', label: 'High' },
-  { value: 'URGENT', label: 'Urgent' },
-]
-
 export function LeadForm({ onSuccess, onCancel }: LeadFormProps) {
-  const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState<CreateLeadPayload>({
-    clientId: '',
-    source: 'WEBSITE',
-    priority: 'MEDIUM',
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LeadFormData>({
+    resolver: zodResolver(leadFormSchema),
+    defaultValues: {
+      clientId: '',
+      propertyId: '',
+      source: 'WEBSITE',
+      priority: 'MEDIUM',
+    },
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!form.clientId.trim()) {
-      toast.error('Client ID is required')
-      return
-    }
-    setLoading(true)
+  const onSubmit = async (data: LeadFormData) => {
     try {
-      await leadsApi.create(form)
+      await leadsApi.create({
+        clientId: data.clientId,
+        propertyId: data.propertyId || undefined,
+        source: data.source,
+        priority: data.priority,
+        budget: data.budget ? Number(data.budget) : undefined,
+        notes: data.notes || undefined,
+        nextFollowUp: data.nextFollowUp || undefined,
+      })
       toast.success('Lead created successfully')
       onSuccess()
     } catch {
       toast.error('Failed to create lead')
-    } finally {
-      setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <Input
         label="Client ID"
         required
-        value={form.clientId}
-        onChange={(e) => setForm({ ...form, clientId: e.target.value })}
+        {...register('clientId')}
+        error={errors.clientId?.message}
         placeholder="Enter client ID"
       />
       <Input
         label="Property ID"
-        value={form.propertyId ?? ''}
-        onChange={(e) => setForm({ ...form, propertyId: e.target.value || undefined })}
+        {...register('propertyId')}
         placeholder="Enter property ID (optional)"
       />
       <div className="grid grid-cols-2 gap-3">
         <Select
           label="Source"
-          options={sourceOptions}
-          value={form.source ?? ''}
-          onChange={(e) => setForm({ ...form, source: e.target.value as CreateLeadPayload['source'] })}
+          options={[
+            { value: 'REFERRAL', label: 'Referral' },
+            { value: 'WEBSITE', label: 'Website' },
+            { value: 'SOCIAL_MEDIA', label: 'Social Media' },
+            { value: 'WALK_IN', label: 'Walk-in' },
+            { value: 'PHONE', label: 'Phone' },
+            { value: 'ADVERTISEMENT', label: 'Advertisement' },
+            { value: 'OTHER', label: 'Other' },
+          ]}
+          {...register('source')}
         />
         <Select
           label="Priority"
-          options={priorityOptions}
-          value={form.priority ?? ''}
-          onChange={(e) => setForm({ ...form, priority: e.target.value as CreateLeadPayload['priority'] })}
+          options={[
+            { value: 'LOW', label: 'Low' },
+            { value: 'MEDIUM', label: 'Medium' },
+            { value: 'HIGH', label: 'High' },
+            { value: 'URGENT', label: 'Urgent' },
+          ]}
+          {...register('priority')}
         />
       </div>
       <Input
         label="Budget"
         type="number"
-        value={form.budget ?? ''}
-        onChange={(e) => setForm({ ...form, budget: e.target.value ? Number(e.target.value) : undefined })}
+        {...register('budget')}
         placeholder="0"
       />
       <Input
         label="Next Follow-up"
         type="datetime-local"
-        value={form.nextFollowUp ?? ''}
-        onChange={(e) => setForm({ ...form, nextFollowUp: e.target.value || undefined })}
+        {...register('nextFollowUp')}
       />
       <Textarea
         label="Notes"
-        value={form.notes ?? ''}
-        onChange={(e) => setForm({ ...form, notes: e.target.value || undefined })}
+        {...register('notes')}
         rows={3}
         placeholder="Additional notes..."
       />
@@ -105,7 +103,7 @@ export function LeadForm({ onSuccess, onCancel }: LeadFormProps) {
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" loading={loading}>
+        <Button type="submit" loading={isSubmitting}>
           Create Lead
         </Button>
       </div>

@@ -1,121 +1,125 @@
-import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import { Button, Input, Select, Textarea } from '../ui'
 import { clientsApi } from '../../api/clients'
-import type { CreateClientPayload, ClientType, ClientSource } from '../../types'
+import { clientFormSchema, type ClientFormData } from '../../schemas'
 
 interface ClientFormProps {
   onSuccess: () => void
   onCancel: () => void
 }
 
-const typeOptions = [
-  { value: 'BUYER', label: 'Buyer' },
-  { value: 'SELLER', label: 'Seller' },
-  { value: 'TENANT', label: 'Tenant' },
-  { value: 'LANDLORD', label: 'Landlord' },
-  { value: 'INVESTOR', label: 'Investor' },
-]
-
-const sourceOptions = [
-  { value: 'REFERRAL', label: 'Referral' },
-  { value: 'WEBSITE', label: 'Website' },
-  { value: 'SOCIAL_MEDIA', label: 'Social Media' },
-  { value: 'WALK_IN', label: 'Walk-in' },
-  { value: 'PHONE', label: 'Phone' },
-  { value: 'ADVERTISEMENT', label: 'Advertisement' },
-  { value: 'OTHER', label: 'Other' },
-]
-
 export function ClientForm({ onSuccess, onCancel }: ClientFormProps) {
-  const [loading, setLoading] = useState(false)
-  const [form, setForm] = useState<CreateClientPayload>({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    type: 'BUYER',
-    source: 'WEBSITE',
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ClientFormData>({
+    resolver: zodResolver(clientFormSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      phone: '',
+      email: '',
+      nationalId: '',
+      type: 'BUYER',
+      source: 'WEBSITE',
+      notes: '',
+    },
   })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!form.firstName.trim() || !form.lastName.trim() || !form.phone.trim()) {
-      toast.error('First name, last name, and phone are required')
-      return
-    }
-    setLoading(true)
+  const onSubmit = async (data: ClientFormData) => {
     try {
-      await clientsApi.create(form)
+      await clientsApi.create({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        email: data.email || undefined,
+        nationalId: data.nationalId || undefined,
+        type: data.type,
+        source: data.source,
+        notes: data.notes || undefined,
+      })
       toast.success('Client created successfully')
       onSuccess()
     } catch {
       toast.error('Failed to create client')
-    } finally {
-      setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3">
         <Input
           label="First Name"
           required
-          value={form.firstName}
-          onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+          {...register('firstName')}
+          error={errors.firstName?.message}
         />
         <Input
           label="Last Name"
           required
-          value={form.lastName}
-          onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+          {...register('lastName')}
+          error={errors.lastName?.message}
         />
       </div>
       <Input
         label="Phone"
         required
-        value={form.phone}
-        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+        {...register('phone')}
+        error={errors.phone?.message}
         placeholder="+20..."
       />
       <Input
         label="Email"
         type="email"
-        value={form.email ?? ''}
-        onChange={(e) => setForm({ ...form, email: e.target.value || undefined })}
+        {...register('email')}
+        error={errors.email?.message}
       />
       <Input
         label="National ID"
-        value={form.nationalId ?? ''}
-        onChange={(e) => setForm({ ...form, nationalId: e.target.value || undefined })}
+        {...register('nationalId')}
+        error={errors.nationalId?.message}
       />
       <div className="grid grid-cols-2 gap-3">
         <Select
           label="Type"
           required
-          options={typeOptions}
-          value={form.type}
-          onChange={(e) => setForm({ ...form, type: e.target.value as ClientType })}
+          options={[
+            { value: 'BUYER', label: 'Buyer' },
+            { value: 'SELLER', label: 'Seller' },
+            { value: 'TENANT', label: 'Tenant' },
+            { value: 'LANDLORD', label: 'Landlord' },
+            { value: 'INVESTOR', label: 'Investor' },
+          ]}
+          {...register('type')}
         />
         <Select
           label="Source"
           required
-          options={sourceOptions}
-          value={form.source}
-          onChange={(e) => setForm({ ...form, source: e.target.value as ClientSource })}
+          options={[
+            { value: 'REFERRAL', label: 'Referral' },
+            { value: 'WEBSITE', label: 'Website' },
+            { value: 'SOCIAL_MEDIA', label: 'Social Media' },
+            { value: 'WALK_IN', label: 'Walk-in' },
+            { value: 'PHONE', label: 'Phone' },
+            { value: 'ADVERTISEMENT', label: 'Advertisement' },
+            { value: 'OTHER', label: 'Other' },
+          ]}
+          {...register('source')}
         />
       </div>
       <Textarea
         label="Notes"
-        value={form.notes ?? ''}
-        onChange={(e) => setForm({ ...form, notes: e.target.value || undefined })}
+        {...register('notes')}
         rows={3}
       />
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="secondary" onClick={onCancel}>
           Cancel
         </Button>
-        <Button type="submit" loading={loading}>
+        <Button type="submit" loading={isSubmitting}>
           Create Client
         </Button>
       </div>
