@@ -13,6 +13,7 @@ const mockPrisma = {
     count: jest.fn(),
     groupBy: jest.fn(),
   },
+  user: { findUnique: jest.fn() },
 };
 
 describe('PropertiesService', () => {
@@ -188,6 +189,7 @@ describe('PropertiesService', () => {
   describe('assignAgent', () => {
     it('should assign an agent to a property', async () => {
       mockPrisma.property.findUnique.mockResolvedValue({ id: sampleProperty.id });
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'agent-1', role: 'AGENT' });
       mockPrisma.property.update.mockResolvedValue({
         ...sampleProperty,
         assignedAgentId: 'agent-1',
