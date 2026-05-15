@@ -10,6 +10,7 @@ import { Observable, throwError, of } from 'rxjs';
 import { concatMap, catchError } from 'rxjs/operators';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
 @Injectable()
 export class IdempotencyInterceptor implements NestInterceptor {
   constructor(private readonly prisma: PrismaService) {}
@@ -74,3 +75,4 @@ export class IdempotencyInterceptor implements NestInterceptor {
     );
   }
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */

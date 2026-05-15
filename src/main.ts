@@ -19,6 +19,7 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'),
 
 // Sentry is initialized lazily at runtime if @sentry/node is in node_modules and SENTRY_DSN is set
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 let Sentry: any = null;
 if (process.env['SENTRY_DSN']) {
   try {
@@ -48,12 +49,14 @@ if (process.env['SENTRY_DSN']) {
     // Sentry not installed — skip
   }
 }
+/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Sentry request handler — must be first (if Sentry is enabled)
   if (Sentry) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     app.use(Sentry.requestsHandler());
   }
 
@@ -127,6 +130,7 @@ async function bootstrap() {
 
   // Sentry error handler — must be after exception filters (if Sentry is enabled)
   if (Sentry) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     app.use(Sentry.errorHandler());
   }
 

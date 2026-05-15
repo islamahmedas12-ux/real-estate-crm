@@ -28,21 +28,26 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
-      // PrismaPg adapter causes unresolved types across the codebase —
-      // these rules fire on virtually every Prisma call and are not actionable
-      '@typescript-eslint/no-unsafe-argument': 'off',
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/no-redundant-type-constituents': 'off',
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
+  // PrismaPg adapter is used in prisma.service.ts via createPrismaPgAdapter();
+  // the raw.ts helper contains eslint-disable for the narrow adapter instantiation only
+  {
+    files: ['src/prisma/prisma.service.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+    },
+  },
   // Relax unsafe rules for test files — mock objects are inherently untyped
   {
-    files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+    files: ['**/*.spec.ts', '**/*.e2e-spec.ts', 'test/helpers/**/*.ts', 'test/performance.test.ts', 'test/security-audit.test.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
