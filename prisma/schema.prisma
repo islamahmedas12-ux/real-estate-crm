@@ -117,6 +117,7 @@ enum ActivityEntityType {
   LEAD
   CONTRACT
   INVOICE
+  SETTING
 }
 
 // ─── Models ──────────────────────────────────────────────────────────

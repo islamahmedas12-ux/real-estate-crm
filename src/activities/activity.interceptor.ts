@@ -15,6 +15,8 @@ export interface LogActivityOptions {
   entityType: ActivityEntityType;
   /** Extract entity ID from request params — defaults to 'id' */
   idParam?: string;
+  /** Capture before/after diff in metadata */
+  captureDiff?: boolean;
 }
 
 /**
@@ -61,6 +63,7 @@ export class ActivityInterceptor implements NestInterceptor {
     const action = METHOD_TO_ACTION[method] ?? method;
     const idParam = options.idParam ?? 'id';
     const user = request.user;
+    const captureDiff = options.captureDiff ?? false;
 
     return next.handle().pipe(
       tap((responseBody) => {
@@ -75,6 +78,16 @@ export class ActivityInterceptor implements NestInterceptor {
 
         const description = `${action} ${options.entityType.toLowerCase()} ${entityId}`;
 
+        // Capture diff metadata if enabled
+        const metadata: Record<string, unknown> = {};
+        if (captureDiff && action === 'UPDATE') {
+          const body = request.body as Record<string, unknown> | undefined;
+          if (body) {
+            metadata.changes = body;
+            metadata.before = (responseBody as Record<string, unknown>)?.before;
+          }
+        }
+
         this.activitiesService
           .log({
             type: action,
@@ -83,7 +96,7 @@ export class ActivityInterceptor implements NestInterceptor {
             entityId,
             performedBy: user?.id ?? 'system',
             performedById: user?.id,
-            metadata: action === 'CREATE' ? { created: true } : undefined,
+            metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
           })
           .catch(() => {
             // Activity logging should never break the main flow

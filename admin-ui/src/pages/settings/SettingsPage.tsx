@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Settings, Building, Tag, Radio, Plus, Trash2, Save } from 'lucide-react'
+import { Settings, Building, Tag, Radio, Plus, Trash2, Save, Clock } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Button, Input } from '../../components/ui'
+import { Button, Input, LoadingSpinner } from '../../components/ui'
 import { settingsApi } from '../../api/settings'
+import { activitiesApi } from '../../api/activities'
 import type { CompanySettings, ConfigItem } from '../../types/reports'
+import type { Activity } from '../../types'
 
-type Tab = 'company' | 'property-types' | 'lead-sources'
+type Tab = 'company' | 'property-types' | 'lead-sources' | 'history'
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('company')
@@ -15,6 +17,7 @@ export default function SettingsPage() {
     { key: 'company', label: 'Company Info', icon: Building },
     { key: 'property-types', label: 'Property Types', icon: Tag },
     { key: 'lead-sources', label: 'Lead Sources', icon: Radio },
+    { key: 'history', label: 'History', icon: Clock },
   ]
 
   return (
@@ -54,6 +57,7 @@ export default function SettingsPage() {
       {activeTab === 'company' && <CompanyInfoSection />}
       {activeTab === 'property-types' && <ConfigListSection kind="property-types" title="Property Types" />}
       {activeTab === 'lead-sources' && <ConfigListSection kind="lead-sources" title="Lead Sources" />}
+      {activeTab === 'history' && <SettingsHistorySection />}
     </div>
   )
 }
@@ -296,6 +300,57 @@ function ConfigListSection({ kind, title }: { kind: 'property-types' | 'lead-sou
         <Button loading={mutation.isPending} leftIcon={<Save size={16} />} onClick={handleSave}>
           Save {title}
         </Button>
+      </div>
+    </div>
+  )
+}
+
+// ─── Settings History Section ─────────────────────────────────────────────
+
+function SettingsHistorySection() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['activities', 'settings-history'],
+    queryFn: () => activitiesApi.getByEntity('SETTING', 'settings'),
+    staleTime: 30_000,
+  })
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+        <LoadingSpinner message="Loading history..." />
+      </div>
+    )
+  }
+
+  if (!data?.length) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800 text-center">
+        <p className="text-sm text-gray-400">No settings changes recorded yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="font-semibold text-gray-800 dark:text-gray-200">Recent Settings Changes</h2>
+      </div>
+      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+        {data.map((activity: Activity) => (
+          <div key={activity.id} className="flex items-start gap-4 p-4">
+            <div className="mt-0.5 rounded-full bg-indigo-50 p-1.5 dark:bg-indigo-900/30">
+              <Clock size={14} className="text-indigo-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                {activity.description}
+              </p>
+              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                {new Date(activity.createdAt).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )
