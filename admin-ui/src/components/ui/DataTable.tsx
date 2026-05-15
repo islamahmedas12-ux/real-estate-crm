@@ -82,7 +82,7 @@ export function DataTable<T extends Record<string, unknown>>({
   const secondaryCols = columns.slice(1)
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3" data-datatable>
       {showCards ? (
         /* ── Mobile card view ── */
         <div className="flex flex-col gap-3">
@@ -201,6 +201,14 @@ export function DataTable<T extends Record<string, unknown>>({
                   <tr
                     key={String(row[keyField] ?? i)}
                     onClick={() => onRowClick?.(row)}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    data-datatable-row
+                    onKeyDown={(e) => {
+                      if ((e.key === 'Enter' || e.key === ' ') && onRowClick) {
+                        e.preventDefault();
+                        onRowClick(row);
+                      }
+                    }}
                     className={cn(
                       'transition-colors',
                       onRowClick && 'cursor-pointer hover:bg-indigo-50/60 dark:hover:bg-indigo-900/10',
