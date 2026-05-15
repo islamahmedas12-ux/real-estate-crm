@@ -4,10 +4,10 @@ import { PrismaService } from '../prisma/prisma.service.js';
 
 describe('HealthController', () => {
   let controller: HealthController;
-  let prisma: { $queryRawUnsafe: jest.Mock };
+  let prisma: { $queryRaw: jest.Mock };
 
   beforeEach(async () => {
-    prisma = { $queryRawUnsafe: jest.fn().mockResolvedValue([{ '?column?': 1 }]) };
+    prisma = { $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }]) };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
@@ -27,7 +27,7 @@ describe('HealthController', () => {
     });
 
     it('should return degraded when database is down', async () => {
-      prisma.$queryRawUnsafe.mockRejectedValueOnce(new Error('Connection refused'));
+      prisma.$queryRaw.mockRejectedValueOnce(new Error('Connection refused'));
       const result = await controller.check();
       expect(result.status).toBe('degraded');
       expect(result.database).toBe('disconnected');
@@ -47,7 +47,7 @@ describe('HealthController', () => {
     });
 
     it('should throw when database is down', async () => {
-      prisma.$queryRawUnsafe.mockRejectedValueOnce(new Error('Connection refused'));
+      prisma.$queryRaw.mockRejectedValueOnce(new Error('Connection refused'));
       await expect(controller.ready()).rejects.toThrow('Connection refused');
     });
   });

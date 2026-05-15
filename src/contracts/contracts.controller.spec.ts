@@ -3,6 +3,7 @@ import { ContractsController } from './contracts.controller.js';
 import { ContractsService } from './contracts.service.js';
 import { ContractType, ContractStatus, UserRole } from '@prisma/client';
 import { AuthenticatedUser } from '../common/decorators/current-user.decorator.js';
+import { IdempotencyInterceptor } from '../common/interceptors/idempotency.interceptor.js';
 
 const mockService = {
   create: jest.fn(),
@@ -35,7 +36,10 @@ describe('ContractsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ContractsController],
       providers: [{ provide: ContractsService, useValue: mockService }],
-    }).compile();
+    })
+      .overrideInterceptor(IdempotencyInterceptor)
+      .useValue({ intercept: (_ctx: unknown, next: { handle: () => unknown }) => next.handle() })
+      .compile();
 
     controller = module.get<ContractsController>(ContractsController);
     jest.clearAllMocks();

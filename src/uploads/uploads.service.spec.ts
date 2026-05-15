@@ -11,11 +11,17 @@ jest.mock('fs', () => ({
   writeFileSync: jest.fn(),
   unlinkSync: jest.fn(),
 }));
+jest.mock('fs/promises', () => ({
+  writeFile: jest.fn().mockResolvedValue(undefined),
+  unlink: jest.fn().mockResolvedValue(undefined),
+  mkdir: jest.fn().mockResolvedValue(undefined),
+}));
 
 jest.mock('sharp', () => {
   const mockSharp = jest.fn(() => ({
     resize: jest.fn().mockReturnThis(),
     toFile: jest.fn().mockResolvedValue({}),
+    toBuffer: jest.fn().mockResolvedValue(Buffer.from('img')),
   }));
   return { __esModule: true, default: mockSharp };
 });

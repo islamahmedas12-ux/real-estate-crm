@@ -16,6 +16,11 @@ describe('EmailService', () => {
       update: jest.fn(),
       findUnique: jest.fn(),
     },
+    emailPreference: {
+      findUnique: jest.fn().mockResolvedValue({ userId: 'u1', unsubscribeToken: 'tok' }),
+      create: jest.fn().mockResolvedValue({ userId: 'u1', unsubscribeToken: 'tok' }),
+      update: jest.fn().mockResolvedValue({ userId: 'u1', unsubscribeToken: 'tok' }),
+    },
   };
 
   const mockQueue = {
