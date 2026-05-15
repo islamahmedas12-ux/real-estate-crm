@@ -233,6 +233,18 @@ src/<module>/
   - `test:` Test additions/changes
   - `chore:` Build/tooling changes
 
+### Pre-commit Hooks
+
+This project uses [husky](https://typicode.github.io/husky/) + [lint-staged](https://github.com/lint-staged/lint-staged) to enforce linting and formatting before every commit.
+
+On every `git commit`, staged `*.ts`/`*.tsx` files are automatically run through:
+- `eslint --fix` (skips `e2e/**/*.ts`)
+- `prettier --write`
+
+If eslint reports errors, the commit is blocked. Fix them with `npm run lint -- --fix` before recommitting.
+
+The `prepare` script in `package.json` (`husky install`) runs automatically during `npm install`, so no extra setup is needed after cloning.
+
 ### Security
 
 - Helmet middleware for HTTP security headers
