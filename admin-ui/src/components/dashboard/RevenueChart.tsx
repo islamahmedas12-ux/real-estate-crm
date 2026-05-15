@@ -11,6 +11,7 @@ import { TrendingUp, TrendingDown } from 'lucide-react'
 import { ChartCard } from './ChartCard'
 import { Skeleton } from '../ui'
 import type { RevenueResponse } from '../../types/dashboard'
+import { CHART_TOOLTIP_STYLE } from './tokens'
 
 interface Props {
   data?: RevenueResponse
@@ -84,13 +85,7 @@ export function RevenueChart({ data, isLoading }: Props) {
               <Tooltip
                 formatter={(value: unknown) => [formatCurrency(Number(value)), 'Revenue']}
                 labelFormatter={(label: unknown) => formatDate(String(label))}
-                contentStyle={{
-                  backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: '#f9fafb',
-                  fontSize: '12px',
-                }}
+                contentStyle={CHART_TOOLTIP_STYLE}
               />
               <Area
                 type="monotone"

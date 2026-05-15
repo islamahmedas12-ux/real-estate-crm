@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 import { cn } from '../../utils'
 import { Skeleton } from './Skeleton'
 import type { Column } from '../../types'
+
+type MobileLayout = 'cards' | 'scroll'
+type SortDir = 'asc' | 'desc' | null
 
 interface DataTableProps<T extends Record<string, unknown>> {
   columns: Column<T>[]
@@ -16,11 +19,9 @@ interface DataTableProps<T extends Record<string, unknown>> {
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
   keyField?: string
-  mobileLayout?: 'cards' | 'scroll'
+  mobileLayout?: MobileLayout
   actionsColumn?: number
 }
-
-type SortDir = 'asc' | 'desc' | null
 
 export function DataTable<T extends Record<string, unknown>>({
   columns,
@@ -41,26 +42,33 @@ export function DataTable<T extends Record<string, unknown>>({
   const [sortDir, setSortDir] = useState<SortDir>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState<Record<string, boolean>>({})
 
+  const SORT_CYCLE: SortDir[] = ['asc', 'desc', null]
+
   function handleSort(key: string) {
     if (sortKey === key) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : d === 'desc' ? null : 'asc'))
-      if (sortDir === 'desc') setSortKey(null)
+      const idx = SORT_CYCLE.indexOf(sortDir)
+      const next = SORT_CYCLE[(idx + 1) % SORT_CYCLE.length]
+      setSortDir(next)
+      if (next === null) setSortKey(null)
     } else {
       setSortKey(key)
       setSortDir('asc')
     }
   }
 
-  const sorted = [...data].sort((a, b) => {
-    if (!sortKey || !sortDir) return 0
-    const av = a[sortKey]
-    const bv = b[sortKey]
-    if (av === bv) return 0
-    const dir = sortDir === 'asc' ? 1 : -1
-    return (av ?? '') > (bv ?? '') ? dir : -dir
-  })
+  const sorted = useMemo(
+    () => [...data].sort((a, b) => {
+      if (!sortKey || !sortDir) return 0
+      const av = a[sortKey]
+      const bv = b[sortKey]
+      if (av === bv) return 0
+      const dir = sortDir === 'asc' ? 1 : -1
+      return (av ?? '') > (bv ?? '') ? dir : -dir
+    }),
+    [data, sortKey, sortDir],
+  )
 
-  const totalPages = total ? Math.ceil(total / pageSize) : 1
+  const totalPages = useMemo(() => (total ? Math.ceil(total / pageSize) : 1), [total, pageSize])
 
   function SortIcon({ colKey }: { colKey: string }) {
     if (sortKey !== colKey) return <ChevronsUpDown size={14} className="text-gray-400" />
@@ -70,6 +78,8 @@ export function DataTable<T extends Record<string, unknown>>({
 
   // Below 768px: render card layout if mobileLayout='cards'
   const showCards = mobileLayout === 'cards'
+  const primaryCol = columns[0]
+  const secondaryCols = columns.slice(1)
 
   return (
     <div className="flex flex-col gap-3">
@@ -94,8 +104,6 @@ export function DataTable<T extends Record<string, unknown>>({
           ) : (
             sorted.map((row, i) => {
               const rowKey = String(row[keyField] ?? i)
-              const primaryCol = columns[0]
-              const secondaryCols = columns.slice(1)
               return (
                 <div
                   key={rowKey}
