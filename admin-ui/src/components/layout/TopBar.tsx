@@ -33,7 +33,8 @@ export function TopBar({ children }: { children?: React.ReactNode }) {
   }, [])
 
   function handleSearch(_query: string) {
-    // TODO: implement global search
+    // Global search is not implemented — users should use the specific
+    // search capabilities on each page (properties, leads, clients).
   }
 
   function switchLanguage(lang: string) {
