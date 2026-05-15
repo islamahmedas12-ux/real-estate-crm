@@ -22,6 +22,7 @@ import {
   CurrentUser,
   type AuthenticatedUser,
 } from '../common/decorators/current-user.decorator.js';
+import { Public } from '../auth/decorators/public.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { AuthGuard } from '../common/guards/auth.guard.js';
 
@@ -128,5 +129,56 @@ export class EmailController {
   @ApiResponse({ status: 404, description: 'Email log not found' })
   async retryEmail(@Param('id', ParseUUIDPipe) id: string) {
     return this.emailService.retryEmail(id);
+  }
+
+  @Get('unsubscribe')
+  @Public()
+  @ApiOperation({ summary: 'Unsubscribe from email category via signed token' })
+  @ApiResponse({ status: 200, description: 'Unsubscribed successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
+  async unsubscribe(@Query('token') token: string, @Query('type') type: string) {
+    if (!token) {
+      throw new NotFoundException('Missing unsubscribe token');
+    }
+
+    const validTypes = [
+      'leadAssignment',
+      'followUpReminder',
+      'contractUpdates',
+      'invoiceReminder',
+      'paymentConfirmation',
+      'weeklySummary',
+    ];
+
+    const prefType = validTypes.includes(type) ? type : null;
+
+    const prefs = await this.prisma.emailPreference.findFirst({
+      where: { unsubscribeToken: token },
+    });
+
+    if (!prefs) {
+      throw new NotFoundException('Invalid unsubscribe token');
+    }
+
+    const updateData: Record<string, boolean> = {};
+    if (prefType) {
+      updateData[prefType] = false;
+    } else {
+      // No type specified — unsubscribe from all
+      for (const t of validTypes) {
+        updateData[t] = false;
+      }
+    }
+
+    await this.prisma.emailPreference.update({
+      where: { id: prefs.id },
+      data: { ...updateData, unsubscribeToken: null },
+    });
+
+    return {
+      message: prefType
+        ? `You have been unsubscribed from ${type} emails.`
+        : 'You have been unsubscribed from all CRM notification emails.',
+    };
   }
 }
