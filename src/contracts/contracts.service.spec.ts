@@ -212,22 +212,22 @@ describe('ContractsService', () => {
   });
 
   describe('changeStatus', () => {
-    it('should change DRAFT to ACTIVE', async () => {
+    it('should change DRAFT to PENDING (valid lifecycle step)', async () => {
       mockPrisma.contract.findUnique.mockResolvedValue(mockContract);
       mockPrisma.contract.update.mockResolvedValue({
         ...mockContract,
-        status: ContractStatus.ACTIVE,
+        status: ContractStatus.PENDING,
       });
 
       const result = await service.changeStatus(
         'contract-001',
         {
-          status: ContractStatus.ACTIVE,
+          status: ContractStatus.PENDING,
         },
         adminUser,
       );
 
-      expect(result.status).toBe(ContractStatus.ACTIVE);
+      expect(result.status).toBe(ContractStatus.PENDING);
     });
 
     it('should reject invalid transition (COMPLETED -> DRAFT)', async () => {
@@ -366,23 +366,23 @@ describe('ContractsService', () => {
     it('should allow agent to change own contract status', async () => {
       mockPrisma.contract.findUnique.mockResolvedValue({
         ...mockContract,
-        agentId: 'agent-001',
+        agentId: agentUser.id,
       });
       mockPrisma.contract.update.mockResolvedValue({
         ...mockContract,
-        agentId: 'agent-001',
-        status: ContractStatus.ACTIVE,
+        agentId: agentUser.id,
+        status: ContractStatus.PENDING,
       });
 
       const result = await service.changeStatus(
         'contract-001',
         {
-          status: ContractStatus.ACTIVE,
+          status: ContractStatus.PENDING,
         },
         agentUser,
       );
 
-      expect(result.status).toBe(ContractStatus.ACTIVE);
+      expect(result.status).toBe(ContractStatus.PENDING);
     });
   });
 

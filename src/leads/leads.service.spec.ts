@@ -18,6 +18,9 @@ const mockPrisma = {
     findMany: jest.fn(),
     count: jest.fn(),
   },
+  client: { findUnique: jest.fn().mockResolvedValue({ id: 'client-1' }) },
+  property: { findUnique: jest.fn().mockResolvedValue({ id: 'property-1' }) },
+  user: { findUnique: jest.fn() },
   $transaction: jest.fn(),
 };
 
@@ -31,6 +34,9 @@ describe('LeadsService', () => {
 
     service = module.get<LeadsService>(LeadsService);
     jest.clearAllMocks();
+    // Default: referenced client/property exist (create() validates them)
+    mockPrisma.client.findUnique.mockResolvedValue({ id: 'client-1' });
+    mockPrisma.property.findUnique.mockResolvedValue({ id: 'property-1' });
   });
 
   const sampleLead = {
@@ -115,6 +121,7 @@ describe('LeadsService', () => {
           type: LeadActivityType.STATUS_CHANGE,
           description: `Lead created with status ${sampleLead.status}`,
           performedBy,
+          performedById: performedBy,
         },
       });
     });
@@ -618,6 +625,7 @@ describe('LeadsService', () => {
   describe('assignAgent', () => {
     it('should assign an agent to a lead', async () => {
       mockPrisma.lead.findUnique.mockResolvedValue(sampleLead);
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'agent-456', role: 'AGENT' });
       const assigned = { ...sampleLead, assignedAgentId: 'agent-456' };
       mockPrisma.lead.update.mockResolvedValue(assigned);
 
@@ -667,6 +675,7 @@ describe('LeadsService', () => {
           type: LeadActivityType.CALL,
           description: 'Called client',
           performedBy,
+          performedById: performedBy,
         },
       });
     });
@@ -750,24 +759,22 @@ describe('LeadsService', () => {
   // ─── getPipeline ──────────────────────────────────────────────────────────
 
   describe('getPipeline', () => {
-    it('should return leads grouped by status', async () => {
-      const leads = [
+    it('should return per-status buckets with leads and totals', async () => {
+      // New shape: getPipeline runs one findMany+count per status and
+      // returns { [status]: { leads, total } }
+      mockPrisma.lead.findMany.mockResolvedValue([
         { id: '1', status: LeadStatus.NEW, client: {}, property: {} },
-        { id: '2', status: LeadStatus.NEW, client: {}, property: {} },
-        { id: '3', status: LeadStatus.CONTACTED, client: {}, property: {} },
-        { id: '4', status: LeadStatus.WON, client: {}, property: {} },
-      ];
-      mockPrisma.lead.findMany.mockResolvedValue(leads);
+      ]);
+      mockPrisma.lead.count.mockResolvedValue(1);
 
       const result = await service.getPipeline(undefined, true);
 
-      expect(result[LeadStatus.NEW]).toHaveLength(2);
-      expect(result[LeadStatus.CONTACTED]).toHaveLength(1);
-      expect(result[LeadStatus.QUALIFIED]).toHaveLength(0);
-      expect(result[LeadStatus.PROPOSAL]).toHaveLength(0);
-      expect(result[LeadStatus.NEGOTIATION]).toHaveLength(0);
-      expect(result[LeadStatus.WON]).toHaveLength(1);
-      expect(result[LeadStatus.LOST]).toHaveLength(0);
+      for (const status of Object.values(LeadStatus)) {
+        expect(result[status]).toEqual({
+          leads: [{ id: '1', status: LeadStatus.NEW, client: {}, property: {} }],
+          total: 1,
+        });
+      }
     });
 
     it('should scope to agent when not admin/manager', async () => {
@@ -777,7 +784,7 @@ describe('LeadsService', () => {
 
       expect(mockPrisma.lead.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { assignedAgentId: 'agent-123' },
+          where: expect.objectContaining({ assignedAgentId: 'agent-123' }),
         }),
       );
     });
@@ -789,7 +796,7 @@ describe('LeadsService', () => {
 
       expect(mockPrisma.lead.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: {},
+          where: expect.not.objectContaining({ assignedAgentId: expect.anything() }),
         }),
       );
     });
@@ -797,10 +804,12 @@ describe('LeadsService', () => {
     it('should return empty pipeline when no leads exist', async () => {
       mockPrisma.lead.findMany.mockResolvedValue([]);
 
+      mockPrisma.lead.count.mockResolvedValue(0);
+
       const result = await service.getPipeline(undefined, true);
 
       for (const status of Object.values(LeadStatus)) {
-        expect(result[status]).toEqual([]);
+        expect(result[status]).toEqual({ leads: [], total: 0 });
       }
     });
   });

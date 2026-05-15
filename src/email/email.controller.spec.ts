@@ -29,6 +29,7 @@ describe('EmailController', () => {
   };
 
   const mockUser = {
+    id: 'user-123',
     sub: 'user-123',
     email: 'user@test.com',
     roles: ['admin'],

@@ -35,8 +35,11 @@ describe('ReportsService', () => {
 
     it('handles last_month range', () => {
       const { start, end } = service['getDateRange']('last_month');
+      const expectedMonth = (new Date().getMonth() + 11) % 12;
       expect(start.getDate()).toBe(1);
-      expect(end.getDate()).toBe(0);
+      expect(start.getMonth()).toBe(expectedMonth);
+      expect(end.getMonth()).toBe(expectedMonth);
+      expect(end.getTime()).toBeGreaterThan(start.getTime());
     });
 
     it('handles custom range', () => {

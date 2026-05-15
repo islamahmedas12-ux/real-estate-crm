@@ -3,19 +3,19 @@ import { PdfController } from './pdf.controller';
 import { PdfService } from './pdf.service';
 import { ReportType } from './dto/generate-report.dto';
 
-const mockPdfBuffer = Buffer.from('%PDF-1.4 mock');
-
 const mockService = {
-  generateContractPdf: jest.fn().mockResolvedValue(mockPdfBuffer),
-  generateInvoicePdf: jest.fn().mockResolvedValue(mockPdfBuffer),
-  generatePropertyPdf: jest.fn().mockResolvedValue(mockPdfBuffer),
-  generateReport: jest.fn().mockResolvedValue(mockPdfBuffer),
+  streamContractPdf: jest.fn().mockResolvedValue(undefined),
+  streamInvoicePdf: jest.fn().mockResolvedValue(undefined),
+  streamPropertyPdf: jest.fn().mockResolvedValue(undefined),
+  streamReport: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockResponse = () => {
   const res: any = {};
   res.set = jest.fn().mockReturnValue(res);
   res.end = jest.fn().mockReturnValue(res);
+  res.status = jest.fn().mockReturnValue(res);
+  res.json = jest.fn().mockReturnValue(res);
   return res;
 };
 
@@ -37,60 +37,45 @@ describe('PdfController', () => {
   });
 
   describe('contractPdf', () => {
-    it('should return PDF buffer with correct headers', async () => {
+    it('streams the contract PDF to the response', async () => {
       const res = mockResponse();
       await controller.contractPdf('uuid-1', res);
-
-      expect(mockService.generateContractPdf).toHaveBeenCalledWith('uuid-1');
-      expect(res.set).toHaveBeenCalledWith(
-        expect.objectContaining({
-          'Content-Type': 'application/pdf',
-        }),
-      );
-      expect(res.end).toHaveBeenCalledWith(mockPdfBuffer);
+      expect(mockService.streamContractPdf).toHaveBeenCalledWith('uuid-1', res);
     });
   });
 
   describe('invoicePdf', () => {
-    it('should return PDF buffer with correct headers', async () => {
+    it('streams the invoice PDF to the response', async () => {
       const res = mockResponse();
       await controller.invoicePdf('uuid-2', res);
-
-      expect(mockService.generateInvoicePdf).toHaveBeenCalledWith('uuid-2');
-      expect(res.set).toHaveBeenCalledWith(
-        expect.objectContaining({
-          'Content-Type': 'application/pdf',
-        }),
-      );
-      expect(res.end).toHaveBeenCalledWith(mockPdfBuffer);
+      expect(mockService.streamInvoicePdf).toHaveBeenCalledWith('uuid-2', res);
     });
   });
 
   describe('propertyPdf', () => {
-    it('should return PDF buffer with correct headers', async () => {
+    it('streams the property PDF to the response', async () => {
       const res = mockResponse();
       await controller.propertyPdf('uuid-3', res);
-
-      expect(mockService.generatePropertyPdf).toHaveBeenCalledWith('uuid-3');
-      expect(res.end).toHaveBeenCalledWith(mockPdfBuffer);
+      expect(mockService.streamPropertyPdf).toHaveBeenCalledWith('uuid-3', res);
     });
   });
 
   describe('generateReport', () => {
-    it('should generate monthly revenue report', async () => {
+    it('streams a monthly revenue report', async () => {
       const res = mockResponse();
       const dto = { type: ReportType.MONTHLY_REVENUE, month: '2026-03' };
       await controller.generateReport(dto, res);
 
-      expect(mockService.generateReport).toHaveBeenCalledWith(
+      expect(mockService.streamReport).toHaveBeenCalledWith(
         ReportType.MONTHLY_REVENUE,
         '2026-03',
         undefined,
+        res,
+        expect.any(String),
       );
-      expect(res.end).toHaveBeenCalledWith(mockPdfBuffer);
     });
 
-    it('should generate agent performance report', async () => {
+    it('streams an agent performance report', async () => {
       const res = mockResponse();
       const dto = {
         type: ReportType.AGENT_PERFORMANCE,
@@ -99,12 +84,13 @@ describe('PdfController', () => {
       };
       await controller.generateReport(dto, res);
 
-      expect(mockService.generateReport).toHaveBeenCalledWith(
+      expect(mockService.streamReport).toHaveBeenCalledWith(
         ReportType.AGENT_PERFORMANCE,
         '2026-03',
         'agent-1',
+        res,
+        expect.any(String),
       );
-      expect(res.end).toHaveBeenCalledWith(mockPdfBuffer);
     });
   });
 });

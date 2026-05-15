@@ -15,6 +15,7 @@ jest.mock('fs/promises', () => ({
   writeFile: jest.fn().mockResolvedValue(undefined),
   unlink: jest.fn().mockResolvedValue(undefined),
   mkdir: jest.fn().mockResolvedValue(undefined),
+  access: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.mock('sharp', () => {
@@ -27,6 +28,7 @@ jest.mock('sharp', () => {
 });
 
 import * as fs from 'fs';
+import * as fsPromises from 'fs/promises';
 
 const mockPrisma = {
   property: {
@@ -44,6 +46,7 @@ const mockPrisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
+  $transaction: jest.fn().mockImplementation((ops: Promise<unknown>[]) => Promise.all(ops)),
 };
 
 const mockConfig = {
@@ -227,7 +230,7 @@ describe('UploadsService', () => {
       const result = await service.deletePropertyImage(propertyId, imageId);
 
       expect(result).toEqual({ message: 'Image deleted successfully' });
-      expect(fs.unlinkSync).toHaveBeenCalledTimes(2); // image + thumbnail
+      expect(fsPromises.unlink).toHaveBeenCalledTimes(2); // image + thumbnail
       expect(mockPrisma.propertyImage.delete).toHaveBeenCalledWith({
         where: { id: imageId },
       });
@@ -365,7 +368,7 @@ describe('UploadsService', () => {
       const result = await service.uploadContractDocument(contractId, file);
 
       expect(result).toHaveProperty('documentUrl');
-      expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
+      expect(fsPromises.writeFile).toHaveBeenCalled();
       expect(mockPrisma.contract.update).toHaveBeenCalledTimes(1);
     });
 
@@ -431,43 +434,45 @@ describe('UploadsService', () => {
   });
 
   describe('getFilePath', () => {
-    it('should return the file path for an existing file', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
+    it('should return the file path for an existing file', async () => {
+      (fsPromises.access as jest.Mock).mockResolvedValue(undefined);
 
-      const result = service.getFilePath('images', 'test-image.jpg');
+      const result = await service.getFilePath('images', 'test-image.jpg');
 
       expect(result).toContain('images');
       expect(result).toContain('test-image.jpg');
     });
 
-    it('should throw NotFoundException for missing file', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
+    it('should throw NotFoundException for missing file', async () => {
+      (fsPromises.access as jest.Mock).mockRejectedValueOnce(new Error('ENOENT'));
 
-      expect(() => service.getFilePath('images', 'nonexistent.jpg')).toThrow(NotFoundException);
+      await expect(service.getFilePath('images', 'nonexistent.jpg')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
-    it('should sanitize path traversal attempts', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
+    it('should sanitize path traversal attempts', async () => {
+      (fsPromises.access as jest.Mock).mockResolvedValue(undefined);
 
-      const result = service.getFilePath('images', '../../../etc/passwd');
+      const result = await service.getFilePath('images', '../../../etc/passwd');
 
       // path.basename strips directory traversal
       expect(result).not.toContain('..');
       expect(result).toContain('passwd');
     });
 
-    it('should work for thumbnails type', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
+    it('should work for thumbnails type', async () => {
+      (fsPromises.access as jest.Mock).mockResolvedValue(undefined);
 
-      const result = service.getFilePath('thumbnails', 'thumb.jpg');
+      const result = await service.getFilePath('thumbnails', 'thumb.jpg');
 
       expect(result).toContain('thumbnails');
     });
 
-    it('should work for documents type', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
+    it('should work for documents type', async () => {
+      (fsPromises.access as jest.Mock).mockResolvedValue(undefined);
 
-      const result = service.getFilePath('documents', 'contract.pdf');
+      const result = await service.getFilePath('documents', 'contract.pdf');
 
       expect(result).toContain('documents');
     });
