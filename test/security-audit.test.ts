@@ -42,8 +42,14 @@ function log(status: '✅' | '❌' | '⚠️', test: string, detail: string = ''
 
 async function getToken(role: string = 'admin'): Promise<string> {
   const creds: Record<string, { u: string; p: string }> = {
-    admin: { u: 'admin-test', p: 'Admin123!' },
-    agent: { u: 'agent-test', p: 'Agent123!' },
+    admin: {
+      u: process.env.TEST_USER_ADMIN || 'admin-test',
+      p: process.env.TEST_PASS_ADMIN || 'Admin123!',
+    },
+    agent: {
+      u: process.env.TEST_USER_AGENT || 'agent-test',
+      p: process.env.TEST_PASS_AGENT || 'Agent123!',
+    },
   };
   const c = creds[role] || creds.admin;
   const res = await fetch(`${AUTH_URL}/protocol/openid-connect/token`, {
@@ -51,7 +57,7 @@ async function getToken(role: string = 'admin'): Promise<string> {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'password',
-      client_id: 'crm-backend',
+      client_id: process.env.TEST_CLIENT_ID || 'crm-backend',
       client_secret: CLIENT_SECRET,
       username: c.u,
       password: c.p,
@@ -359,7 +365,13 @@ async function main() {
     console.log('\n✅ Security audit passed — no critical findings!');
   } else {
     console.log(`\n❌ ${failed} critical finding(s) need attention!`);
+    if (process.env.CI === 'true') {
+      process.exit(1);
+    }
   }
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error('Security audit runner failed:', err);
+  process.exit(1);
+});
