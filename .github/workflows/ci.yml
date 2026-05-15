@@ -57,8 +57,8 @@ jobs:
       - name: Lint
         run: npm run lint -- --max-warnings 0
 
-      - name: Type check
-        run: npx tsc --noEmit
+      - name: Type check (production code — specs typechecked by test runner)
+        run: npx tsc --noEmit -p tsconfig.build.json
 
       - name: Run database migrations
         run: npx prisma migrate deploy
@@ -75,10 +75,6 @@ jobs:
     name: CI / Frontend Admin UI
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: admin-ui
-
     steps:
       - uses: actions/checkout@v4
 
@@ -86,29 +82,24 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: admin-ui/package-lock.json
 
-      - name: Install dependencies
+      - name: Install dependencies (root workspaces — links @crm/*)
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: npm run lint --workspace admin-ui
 
       - name: Type check & Build
-        run: npm run build
+        run: npm run build --workspace admin-ui
 
       - name: Test
-        run: npm test
+        run: npm test --workspace admin-ui
 
   # ── Agent UI ───────────────────────────────────────────────────────────
   agent-ui:
     name: CI / Frontend Agent UI
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: agent-ui
-
     steps:
       - uses: actions/checkout@v4
 
@@ -116,19 +107,18 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: agent-ui/package-lock.json
 
-      - name: Install dependencies
+      - name: Install dependencies (root workspaces — links @crm/*)
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: npm run lint --workspace agent-ui
 
       - name: Type check & Build
-        run: npm run build
+        run: npm run build --workspace agent-ui
 
       - name: Test
-        run: npm test
+        run: npm test --workspace agent-ui
 
   # ── Flutter Mobile ─────────────────────────────────────────────────────
   mobile:

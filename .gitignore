@@ -81,3 +81,6 @@ mobile/ios/Flutter/.last_build_id
 .autobuild-progress.md
 .autobuild-order.txt
 
+
+# Claude Code local state
+.claude/
