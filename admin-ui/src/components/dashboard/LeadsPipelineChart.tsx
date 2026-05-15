@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   ResponsiveContainer,
   PieChart,
@@ -11,34 +12,17 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts'
-import { useState } from 'react'
 import { ChartCard } from './ChartCard'
 import { Skeleton } from '../ui'
 import type { LeadsResponse } from '../../types/dashboard'
+import { STATUS_COLORS, formatStatus, CHART_TOOLTIP_STYLE } from './tokens'
+
+type ChartMode = 'donut' | 'bar'
 
 interface Props {
   data?: LeadsResponse
   isLoading: boolean
 }
-
-const STATUS_COLORS: Record<string, string> = {
-  NEW: '#6366f1',
-  CONTACTED: '#3b82f6',
-  QUALIFIED: '#8b5cf6',
-  PROPOSAL: '#f97316',
-  NEGOTIATION: '#f59e0b',
-  WON: '#22c55e',
-  LOST: '#ef4444',
-}
-
-function formatStatus(s: string): string {
-  return s
-    .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
-type ChartMode = 'donut' | 'bar'
 
 export function LeadsPipelineChart({ data, isLoading }: Props) {
   const [mode, setMode] = useState<ChartMode>('donut')
@@ -113,13 +97,7 @@ export function LeadsPipelineChart({ data, isLoading }: Props) {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    color: '#f9fafb',
-                    fontSize: '12px',
-                  }}
+                  contentStyle={CHART_TOOLTIP_STYLE}
                 />
                 <Legend
                   iconType="circle"
@@ -139,13 +117,7 @@ export function LeadsPipelineChart({ data, isLoading }: Props) {
                 />
                 <YAxis tick={{ fontSize: 11 }} className="text-gray-500 dark:text-gray-400" />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    color: '#f9fafb',
-                    fontSize: '12px',
-                  }}
+                  contentStyle={CHART_TOOLTIP_STYLE}
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {pipeline.map((entry) => (
