@@ -142,7 +142,7 @@ describe('PropertiesController', () => {
 
       const result = await controller.findAll({} as any, adminUser);
       expect(result).toEqual(paginated);
-      expect(mockService.findAll).toHaveBeenCalledWith({}, adminUser.sub, true);
+      expect(mockService.findAll).toHaveBeenCalledWith({}, adminUser.id, true);
     });
 
     it('should return paginated properties for manager', async () => {
@@ -151,7 +151,7 @@ describe('PropertiesController', () => {
 
       const result = await controller.findAll({} as any, managerUser);
       expect(result).toEqual(paginated);
-      expect(mockService.findAll).toHaveBeenCalledWith({}, managerUser.sub, true);
+      expect(mockService.findAll).toHaveBeenCalledWith({}, managerUser.id, true);
     });
 
     it('should scope results for agent users', async () => {
@@ -159,7 +159,7 @@ describe('PropertiesController', () => {
       mockService.findAll.mockResolvedValue(paginated);
 
       await controller.findAll({} as any, agentUser);
-      expect(mockService.findAll).toHaveBeenCalledWith({}, agentUser.sub, false);
+      expect(mockService.findAll).toHaveBeenCalledWith({}, agentUser.id, false);
     });
 
     it('should pass filter parameters to service', async () => {
@@ -178,7 +178,7 @@ describe('PropertiesController', () => {
       };
 
       await controller.findAll(filter as any, adminUser);
-      expect(mockService.findAll).toHaveBeenCalledWith(filter, adminUser.sub, true);
+      expect(mockService.findAll).toHaveBeenCalledWith(filter, adminUser.id, true);
     });
 
     it('should handle undefined user roles gracefully', async () => {
@@ -188,7 +188,7 @@ describe('PropertiesController', () => {
       const userWithNoRoles = { sub: 'user-001', email: 'user@test.com' } as AuthenticatedUser;
 
       await controller.findAll({} as any, userWithNoRoles);
-      expect(mockService.findAll).toHaveBeenCalledWith({}, userWithNoRoles.sub, false);
+      expect(mockService.findAll).toHaveBeenCalledWith({}, userWithNoRoles.id, false);
     });
   });
 
@@ -205,7 +205,7 @@ describe('PropertiesController', () => {
         'villa cairo',
         undefined,
         20,
-        adminUser.sub,
+        adminUser.id,
         true,
       );
     });
@@ -222,7 +222,7 @@ describe('PropertiesController', () => {
         'apartment',
         cursorId,
         10,
-        adminUser.sub,
+        adminUser.id,
         true,
       );
     });
@@ -238,7 +238,7 @@ describe('PropertiesController', () => {
         'office',
         undefined,
         20,
-        agentUser.sub,
+        agentUser.id,
         false,
       );
     });
@@ -255,7 +255,7 @@ describe('PropertiesController', () => {
         'land',
         undefined,
         20,
-        userWithNoRoles.sub,
+        userWithNoRoles.id,
         false,
       );
     });
@@ -273,7 +273,7 @@ describe('PropertiesController', () => {
 
       const result = await controller.getStats(adminUser);
       expect(result.total).toBe(100);
-      expect(mockService.getStats).toHaveBeenCalledWith(adminUser.sub, true);
+      expect(mockService.getStats).toHaveBeenCalledWith(adminUser.id, true);
     });
 
     it('should return statistics for manager', async () => {
@@ -282,14 +282,14 @@ describe('PropertiesController', () => {
 
       const result = await controller.getStats(managerUser);
       expect(result.total).toBe(50);
-      expect(mockService.getStats).toHaveBeenCalledWith(managerUser.sub, true);
+      expect(mockService.getStats).toHaveBeenCalledWith(managerUser.id, true);
     });
 
     it('should scope stats for agent users', async () => {
       mockService.getStats.mockResolvedValue({ total: 5, byType: [], byStatus: [], byCity: [] });
 
       await controller.getStats(agentUser);
-      expect(mockService.getStats).toHaveBeenCalledWith(agentUser.sub, false);
+      expect(mockService.getStats).toHaveBeenCalledWith(agentUser.id, false);
     });
 
     it('should handle undefined user roles gracefully', async () => {
@@ -297,7 +297,7 @@ describe('PropertiesController', () => {
 
       const userWithNoRoles = { sub: 'user-001', email: 'user@test.com' } as AuthenticatedUser;
       await controller.getStats(userWithNoRoles);
-      expect(mockService.getStats).toHaveBeenCalledWith(userWithNoRoles.sub, false);
+      expect(mockService.getStats).toHaveBeenCalledWith(userWithNoRoles.id, false);
     });
   });
 

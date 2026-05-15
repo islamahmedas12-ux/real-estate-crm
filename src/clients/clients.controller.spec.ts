@@ -97,7 +97,7 @@ describe('ClientsController', () => {
 
       const result = await controller.findAll({} as any, adminUser);
       expect(result).toEqual(paginated);
-      expect(mockService.findAll).toHaveBeenCalledWith({}, adminUser.sub, true);
+      expect(mockService.findAll).toHaveBeenCalledWith({}, adminUser.id, true);
     });
 
     it('should scope results for non-admin users', async () => {
@@ -105,7 +105,7 @@ describe('ClientsController', () => {
       mockService.findAll.mockResolvedValue(paginated);
 
       await controller.findAll({} as any, agentUser);
-      expect(mockService.findAll).toHaveBeenCalledWith({}, agentUser.sub, false);
+      expect(mockService.findAll).toHaveBeenCalledWith({}, agentUser.id, false);
     });
   });
 
@@ -120,14 +120,14 @@ describe('ClientsController', () => {
 
       const result = await controller.getStats(adminUser);
       expect(result.total).toBe(100);
-      expect(mockService.getStats).toHaveBeenCalledWith(adminUser.sub, true);
+      expect(mockService.getStats).toHaveBeenCalledWith(adminUser.id, true);
     });
 
     it('should scope stats for agent users', async () => {
       mockService.getStats.mockResolvedValue({ total: 5, byType: [], bySource: [] });
 
       await controller.getStats(agentUser);
-      expect(mockService.getStats).toHaveBeenCalledWith(agentUser.sub, false);
+      expect(mockService.getStats).toHaveBeenCalledWith(agentUser.id, false);
     });
   });
 

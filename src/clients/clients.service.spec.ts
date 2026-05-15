@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ClientsService } from './clients.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { ClientType, ClientSource } from '@prisma/client';
+import { ClientType, ClientSource, UserRole } from '@prisma/client';
 
 const mockPrisma = {
   client: {
@@ -16,7 +16,8 @@ const mockPrisma = {
     groupBy: jest.fn(),
   },
   lead: { findMany: jest.fn() },
-  contract: { findMany: jest.fn() },
+  contract: { findMany: jest.fn(), count: jest.fn().mockResolvedValue(0) },
+  user: { findUnique: jest.fn() },
 };
 
 describe('ClientsService', () => {
@@ -177,6 +178,7 @@ describe('ClientsService', () => {
   describe('assignAgent', () => {
     it('should assign an agent to a client', async () => {
       mockPrisma.client.findUnique.mockResolvedValue(sampleClient);
+      mockPrisma.user.findUnique.mockResolvedValue({ id: 'agent-456', role: UserRole.AGENT });
       const assigned = { ...sampleClient, assignedAgentId: 'agent-456' };
       mockPrisma.client.update.mockResolvedValue(assigned);
 
@@ -195,7 +197,7 @@ describe('ClientsService', () => {
       const stats = await service.getStats(undefined, true);
 
       expect(stats.total).toBe(50);
-      expect(stats.byType).toHaveLength(1);
+      expect(stats.byType).toEqual({ [ClientType.BUYER]: 30 });
       expect(stats.bySource).toHaveLength(1);
     });
   });

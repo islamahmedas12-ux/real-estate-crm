@@ -89,7 +89,7 @@ describe('LeadsController', () => {
   // ─── create ────────────────────────────────────────────────────────────────
 
   describe('create', () => {
-    it('should create a lead and pass user.sub as performedBy', async () => {
+    it('should create a lead and pass user.id as performedBy', async () => {
       mockService.create.mockResolvedValue(sampleLead);
 
       const dto = {
@@ -102,7 +102,7 @@ describe('LeadsController', () => {
       const result = await controller.create(dto as any, adminUser);
 
       expect(result).toEqual(sampleLead);
-      expect(mockService.create).toHaveBeenCalledWith(dto, adminUser.sub);
+      expect(mockService.create).toHaveBeenCalledWith(dto, adminUser.id);
     });
   });
 
@@ -124,7 +124,7 @@ describe('LeadsController', () => {
       const result = await controller.findAll(filter, adminUser);
 
       expect(result).toEqual(paginated);
-      expect(mockService.findAll).toHaveBeenCalledWith(filter, adminUser.sub, true);
+      expect(mockService.findAll).toHaveBeenCalledWith(filter, adminUser.id, true);
     });
 
     it('should return paginated leads for manager', async () => {
@@ -134,7 +134,7 @@ describe('LeadsController', () => {
       const result = await controller.findAll(filter, managerUser);
 
       expect(result).toEqual(paginated);
-      expect(mockService.findAll).toHaveBeenCalledWith(filter, managerUser.sub, true);
+      expect(mockService.findAll).toHaveBeenCalledWith(filter, managerUser.id, true);
     });
 
     it('should scope results for agent users (not admin/manager)', async () => {
@@ -143,7 +143,7 @@ describe('LeadsController', () => {
 
       await controller.findAll({} as any, agentUser);
 
-      expect(mockService.findAll).toHaveBeenCalledWith({}, agentUser.sub, false);
+      expect(mockService.findAll).toHaveBeenCalledWith({}, agentUser.id, false);
     });
 
     it('should pass filter through to service', async () => {
@@ -158,7 +158,7 @@ describe('LeadsController', () => {
 
       await controller.findAll(filter, adminUser);
 
-      expect(mockService.findAll).toHaveBeenCalledWith(filter, adminUser.sub, true);
+      expect(mockService.findAll).toHaveBeenCalledWith(filter, adminUser.id, true);
     });
   });
 
@@ -181,7 +181,7 @@ describe('LeadsController', () => {
       const result = await controller.getPipeline(adminUser);
 
       expect(result).toEqual(pipelineResult);
-      expect(mockService.getPipeline).toHaveBeenCalledWith(adminUser.sub, true);
+      expect(mockService.getPipeline).toHaveBeenCalledWith(adminUser.id, true, 50);
     });
 
     it('should return pipeline for manager with isAdminOrManager=true', async () => {
@@ -190,7 +190,7 @@ describe('LeadsController', () => {
       const result = await controller.getPipeline(managerUser);
 
       expect(result).toEqual(pipelineResult);
-      expect(mockService.getPipeline).toHaveBeenCalledWith(managerUser.sub, true);
+      expect(mockService.getPipeline).toHaveBeenCalledWith(managerUser.id, true, 50);
     });
 
     it('should return pipeline for agent with isAdminOrManager=false', async () => {
@@ -198,7 +198,7 @@ describe('LeadsController', () => {
 
       await controller.getPipeline(agentUser);
 
-      expect(mockService.getPipeline).toHaveBeenCalledWith(agentUser.sub, false);
+      expect(mockService.getPipeline).toHaveBeenCalledWith(agentUser.id, false, 50);
     });
   });
 
@@ -218,7 +218,7 @@ describe('LeadsController', () => {
       const result = await controller.getStats(adminUser);
 
       expect(result.total).toBe(100);
-      expect(mockService.getStats).toHaveBeenCalledWith(adminUser.sub, true);
+      expect(mockService.getStats).toHaveBeenCalledWith(adminUser.id, true);
     });
 
     it('should scope stats for agent users', async () => {
@@ -231,7 +231,7 @@ describe('LeadsController', () => {
 
       await controller.getStats(agentUser);
 
-      expect(mockService.getStats).toHaveBeenCalledWith(agentUser.sub, false);
+      expect(mockService.getStats).toHaveBeenCalledWith(agentUser.id, false);
     });
   });
 
@@ -298,7 +298,7 @@ describe('LeadsController', () => {
       const result = await controller.changeStatus(sampleLead.id, dto, adminUser);
 
       expect(result.status).toBe(LeadStatus.CONTACTED);
-      expect(mockService.changeStatus).toHaveBeenCalledWith(sampleLead.id, dto, adminUser.sub);
+      expect(mockService.changeStatus).toHaveBeenCalledWith(sampleLead.id, dto, adminUser.id);
     });
 
     it('should pass notes through when provided', async () => {
@@ -308,7 +308,7 @@ describe('LeadsController', () => {
       const dto = { status: LeadStatus.CONTACTED, notes: 'Spoke on phone' };
       await controller.changeStatus(sampleLead.id, dto, agentUser);
 
-      expect(mockService.changeStatus).toHaveBeenCalledWith(sampleLead.id, dto, agentUser.sub);
+      expect(mockService.changeStatus).toHaveBeenCalledWith(sampleLead.id, dto, agentUser.id);
     });
 
     it('should propagate service errors', async () => {
@@ -344,7 +344,7 @@ describe('LeadsController', () => {
         leadId: sampleLead.id,
         type: LeadActivityType.CALL,
         description: 'Called client',
-        performedBy: agentUser.sub,
+        performedBy: agentUser.id,
         createdAt: new Date(),
       };
       mockService.addActivity.mockResolvedValue(activity);
@@ -353,7 +353,7 @@ describe('LeadsController', () => {
       const result = await controller.addActivity(sampleLead.id, dto, agentUser);
 
       expect(result).toEqual(activity);
-      expect(mockService.addActivity).toHaveBeenCalledWith(sampleLead.id, dto, agentUser.sub);
+      expect(mockService.addActivity).toHaveBeenCalledWith(sampleLead.id, dto, agentUser.id);
     });
   });
 
