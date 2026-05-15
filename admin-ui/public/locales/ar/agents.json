@@ -1,0 +1,25 @@
+{
+  "title": "المندوبون",
+  "title_one": "مندوب",
+  "addAgent": "إضافة مندوب",
+  "editAgent": "تعديل المندوب",
+  "agentDetails": "تفاصيل المندوب",
+  "agentsList": "المندوبون",
+  "noAgents": "لا يوجد مندوبون",
+  "performance": "الأداء",
+  "fields": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "role": "الدور",
+    "status": "الحالة",
+    "joinedAt": "تاريخ الانضمام",
+    "deals": "المعاملات",
+    "revenue": "الإيرادات"
+  },
+  "roles": {
+    "admin": "مدير",
+    "manager": "مشرف",
+    "agent": "مندوب"
+  }
+}

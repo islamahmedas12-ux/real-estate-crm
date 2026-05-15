@@ -1,0 +1,28 @@
+{
+  "title": "Invoices",
+  "title_one": "Invoice",
+  "addInvoice": "Add Invoice",
+  "editInvoice": "Edit Invoice",
+  "invoiceDetails": "Invoice Details",
+  "invoicesList": "Invoices",
+  "noInvoices": "No invoices found",
+  "recordPayment": "Record Payment",
+  "fields": {
+    "number": "Invoice Number",
+    "client": "Client",
+    "contract": "Contract",
+    "amount": "Amount",
+    "dueDate": "Due Date",
+    "paidDate": "Paid Date",
+    "status": "Status",
+    "items": "Items",
+    "notes": "Notes"
+  },
+  "status": {
+    "draft": "Draft",
+    "sent": "Sent",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "cancelled": "Cancelled"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "title": "Settings",
+  "profile": "Profile",
+  "account": "Account",
+  "notifications": "Notifications",
+  "security": "Security",
+  "preferences": "Preferences",
+  "fields": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "role": "Role",
+    "language": "Language",
+    "theme": "Theme",
+    "notificationsEnabled": "Enable Notifications"
+  },
+  "themes": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}

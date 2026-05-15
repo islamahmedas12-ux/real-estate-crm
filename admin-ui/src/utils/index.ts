@@ -1,32 +1,36 @@
-import { clsx, type ClassValue } from 'clsx'
+import { clsx, type ClassValue } from 'clsx';
 
 export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs)
+  return clsx(inputs);
 }
 
-export function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount)
+export function formatCurrency(amount: number, currency = 'SAR', locale?: string): string {
+  return new Intl.NumberFormat(locale ?? 'en-US', { style: 'currency', currency }).format(amount);
 }
 
-export function formatDate(date: string | Date): string {
-  return new Intl.DateTimeFormat('en-US', {
+export function formatDate(date: string | Date, locale?: string): string {
+  return new Intl.DateTimeFormat(locale ?? 'en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  }).format(new Date(date))
+  }).format(new Date(date));
+}
+
+export function formatNumber(num: number, locale?: string): string {
+  return new Intl.NumberFormat(locale ?? 'en-US').format(num);
 }
 
 export function debounce<T extends (...args: unknown[]) => unknown>(fn: T, delay: number) {
-  let timer: ReturnType<typeof setTimeout>
+  let timer: ReturnType<typeof setTimeout>;
   return (...args: Parameters<T>) => {
-    clearTimeout(timer)
-    timer = setTimeout(() => fn(...args), delay)
-  }
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
 }
 
 export function truncate(str: string, maxLength: number): string {
-  if (str.length <= maxLength) return str
-  return str.slice(0, maxLength) + '…'
+  if (str.length <= maxLength) return str;
+  return str.slice(0, maxLength) + '…';
 }
 
 export function getInitials(name: string): string {
@@ -35,5 +39,5 @@ export function getInitials(name: string): string {
     .map((n) => n[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2)
+    .slice(0, 2);
 }

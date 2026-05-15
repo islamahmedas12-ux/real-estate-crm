@@ -1,0 +1,22 @@
+{
+  "title": "الإعدادات",
+  "profile": "الملف الشخصي",
+  "account": "الحساب",
+  "notifications": "الإشعارات",
+  "security": "الأمان",
+  "preferences": "التفضيلات",
+  "fields": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "role": "الدور",
+    "language": "اللغة",
+    "theme": "المظهر",
+    "notificationsEnabled": "تفعيل الإشعارات"
+  },
+  "themes": {
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام"
+  }
+}

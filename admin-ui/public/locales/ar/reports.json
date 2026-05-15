@@ -1,0 +1,11 @@
+{
+  "title": "التقارير",
+  "generate": "إنشاء تقرير",
+  "dateRange": "النطاق الزمني",
+  "exportPdf": "تصدير PDF",
+  "exportCsv": "تصدير CSV",
+  "revenue": "الإيرادات",
+  "performance": "الأداء",
+  "pipeline": "المبيعات",
+  "noReports": "لا توجد تقارير"
+}

@@ -1,0 +1,35 @@
+{
+  "title": "العملاء",
+  "title_one": "العميل",
+  "addClient": "إضافة عميل",
+  "editClient": "تعديل العميل",
+  "clientDetails": "تفاصيل العميل",
+  "clientsList": "العملاء",
+  "noClients": "لا يوجد عملاء",
+  "fields": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "phoneAlt": "هاتف بديل",
+    "type": "النوع",
+    "nationality": "الجنسية",
+    "budget": "الميزانية",
+    "notes": "ملاحظات",
+    "preferredContact": "وسيلة الاتصال المفضلة",
+    "source": "المصدر"
+  },
+  "types": {
+    "buyer": "مشتري",
+    "seller": "بائع",
+    "renter": "مستأجر",
+    "tenant": "مؤجر",
+    "both": "مشتري وبائع"
+  },
+  "sources": {
+    "website": "الموقع الإلكتروني",
+    "referral": "إحالة",
+    "social": "وسائل التواصل الاجتماعي",
+    "advertisement": "إعلان",
+    "walkIn": "زيارة مباشرة"
+  }
+}

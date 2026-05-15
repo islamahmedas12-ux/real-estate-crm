@@ -1,0 +1,40 @@
+{
+  "title": "Leads",
+  "title_one": "Lead",
+  "addLead": "Add Lead",
+  "editLead": "Edit Lead",
+  "leadDetails": "Lead Details",
+  "leadsList": "Leads",
+  "leadsKanban": "Leads Board",
+  "noLeads": "No leads found",
+  "fields": {
+    "title": "Title",
+    "description": "Description",
+    "value": "Value",
+    "stage": "Stage",
+    "source": "Source",
+    "assignedTo": "Assigned To",
+    "client": "Client",
+    "property": "Property",
+    "notes": "Notes",
+    "followUpDate": "Follow-up Date",
+    "lastContacted": "Last Contacted"
+  },
+  "stages": {
+    "new": "New",
+    "contacted": "Contacted",
+    "qualified": "Qualified",
+    "proposal": "Proposal",
+    "negotiation": "Negotiation",
+    "won": "Won",
+    "lost": "Lost"
+  },
+  "sources": {
+    "website": "Website",
+    "referral": "Referral",
+    "social": "Social Media",
+    "advertisement": "Advertisement",
+    "walkIn": "Walk-in",
+    "call": "Phone Call"
+  }
+}

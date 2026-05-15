@@ -13,18 +13,19 @@ import {
   ChevronRight,
   Building,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '../../utils'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard',   path: '/',           icon: LayoutDashboard, exact: true },
-  { label: 'Properties',  path: '/properties', icon: Building2 },
-  { label: 'Clients',     path: '/clients',    icon: Users },
-  { label: 'Leads',       path: '/leads',      icon: UserCheck },
-  { label: 'Contracts',   path: '/contracts',  icon: FileText },
-  { label: 'Invoices',    path: '/invoices',   icon: Receipt },
-  { label: 'Reports',     path: '/reports',    icon: BarChart3 },
-  { label: 'Agents',      path: '/agents',     icon: UserCog },
-  { label: 'Settings',    path: '/settings',   icon: Settings },
+  { labelKey: 'nav.dashboard',  path: '/',           icon: LayoutDashboard, exact: true },
+  { labelKey: 'nav.properties', path: '/properties', icon: Building2 },
+  { labelKey: 'nav.clients',    path: '/clients',    icon: Users },
+  { labelKey: 'nav.leads',      path: '/leads',      icon: UserCheck },
+  { labelKey: 'nav.contracts',  path: '/contracts',  icon: FileText },
+  { labelKey: 'nav.invoices',   path: '/invoices',   icon: Receipt },
+  { labelKey: 'nav.reports',    path: '/reports',    icon: BarChart3 },
+  { labelKey: 'nav.agents',     path: '/agents',     icon: UserCog },
+  { labelKey: 'nav.settings',   path: '/settings',   icon: Settings },
 ]
 
 interface SidebarProps {
@@ -33,6 +34,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+  const { t } = useTranslation()
+
   return (
     <aside
       className={cn(
@@ -54,7 +57,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </div>
         {!collapsed && (
           <span className="font-semibold text-gray-900 dark:text-gray-100 truncate text-sm">
-            Estate CRM
+            {t('app.name')}
           </span>
         )}
       </div>
@@ -62,7 +65,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-3 px-2">
         <ul className="flex flex-col gap-0.5">
-          {NAV_ITEMS.map(({ label, path, icon: Icon, exact }) => (
+          {NAV_ITEMS.map(({ labelKey, path, icon: Icon, exact }) => (
             <li key={path}>
               <NavLink
                 to={path}
@@ -76,10 +79,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     collapsed && 'justify-center',
                   )
                 }
-                title={collapsed ? label : undefined}
+                title={collapsed ? t(labelKey) : undefined}
               >
                 <Icon size={18} className="shrink-0" />
-                {!collapsed && <span>{label}</span>}
+                {!collapsed && <span>{t(labelKey)}</span>}
               </NavLink>
             </li>
           ))}

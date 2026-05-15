@@ -1,0 +1,40 @@
+{
+  "title": "العملاء المحتملون",
+  "title_one": "عميل محتمل",
+  "addLead": "إضافة عميل محتمل",
+  "editLead": "تعديل العميل المحتمل",
+  "leadDetails": "تفاصيل العميل المحتمل",
+  "leadsList": "العملاء المحتملون",
+  "leadsKanban": "لوحة العملاء المحتملين",
+  "noLeads": "لا يوجد عملاء محتملون",
+  "fields": {
+    "title": "العنوان",
+    "description": "الوصف",
+    "value": "القيمة",
+    "stage": "المرحلة",
+    "source": "المصدر",
+    "assignedTo": "مُسند إلى",
+    "client": "العميل",
+    "property": "العقار",
+    "notes": "ملاحظات",
+    "followUpDate": "تاريخ المتابعة",
+    "lastContacted": "آخر تواصل"
+  },
+  "stages": {
+    "new": "جديد",
+    "contacted": "تم التواصل",
+    "qualified": "مؤهل",
+    "proposal": "عرض تقديمي",
+    "negotiation": "تفاوض",
+    "won": "تم الفوز",
+    "lost": "خسارة"
+  },
+  "sources": {
+    "website": "الموقع الإلكتروني",
+    "referral": "إحالة",
+    "social": "وسائل التواصل الاجتماعي",
+    "advertisement": "إعلان",
+    "walkIn": "زيارة مباشرة",
+    "call": "مكالمة هاتفية"
+  }
+}
