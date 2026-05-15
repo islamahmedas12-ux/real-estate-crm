@@ -33,6 +33,9 @@
     <div class="footer">
       <p>This is an automated notification from Real Estate CRM.</p>
       <p>You can manage your notification preferences in your account settings.</p>
+      {{#if unsubscribeUrl}}
+      <p><a href="{{unsubscribeUrl}}" style="color:#6b7280;text-decoration:underline;">Unsubscribe</a> from these emails.</p>
+      {{/if}}
     </div>
   </div>
 </body>

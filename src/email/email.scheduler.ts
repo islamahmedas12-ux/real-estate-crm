@@ -65,6 +65,16 @@ export class EmailScheduler {
           this.logger.warn(`Agent ${agentId} has no email — skipping follow-up reminder`);
           continue;
         }
+
+        // Check email preference before sending
+        const prefs = await this.prisma.emailPreference.findUnique({
+          where: { userId: agentId },
+        });
+        if (prefs && !prefs.followUpReminder) {
+          this.logger.log(`Agent ${agentId} has opted out of follow-up reminders — skipping`);
+          continue;
+        }
+
         const agentEmail = agent.email;
         const agentName = [agent.firstName, agent.lastName].filter(Boolean).join(' ') || agentId;
 
@@ -73,7 +83,7 @@ export class EmailScheduler {
           priority: l.priority,
         }));
 
-        await this.emailService.sendFollowUpReminderEmail(agentEmail, agentName, leadData);
+        await this.emailService.sendFollowUpReminderEmail(agentEmail, agentName, agentId, leadData);
         this.logger.log(
           `Follow-up reminder sent to agent ${agentId} for ${agentLeads.length} lead(s)`,
         );
@@ -106,7 +116,7 @@ export class EmailScheduler {
         contract: {
           include: {
             client: {
-              select: { firstName: true, lastName: true, email: true },
+              select: { id: true, firstName: true, lastName: true, email: true },
             },
           },
         },
@@ -123,6 +133,15 @@ export class EmailScheduler {
         const client = invoice.contract.client;
         if (!client.email) continue;
 
+        // Check email preference before sending
+        const prefs = await this.prisma.emailPreference.findUnique({
+          where: { userId: client.id },
+        });
+        if (prefs && !prefs.invoiceReminder) {
+          this.logger.log(`Client ${client.id} has opted out of invoice reminders — skipping`);
+          continue;
+        }
+
         const dueDate = new Date(invoice.dueDate);
         dueDate.setHours(0, 0, 0, 0);
         const daysUntilDue = Math.floor(
@@ -132,6 +151,7 @@ export class EmailScheduler {
         await this.emailService.sendInvoiceReminderEmail(
           client.email,
           `${client.firstName} ${client.lastName}`,
+          client.id,
           {
             invoiceNumber: invoice.invoiceNumber,
             amount: invoice.amount.toString(),
@@ -173,6 +193,15 @@ export class EmailScheduler {
       if (!agentId) continue;
 
       try {
+        // Check email preference before sending
+        const prefs = await this.prisma.emailPreference.findUnique({
+          where: { userId: agentId },
+        });
+        if (prefs && !prefs.weeklySummary) {
+          this.logger.log(`Agent ${agentId} has opted out of weekly summaries — skipping`);
+          continue;
+        }
+
         const [
           newLeads,
           leadsWon,
@@ -238,7 +267,7 @@ export class EmailScheduler {
         const agentName =
           [agentUser.firstName, agentUser.lastName].filter(Boolean).join(' ') || agentId;
 
-        await this.emailService.sendWeeklySummaryEmail(agentEmail, agentName, {
+        await this.emailService.sendWeeklySummaryEmail(agentEmail, agentName, agentId, {
           newLeads,
           leadsWon,
           leadsLost,

@@ -12,6 +12,7 @@ import { Prisma } from '@prisma/client';
 import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import * as Handlebars from 'handlebars';
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -134,6 +135,7 @@ export class EmailService implements OnModuleInit {
     subject: string,
     template: string,
     context: Record<string, any> = {},
+    unsubscribeUrl?: string,
   ) {
     // Create email log
     const emailLog = await this.prisma.emailLog.create({
@@ -147,13 +149,16 @@ export class EmailService implements OnModuleInit {
       },
     });
 
+    // Add unsubscribe URL to template context if provided
+    const templateContext = unsubscribeUrl ? { ...context, unsubscribeUrl } : context;
+
     // Add to queue
     await this.emailQueue.add(
       {
         emailLogId: emailLog.id,
         to,
         subject,
-        html: this.renderTemplate(template, context),
+        html: this.renderTemplate(template, templateContext),
       },
       {
         attempts: 3,
@@ -233,6 +238,24 @@ export class EmailService implements OnModuleInit {
     }
   }
 
+  private async shouldSendEmail(
+    userId: string,
+    preferenceKey:
+      | 'leadAssignment'
+      | 'followUpReminder'
+      | 'contractUpdates'
+      | 'invoiceReminder'
+      | 'paymentConfirmation'
+      | 'weeklySummary',
+  ): Promise<boolean> {
+    const prefs = await this.prisma.emailPreference.findUnique({
+      where: { userId },
+    });
+    // If no preferences record exists, default to sending
+    if (!prefs) return true;
+    return prefs[preferenceKey];
+  }
+
   async retryEmail(emailLogId: string) {
     const emailLog = await this.prisma.emailLog.findUnique({
       where: { id: emailLogId },
@@ -275,9 +298,35 @@ export class EmailService implements OnModuleInit {
 
   // ─── Specific email senders ───────────────────────────────────────
 
+  private async buildUnsubscribeUrl(
+    userId: string,
+    preferenceType?: string,
+  ): Promise<string | undefined> {
+    // Find or create preferences record with unsubscribe token
+    let prefs = await this.prisma.emailPreference.findUnique({ where: { userId } });
+    if (!prefs) {
+      prefs = await this.prisma.emailPreference.create({ data: { userId } });
+    }
+
+    // Generate or reuse token
+    const token = prefs.unsubscribeToken ?? crypto.randomBytes(24).toString('base64url');
+    if (!prefs.unsubscribeToken) {
+      await this.prisma.emailPreference.update({
+        where: { userId },
+        data: { unsubscribeToken: token },
+      });
+    }
+
+    const baseUrl = this.config.get<string>('APP_URL', 'http://localhost:3000');
+    const params = new URLSearchParams({ token });
+    if (preferenceType) params.set('type', preferenceType);
+    return `${baseUrl}/api/email/unsubscribe?${params.toString()}`;
+  }
+
   async sendLeadAssignmentEmail(
     agentEmail: string,
     agentName: string,
+    userId: string,
     lead: {
       clientName: string;
       clientPhone: string;
@@ -289,17 +338,26 @@ export class EmailService implements OnModuleInit {
       notes?: string;
     },
   ) {
-    return this.sendEmail(agentEmail, 'New Lead Assigned to You', 'lead-assignment', {
-      agentName,
-      lead,
-    });
+    const unsubscribeUrl = await this.buildUnsubscribeUrl(userId, 'leadAssignment');
+    return this.sendEmail(
+      agentEmail,
+      'New Lead Assigned to You',
+      'lead-assignment',
+      {
+        agentName,
+        lead,
+      },
+      unsubscribeUrl,
+    );
   }
 
   async sendFollowUpReminderEmail(
     agentEmail: string,
     agentName: string,
+    userId: string,
     leads: Array<{ clientName: string; priority: string }>,
   ) {
+    const unsubscribeUrl = await this.buildUnsubscribeUrl(userId, 'followUpReminder');
     return this.sendEmail(
       agentEmail,
       `Follow-Up Reminder: ${leads.length} lead(s) due today`,
@@ -308,12 +366,14 @@ export class EmailService implements OnModuleInit {
         agentName,
         leads,
       },
+      unsubscribeUrl,
     );
   }
 
   async sendContractUpdateEmail(
     recipientEmail: string,
     recipientName: string,
+    userId: string,
     contract: {
       id: string;
       type: string;
@@ -327,16 +387,24 @@ export class EmailService implements OnModuleInit {
     },
     action: string,
   ) {
-    return this.sendEmail(recipientEmail, `Contract ${action}`, 'contract-update', {
-      recipientName,
-      contract,
-      action,
-    });
+    const unsubscribeUrl = await this.buildUnsubscribeUrl(userId, 'contractUpdates');
+    return this.sendEmail(
+      recipientEmail,
+      `Contract ${action}`,
+      'contract-update',
+      {
+        recipientName,
+        contract,
+        action,
+      },
+      unsubscribeUrl,
+    );
   }
 
   async sendInvoiceReminderEmail(
     recipientEmail: string,
     recipientName: string,
+    userId: string,
     invoice: {
       invoiceNumber: string;
       amount: string;
@@ -345,6 +413,7 @@ export class EmailService implements OnModuleInit {
     },
     daysUntilDue: number,
   ) {
+    const unsubscribeUrl = await this.buildUnsubscribeUrl(userId, 'invoiceReminder');
     return this.sendEmail(
       recipientEmail,
       daysUntilDue < 0
@@ -358,12 +427,14 @@ export class EmailService implements OnModuleInit {
         isOverdue: daysUntilDue < 0,
         isDueToday: daysUntilDue === 0,
       },
+      unsubscribeUrl,
     );
   }
 
   async sendPaymentReceivedEmail(
     recipientEmail: string,
     recipientName: string,
+    userId: string,
     invoice: {
       invoiceNumber: string;
       amount: string;
@@ -371,6 +442,7 @@ export class EmailService implements OnModuleInit {
       paymentMethod?: string;
     },
   ) {
+    const unsubscribeUrl = await this.buildUnsubscribeUrl(userId, 'paymentConfirmation');
     return this.sendEmail(
       recipientEmail,
       `Payment Confirmation: ${invoice.invoiceNumber}`,
@@ -379,12 +451,14 @@ export class EmailService implements OnModuleInit {
         recipientName,
         invoice,
       },
+      unsubscribeUrl,
     );
   }
 
   async sendWeeklySummaryEmail(
     agentEmail: string,
     agentName: string,
+    userId: string,
     stats: {
       newLeads: number;
       leadsWon: number;
@@ -397,9 +471,16 @@ export class EmailService implements OnModuleInit {
       upcomingFollowUps: Array<{ clientName: string; date: string }>;
     },
   ) {
-    return this.sendEmail(agentEmail, 'Your Weekly Summary', 'weekly-summary', {
-      agentName,
-      stats,
-    });
+    const unsubscribeUrl = await this.buildUnsubscribeUrl(userId, 'weeklySummary');
+    return this.sendEmail(
+      agentEmail,
+      'Your Weekly Summary',
+      'weekly-summary',
+      {
+        agentName,
+        stats,
+      },
+      unsubscribeUrl,
+    );
   }
 }
