@@ -1,10 +1,10 @@
 name: Security Audit
 
 on:
-  pull_request:
-    branches: [dev, qa, uat, prod]
-  push:
-    branches: [dev]
+  # Security audit probes a deployed environment (QA), not per-commit.
+  # It requires a reachable API + configured secrets, so it only runs on a
+  # nightly schedule (when QA is deployed) or on-demand.
+  workflow_dispatch:
   schedule:
     # Run nightly at 2am UTC
     - cron: '0 2 * * *'

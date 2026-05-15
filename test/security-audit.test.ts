@@ -19,9 +19,20 @@
 const API_URL = process.env.TEST_API_URL || 'https://qa-api.realstate-crm.homes/api';
 const AUTH_URL =
   process.env.TEST_AUTH_URL || 'https://qa-auth.realstate-crm.homes/realms/real-estate-qa';
-const CLIENT_SECRET =
-  process.env.TEST_CLIENT_SECRET ||
-  '797e5cb4a67875e49f1711c7b7624db6fd6ff6ec4684dcc445715ec5208a85da';
+// This suite probes a deployed environment. Without credentials there is
+// nothing to test — skip cleanly instead of failing or using a baked secret.
+function requireSecret(): string {
+  const secret = process.env.TEST_CLIENT_SECRET;
+  if (!secret) {
+    console.log(
+      '⏭  Skipping security audit: TEST_CLIENT_SECRET not set ' +
+        '(deployed-environment probe — runs on schedule/workflow_dispatch).',
+    );
+    process.exit(0);
+  }
+  return secret;
+}
+const CLIENT_SECRET = requireSecret();
 
 let passed = 0;
 let failed = 0;
