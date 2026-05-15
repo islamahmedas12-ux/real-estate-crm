@@ -2,20 +2,11 @@ import { Clock } from 'lucide-react'
 import { ChartCard } from './ChartCard'
 import { Skeleton } from '../ui'
 import type { ActivityItem } from '../../types/dashboard'
+import { ACTIVITY_TYPE_ICONS } from './tokens'
 
 interface Props {
   data?: ActivityItem[]
   isLoading: boolean
-}
-
-const TYPE_ICONS: Record<string, string> = {
-  PROPERTY_CREATED: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
-  LEAD_CREATED: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-  LEAD_WON: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-  LEAD_LOST: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
-  CONTRACT_SIGNED: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-  INVOICE_PAID: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
-  CLIENT_CREATED: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
 }
 
 function timeAgo(dateStr: string): string {
@@ -60,7 +51,7 @@ export function ActivityFeed({ data, isLoading }: Props) {
             >
               <div
                 className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                  TYPE_ICONS[activity.type] ?? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                  ACTIVITY_TYPE_ICONS[activity.type] ?? 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
                 }`}
               >
                 <Clock size={14} />

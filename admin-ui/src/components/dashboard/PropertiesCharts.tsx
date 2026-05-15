@@ -9,20 +9,11 @@ import {
 import { ChartCard } from './ChartCard'
 import { Skeleton } from '../ui'
 import type { PropertiesResponse } from '../../types/dashboard'
+import { CHART_COLORS, formatLabel, CHART_TOOLTIP_STYLE } from './tokens'
 
 interface Props {
   data?: PropertiesResponse
   isLoading: boolean
-}
-
-const STATUS_COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6']
-const TYPE_COLORS = ['#6366f1', '#3b82f6', '#22c55e', '#f59e0b', '#f97316', '#ef4444', '#8b5cf6']
-
-function formatLabel(s: string): string {
-  return s
-    .replace(/_/g, ' ')
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 export function PropertiesCharts({ data, isLoading }: Props) {
@@ -65,18 +56,10 @@ export function PropertiesCharts({ data, isLoading }: Props) {
                     dataKey="value"
                   >
                     {byStatus.map((_, idx) => (
-                      <Cell key={idx} fill={STATUS_COLORS[idx % STATUS_COLORS.length]} />
+                      <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      color: '#f9fafb',
-                      fontSize: '12px',
-                    }}
-                  />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
                 </PieChart>
               </ResponsiveContainer>
@@ -105,18 +88,10 @@ export function PropertiesCharts({ data, isLoading }: Props) {
                     dataKey="value"
                   >
                     {byType.map((_, idx) => (
-                      <Cell key={idx} fill={TYPE_COLORS[idx % TYPE_COLORS.length]} />
+                      <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      color: '#f9fafb',
-                      fontSize: '12px',
-                    }}
-                  />
+                  <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
                   <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
                 </PieChart>
               </ResponsiveContainer>
