@@ -25,17 +25,20 @@ export default function PropertiesPage() {
 
   const debouncedSearch = useDebounce(search, 300)
   const queryClient = useQueryClient()
+  const coercedMinPrice = minPrice ? Number(minPrice) : undefined
+  const coercedMaxPrice = maxPrice ? Number(maxPrice) : undefined
+  const coercedBedrooms = bedrooms ? Number(bedrooms) : undefined
 
   const { data, isLoading } = useQuery({
-    queryKey: propertiesKeys.list({ page, limit: 12, search: debouncedSearch, type: typeFilter, status: statusFilter, minPrice: minPrice ? Number(minPrice) : undefined, maxPrice: maxPrice ? Number(maxPrice) : undefined, bedrooms: bedrooms ? Number(bedrooms) : undefined, city, sortBy: 'createdAt', sortOrder: 'desc' }),
-    queryFn: () => propertiesApi.list({ page, limit: 12, search: debouncedSearch, type: typeFilter, status: statusFilter, minPrice: minPrice ? Number(minPrice) : undefined, maxPrice: maxPrice ? Number(maxPrice) : undefined, bedrooms: bedrooms ? Number(bedrooms) : undefined, city, sortBy: 'createdAt', sortOrder: 'desc' } as PropertyListParams),
+    queryKey: propertiesKeys.list({ page, limit: 12, search: debouncedSearch, type: typeFilter, status: statusFilter, minPrice: coercedMinPrice, maxPrice: coercedMaxPrice, bedrooms: coercedBedrooms, city, sortBy: 'createdAt', sortOrder: 'desc' }),
+    queryFn: () => propertiesApi.list({ page, limit: 12, search: debouncedSearch, type: typeFilter, status: statusFilter, minPrice: coercedMinPrice, maxPrice: coercedMaxPrice, bedrooms: coercedBedrooms, city, sortBy: 'createdAt', sortOrder: 'desc' } as PropertyListParams),
   })
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: PropertyStatus }) => propertiesApi.changeStatus(id, status),
     onSuccess: () => {
       toast.success('Status updated')
-      queryClient.invalidateQueries({ queryKey: propertiesKeys.all })
+      queryClient.invalidateQueries({ queryKey: propertiesKeys.list({ page, limit: 12, search: debouncedSearch, type: typeFilter, status: statusFilter, minPrice: coercedMinPrice, maxPrice: coercedMaxPrice, bedrooms: coercedBedrooms, city, sortBy: 'createdAt', sortOrder: 'desc' }) })
     },
     onError: () => toast.error('Failed to change status'),
   })

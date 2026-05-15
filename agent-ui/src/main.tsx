@@ -6,10 +6,6 @@ import './i18n'
 import App from './App.tsx'
 import './index.css'
 
-// Single canonical QueryClient instance for the entire agent-ui.
-// Defaults: retry=2 for failed queries, staleTime=5 min so data stays
-// usable across route navigations, refetchOnWindowFocus=false to avoid
-// noisy background refreshes.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

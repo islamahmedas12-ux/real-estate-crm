@@ -60,7 +60,7 @@ export default function ClientsPage() {
       />
 
       <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="New Client">
-        <ClientForm onSuccess={() => { setShowCreateModal(false); queryClient.invalidateQueries({ queryKey: clientsKeys.all }) }} onCancel={() => setShowCreateModal(false)} />
+        <ClientForm onSuccess={() => { setShowCreateModal(false); queryClient.invalidateQueries({ queryKey: clientsKeys.list({ page, limit: 20, search: debouncedSearch, type: typeFilter, source: sourceFilter, sortBy, sortOrder }) }) }} onCancel={() => setShowCreateModal(false)} />
       </Modal>
 
       {selectedClientId && <ClientDetailPanel clientId={selectedClientId} onClose={() => setSelectedClientId(null)} />}
