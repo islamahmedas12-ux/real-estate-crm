@@ -9,7 +9,7 @@ describe('HttpExceptionFilter', () => {
 
   beforeEach(() => {
     filter = new HttpExceptionFilter();
-    mockResponse = { status: jest.fn(), json: jest.fn() };
+    mockResponse = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() };
     mockRequest = { url: '/api/test' };
     mockHost = {
       switchToHttp: () => ({
@@ -35,7 +35,8 @@ describe('HttpExceptionFilter', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       const body = mockResponse.json.mock.calls[0][0];
       expect(body.message).toBe('Internal server error');
-      expect(body.error).toBe('BadRequest');
+      // Production must not leak the specific error type either
+      expect(body.error).toBe('Internal Server Error');
       expect(body.path).toBe('/api/test');
     });
 

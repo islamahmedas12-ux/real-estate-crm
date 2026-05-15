@@ -15,14 +15,13 @@ describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
   let authService: jest.Mocked<AuthService>;
 
+  const configValues: Record<string, string> = {
+    AUTHME_URL: 'https://auth.example.com',
+    AUTHME_REALM: 'crm',
+  };
   const mockConfigService = {
-    getOrThrow: jest.fn((key: string) => {
-      const config: Record<string, string> = {
-        AUTHME_URL: 'https://auth.example.com',
-        AUTHME_REALM: 'crm',
-      };
-      return config[key];
-    }),
+    getOrThrow: jest.fn((key: string) => configValues[key]),
+    get: jest.fn((key: string) => configValues[key]),
   } as unknown as ConfigService;
 
   const mockAuthenticatedUser: AuthenticatedUser = {
@@ -235,15 +234,18 @@ describe('JwtStrategy', () => {
       const payload = { email: 'test@example.com' } as JwtPayload;
 
       await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
-      await expect(strategy.validate(payload)).rejects.toThrow(
-        'Malformed token: missing sub or email',
-      );
+      await expect(strategy.validate(payload)).rejects.toThrow('Malformed token: missing sub');
     });
 
-    it('should throw UnauthorizedException when email is missing', async () => {
+    it('falls back to sub as email when email/preferred_username are absent', async () => {
+      authService.syncUser.mockResolvedValue(mockAuthenticatedUser);
       const payload = { sub: 'authme-sub-123' } as JwtPayload;
 
-      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+      await strategy.validate(payload);
+
+      expect(authService.syncUser).toHaveBeenCalledWith(
+        expect.objectContaining({ authmeId: 'authme-sub-123', email: 'authme-sub-123' }),
+      );
     });
 
     it('should throw UnauthorizedException when user is deactivated', async () => {

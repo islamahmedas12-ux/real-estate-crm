@@ -179,7 +179,7 @@ describe('DashboardController', () => {
 
       const result = await controller.getAgentOverview(agentUser);
       expect(result.properties).toBe(5);
-      expect(mockService.getAgentOverview).toHaveBeenCalledWith('agent-001');
+      expect(mockService.getAgentOverview).toHaveBeenCalledWith(agentUser.id);
     });
   });
 
@@ -193,7 +193,7 @@ describe('DashboardController', () => {
 
       const result = await controller.getAgentLeads(agentUser);
       expect(result.total).toBe(10);
-      expect(mockService.getAgentLeads).toHaveBeenCalledWith('agent-001');
+      expect(mockService.getAgentLeads).toHaveBeenCalledWith(agentUser.id);
     });
   });
 
@@ -208,7 +208,7 @@ describe('DashboardController', () => {
       const result = await controller.getAgentFollowUps(agentUser);
       expect(result.overdue).toHaveLength(1);
       expect(result.upcoming).toHaveLength(1);
-      expect(mockService.getAgentFollowUps).toHaveBeenCalledWith('agent-001');
+      expect(mockService.getAgentFollowUps).toHaveBeenCalledWith(agentUser.id);
     });
   });
 
@@ -224,7 +224,7 @@ describe('DashboardController', () => {
       const result = await controller.getAgentPerformance(agentUser);
       expect(result.thisMonth.leads).toBe(10);
       expect(result.change.leads).toBe(25);
-      expect(mockService.getAgentPerformance).toHaveBeenCalledWith('agent-001');
+      expect(mockService.getAgentPerformance).toHaveBeenCalledWith(agentUser.id);
     });
   });
 });
