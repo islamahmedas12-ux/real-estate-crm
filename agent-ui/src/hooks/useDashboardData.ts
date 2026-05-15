@@ -1,44 +1,51 @@
-import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   fetchAgentOverview,
   fetchAgentLeadsPipeline,
   fetchAgentFollowUps,
   fetchAgentPerformance,
-} from '../api/dashboard';
-import type { AgentLeadsPipeline } from '../api/dashboard';
-import { PIPELINE_COLORS, PIPELINE_LABELS } from '../components/dashboard/tokens';
+} from '../api/dashboard'
+import type { AgentLeadsPipeline } from '../api/dashboard'
+import { PIPELINE_COLORS, PIPELINE_LABELS } from '../components/dashboard/tokens'
+
+const agentKeys = {
+  overview: ['agent', 'overview'] as const,
+  pipeline: ['agent', 'pipeline'] as const,
+  followUps: ['agent', 'follow-ups'] as const,
+  performance: ['agent', 'performance'] as const,
+}
 
 export function useAgentOverview() {
   return useQuery({
-    queryKey: ['agent-overview'],
+    queryKey: agentKeys.overview,
     queryFn: fetchAgentOverview,
     staleTime: 60_000,
-  });
+  })
 }
 
 export function useAgentPipeline() {
   return useQuery({
-    queryKey: ['agent-leads-pipeline'],
+    queryKey: agentKeys.pipeline,
     queryFn: fetchAgentLeadsPipeline,
     staleTime: 60_000,
-  });
+  })
 }
 
 export function useAgentFollowUps() {
   return useQuery({
-    queryKey: ['agent-follow-ups'],
+    queryKey: agentKeys.followUps,
     queryFn: fetchAgentFollowUps,
     staleTime: 60_000,
-  });
+  })
 }
 
 export function useAgentPerformance() {
   return useQuery({
-    queryKey: ['agent-performance'],
+    queryKey: agentKeys.performance,
     queryFn: fetchAgentPerformance,
     staleTime: 60_000,
-  });
+  })
 }
 
 export function usePipelineChartData(pipeline: AgentLeadsPipeline | undefined) {

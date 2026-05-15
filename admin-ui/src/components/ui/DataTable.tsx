@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
 import { cn } from '../../utils'
 import { Skeleton } from './Skeleton'
 import type { Column } from '../../types'
@@ -16,6 +16,8 @@ interface DataTableProps<T extends Record<string, unknown>> {
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
   keyField?: string
+  mobileLayout?: 'cards' | 'scroll'
+  actionsColumn?: number
 }
 
 type SortDir = 'asc' | 'desc' | null
@@ -32,9 +34,12 @@ export function DataTable<T extends Record<string, unknown>>({
   onPageChange,
   onPageSizeChange,
   keyField = 'id',
+  mobileLayout = 'cards',
+  actionsColumn,
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<Record<string, boolean>>({})
 
   function handleSort(key: string) {
     if (sortKey === key) {
@@ -63,79 +68,156 @@ export function DataTable<T extends Record<string, unknown>>({
     return <ChevronDown size={14} className="text-indigo-500" />
   }
 
+  // Below 768px: render card layout if mobileLayout='cards'
+  const showCards = mobileLayout === 'cards'
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800/60">
-            <tr>
-              {columns.map((col) => (
-                <th
-                  key={col.key}
-                  style={col.width ? { width: col.width } : undefined}
-                  className={cn(
-                    'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400',
-                    col.sortable && 'cursor-pointer select-none hover:text-gray-900 dark:hover:text-gray-200',
-                  )}
-                  onClick={() => col.sortable && handleSort(col.key)}
-                >
-                  <div className="flex items-center gap-1">
-                    {col.header}
-                    {col.sortable && <SortIcon colKey={col.key} />}
+      {showCards ? (
+        /* ── Mobile card view ── */
+        <div className="flex flex-col gap-3">
+          {loading ? (
+            Array.from({ length: pageSize > 5 ? 5 : pageSize }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-2">
+                {columns.map((col) => (
+                  <div key={col.key} className="space-y-1">
+                    <Skeleton height="h-3" width="w-1/3" />
+                    <Skeleton height="h-4" width="w-2/3" />
                   </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700/60 bg-white dark:bg-gray-800">
-            {loading ? (
-              Array.from({ length: pageSize > 5 ? 5 : pageSize }).map((_, i) => (
-                <tr key={i}>
-                  {columns.map((col) => (
-                    <td key={col.key} className="px-4 py-3">
-                      <Skeleton height="h-4" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : sorted.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-4 py-12 text-center text-gray-400 dark:text-gray-500"
-                >
-                  {emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              sorted.map((row, i) => (
-                <tr
-                  key={String(row[keyField] ?? i)}
+                ))}
+              </div>
+            ))
+          ) : sorted.length === 0 ? (
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center text-gray-400 dark:text-gray-500">
+              {emptyMessage}
+            </div>
+          ) : (
+            sorted.map((row, i) => {
+              const rowKey = String(row[keyField] ?? i)
+              const primaryCol = columns[0]
+              const secondaryCols = columns.slice(1)
+              return (
+                <div
+                  key={rowKey}
                   onClick={() => onRowClick?.(row)}
                   className={cn(
+                    'rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-2',
                     'transition-colors',
-                    onRowClick && 'cursor-pointer hover:bg-indigo-50/60 dark:hover:bg-indigo-900/10',
+                    onRowClick && 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30',
                   )}
                 >
-                  {columns.map((col) => (
-                    <td
-                      key={col.key}
-                      className="px-4 py-3 text-gray-800 dark:text-gray-200 whitespace-nowrap"
-                    >
-                      {col.render
-                        ? col.render(row[col.key], row)
-                        : String(row[col.key] ?? '')}
-                    </td>
+                  {/* Primary field as card title */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      {primaryCol.render
+                        ? primaryCol.render(row[primaryCol.key], row)
+                        : String(row[primaryCol.key] ?? '')}
+                    </div>
+                    {actionsColumn !== undefined && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setMobileMenuOpen((prev) => ({ ...prev, [rowKey]: !prev[rowKey] })) }}
+                        className="shrink-0 rounded p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+                    )}
+                  </div>
+                  {/* Secondary fields */}
+                  {secondaryCols.map((col) => (
+                    <div key={col.key} className="flex justify-between gap-2">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{col.header}</span>
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                        {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '')}
+                      </span>
+                    </div>
                   ))}
+                  {/* Dropdown menu */}
+                  {actionsColumn !== undefined && mobileMenuOpen[rowKey] && (
+                    <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                      {columns[actionsColumn]?.render
+                        ? columns[actionsColumn].render(row[columns[actionsColumn].key], row)
+                        : null}
+                    </div>
+                  )}
+                </div>
+              )
+            })
+          )}
+        </div>
+      ) : (
+        /* ── Desktop table view ── */
+        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-gray-800/60">
+              <tr>
+                {columns.map((col) => (
+                  <th
+                    key={col.key}
+                    style={col.width ? { width: col.width } : undefined}
+                    className={cn(
+                      'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400',
+                      col.sortable && 'cursor-pointer select-none hover:text-gray-900 dark:hover:text-gray-200',
+                    )}
+                    onClick={() => col.sortable && handleSort(col.key)}
+                  >
+                    <div className="flex items-center gap-1">
+                      {col.header}
+                      {col.sortable && <SortIcon colKey={col.key} />}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700/60 bg-white dark:bg-gray-800">
+              {loading ? (
+                Array.from({ length: pageSize > 5 ? 5 : pageSize }).map((_, i) => (
+                  <tr key={i}>
+                    {columns.map((col) => (
+                      <td key={col.key} className="px-4 py-3">
+                        <Skeleton height="h-4" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : sorted.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length}
+                    className="px-4 py-12 text-center text-gray-400 dark:text-gray-500"
+                  >
+                    {emptyMessage}
+                  </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                sorted.map((row, i) => (
+                  <tr
+                    key={String(row[keyField] ?? i)}
+                    onClick={() => onRowClick?.(row)}
+                    className={cn(
+                      'transition-colors',
+                      onRowClick && 'cursor-pointer hover:bg-indigo-50/60 dark:hover:bg-indigo-900/10',
+                    )}
+                  >
+                    {columns.map((col) => (
+                      <td
+                        key={col.key}
+                        className="px-4 py-3 text-gray-800 dark:text-gray-200 whitespace-nowrap"
+                      >
+                        {col.render
+                          ? col.render(row[col.key], row)
+                          : String(row[col.key] ?? '')}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Pagination */}
-      {(onPageChange || total !== undefined) && (
+      {(onPageChange || total !== undefined) && !showCards && (
         <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
           <div className="flex items-center gap-2">
             <span>Rows per page:</span>
