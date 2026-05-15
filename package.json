@@ -19,7 +19,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main",
     "admin:dev": "cd admin-ui && npm run dev",
     "agent:dev": "cd agent-ui && npm run dev",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
