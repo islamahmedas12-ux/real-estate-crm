@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext } from 'react'
+import React, { createContext, useContext, useCallback } from 'react'
+import { QueryClient } from '@tanstack/react-query'
 import { AuthProvider as AuthmeProvider, useAuth as useAuthme, useUser } from 'authme-sdk/react'
 import { authme } from '../lib/authme'
 import type { User } from '../types'
@@ -11,15 +12,15 @@ interface AuthContextValue {
   isLoading: boolean
   login: () => Promise<void>
   logout: () => void
+  queryClient: QueryClient
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function AuthContextBridge({ children }: { children: React.ReactNode }) {
+function AuthContextBridge({ children, queryClient }: { children: React.ReactNode; queryClient: QueryClient }) {
   const { isAuthenticated, isLoading, login, logout, getToken } = useAuthme()
   const authmeUser = useUser()
 
-  // Map AuthMe user profile to our internal User type
   const user: User | null = authmeUser
     ? {
         id: authmeUser.sub ?? '',
@@ -31,6 +32,12 @@ function AuthContextBridge({ children }: { children: React.ReactNode }) {
 
   const token = getToken?.() ?? null
 
+  const handleLogout = useCallback(() => {
+    queryClient.clear()
+    localStorage.clear()
+    logout()
+  }, [queryClient, logout])
+
   return (
     <AuthContext.Provider
       value={{
@@ -39,7 +46,8 @@ function AuthContextBridge({ children }: { children: React.ReactNode }) {
         isAuthenticated,
         isLoading,
         login: () => login(),
-        logout,
+        logout: handleLogout,
+        queryClient,
       }}
     >
       {children}
@@ -47,10 +55,10 @@ function AuthContextBridge({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children, queryClient }: { children: React.ReactNode; queryClient: QueryClient }) {
   return (
     <AuthmeProvider client={authme}>
-      <AuthContextBridge>{children}</AuthContextBridge>
+      <AuthContextBridge queryClient={queryClient}>{children}</AuthContextBridge>
     </AuthmeProvider>
   )
 }
