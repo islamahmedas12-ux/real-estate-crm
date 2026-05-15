@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Phone, Users as UsersIcon, StickyNote, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import apiClient from '../api/client'
@@ -7,6 +9,7 @@ import { useAuth } from '../context/AuthContext'
 import { Button } from './ui/Button'
 import { Textarea } from './ui/Textarea'
 import { cn } from '../utils'
+import { quickLogSchema, type QuickLogFormData } from '../schemas'
 
 type QuickType = 'CALL' | 'MEETING' | 'NOTE'
 
@@ -17,7 +20,6 @@ const QUICK_TYPES: { value: QuickType; label: string; icon: React.ComponentType<
 ]
 
 interface QuickLogActivityProps {
-  /** Pre-fill entity context if logging from a detail page */
   entityType?: string
   entityId?: string
   className?: string
@@ -26,12 +28,15 @@ interface QuickLogActivityProps {
 export function QuickLogActivity({ entityType, entityId, className }: QuickLogActivityProps) {
   const [open, setOpen] = useState(false)
   const [selected, setSelected] = useState<QuickType>('CALL')
-  const [description, setDescription] = useState('')
   const panelRef = useRef<HTMLDivElement>(null)
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
-  // close on outside click
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<QuickLogFormData>({
+    resolver: zodResolver(quickLogSchema),
+    defaultValues: { type: 'CALL', description: '' },
+  })
+
   useEffect(() => {
     if (!open) return
     const handler = (e: MouseEvent) => {
@@ -53,24 +58,17 @@ export function QuickLogActivity({ entityType, entityId, className }: QuickLogAc
     }) => apiClient.post('/api/activities', payload).then((r) => r.data),
     onSuccess: () => {
       toast.success('Activity logged!')
-      setDescription('')
+      reset()
       setOpen(false)
-      // Invalidate activity queries so lists refresh
       queryClient.invalidateQueries({ queryKey: ['activities'] })
     },
-    onError: () => {
-      toast.error('Failed to log activity.')
-    },
+    onError: () => toast.error('Failed to log activity.'),
   })
 
-  const handleSubmit = () => {
-    if (!description.trim()) {
-      toast.error('Please enter a description.')
-      return
-    }
+  const onSubmit = (data: QuickLogFormData) => {
     mutation.mutate({
-      type: selected,
-      description: description.trim(),
+      type: data.type,
+      description: data.description.trim(),
       entityType: entityType ?? 'LEAD',
       entityId: entityId ?? '',
       performedBy: user?.id ?? '',
@@ -79,7 +77,6 @@ export function QuickLogActivity({ entityType, entityId, className }: QuickLogAc
 
   return (
     <div className={cn('fixed bottom-6 end-6 z-40', className)} ref={panelRef}>
-      {/* Expanded panel */}
       {open && (
         <div className="mb-3 w-80 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl p-4 animate-in fade-in slide-in-from-bottom-2">
           <div className="flex items-center justify-between mb-3">
@@ -94,11 +91,11 @@ export function QuickLogActivity({ entityType, entityId, className }: QuickLogAc
             </button>
           </div>
 
-          {/* Type selector */}
           <div className="flex gap-2 mb-3">
             {QUICK_TYPES.map(({ value, label, icon: Icon }) => (
               <button
                 key={value}
+                type="button"
                 onClick={() => setSelected(value)}
                 className={cn(
                   'flex-1 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors',
@@ -113,26 +110,21 @@ export function QuickLogActivity({ entityType, entityId, className }: QuickLogAc
             ))}
           </div>
 
-          {/* Description */}
-          <Textarea
-            placeholder={`Describe the ${selected.toLowerCase()}...`}
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-
-          <Button
-            className="w-full mt-3"
-            size="sm"
-            onClick={handleSubmit}
-            loading={mutation.isPending}
-          >
-            Log {selected.charAt(0) + selected.slice(1).toLowerCase()}
-          </Button>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Textarea
+              placeholder={`Describe the ${selected.toLowerCase()}...`}
+              rows={3}
+              {...register('description')}
+              error={errors.description?.message}
+            />
+            <input type="hidden" {...register('type')} value={selected} />
+            <Button type="submit" className="w-full mt-3" size="sm" loading={mutation.isPending}>
+              Log {selected.charAt(0) + selected.slice(1).toLowerCase()}
+            </Button>
+          </form>
         </div>
       )}
 
-      {/* FAB */}
       <button
         onClick={() => setOpen((prev) => !prev)}
         className={cn(
