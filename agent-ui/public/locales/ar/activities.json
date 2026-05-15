@@ -1,0 +1,19 @@
+{
+  "title": "الأنشطة",
+  "logActivity": "تسجيل نشاط",
+  "noActivities": "لا توجد أنشطة",
+  "types": {
+    "call": "مكالمة",
+    "meeting": "اجتماع",
+    "email": "بريد إلكتروني",
+    "note": "ملاحظة",
+    "visit": "زيارة عقارية"
+  },
+  "fields": {
+    "type": "النوع",
+    "description": "الوصف",
+    "relatedTo": "مرتبط بـ",
+    "date": "التاريخ",
+    "agent": "المندوب"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "title": "Clients",
+  "title_one": "Client",
+  "addClient": "Add Client",
+  "editClient": "Edit Client",
+  "clientDetails": "Client Details",
+  "noClients": "No clients found",
+  "fields": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "type": "Type",
+    "budget": "Budget",
+    "notes": "Notes"
+  },
+  "types": {
+    "buyer": "Buyer",
+    "seller": "Seller",
+    "renter": "Renter",
+    "tenant": "Tenant"
+  }
+}

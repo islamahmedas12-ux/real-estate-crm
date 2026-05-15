@@ -1,0 +1,19 @@
+{
+  "title": "Activities",
+  "logActivity": "Log Activity",
+  "noActivities": "No activities found",
+  "types": {
+    "call": "Call",
+    "meeting": "Meeting",
+    "email": "Email",
+    "note": "Note",
+    "visit": "Property Visit"
+  },
+  "fields": {
+    "type": "Type",
+    "description": "Description",
+    "relatedTo": "Related To",
+    "date": "Date",
+    "agent": "Agent"
+  }
+}

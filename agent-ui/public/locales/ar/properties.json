@@ -1,0 +1,28 @@
+{
+  "title": "العقارات",
+  "noProperties": "لا توجد عقارات",
+  "addProperty": "إضافة عقار",
+  "viewProperty": "عرض العقار",
+  "fields": {
+    "title": "العنوان",
+    "price": "السعر",
+    "area": "المساحة",
+    "location": "الموقع",
+    "type": "النوع",
+    "status": "الحالة",
+    "bedrooms": "غرف النوم",
+    "bathrooms": "الحمامات"
+  },
+  "types": {
+    "apartment": "شقة",
+    "villa": "فيلا",
+    "land": "أرض",
+    "commercial": "تجاري"
+  },
+  "status": {
+    "available": "متاح",
+    "sold": "تم البيع",
+    "reserved": "محجوز",
+    "rented": "مؤجر"
+  }
+}

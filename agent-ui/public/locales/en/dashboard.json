@@ -1,0 +1,18 @@
+{
+  "title": "Dashboard",
+  "welcome": "Welcome back",
+  "today": "Today",
+  "thisWeek": "This Week",
+  "thisMonth": "This Month",
+  "quickActions": "Quick Actions",
+  "upcomingTasks": "Upcoming Tasks",
+  "todayFollowUps": "Today's Follow-ups",
+  "recentActivities": "Recent Activities",
+  "leadPipeline": "Lead Pipeline",
+  "myProperties": "My Properties",
+  "performanceComparison": "Performance Comparison",
+  "notifications": "Notifications",
+  "noActivities": "No recent activities",
+  "noTasks": "No upcoming tasks",
+  "noFollowUps": "No follow-ups for today"
+}

@@ -1,0 +1,27 @@
+{
+  "title": "العقود",
+  "title_one": "العقد",
+  "contractDetails": "تفاصيل العقد",
+  "noContracts": "لا توجد عقود",
+  "fields": {
+    "title": "العنوان",
+    "type": "النوع",
+    "client": "العميل",
+    "property": "العقار",
+    "value": "القيمة",
+    "startDate": "تاريخ البدء",
+    "endDate": "تاريخ الانتهاء",
+    "status": "الحالة"
+  },
+  "types": {
+    "sale": "بيع",
+    "rental": "إيجار"
+  },
+  "status": {
+    "draft": "مسودة",
+    "pending": "معلق",
+    "active": "نشط",
+    "completed": "مكتمل",
+    "cancelled": "ملغي"
+  }
+}
