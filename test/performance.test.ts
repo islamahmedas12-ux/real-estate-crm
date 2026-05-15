@@ -12,9 +12,12 @@
  */
 
 const API_URL = process.env.TEST_API_URL || 'https://qa-api.realstate-crm.homes/api';
-const AUTH_URL = process.env.TEST_AUTH_URL || 'https://qa-auth.realstate-crm.homes/realms/real-estate-qa';
+const AUTH_URL =
+  process.env.TEST_AUTH_URL || 'https://qa-auth.realstate-crm.homes/realms/real-estate-qa';
 const CLIENT_ID = process.env.TEST_CLIENT_ID || 'crm-backend';
-const CLIENT_SECRET = process.env.TEST_CLIENT_SECRET || '797e5cb4a67875e49f1711c7b7624db6fd6ff6ec4684dcc445715ec5208a85da';
+const CLIENT_SECRET =
+  process.env.TEST_CLIENT_SECRET ||
+  '797e5cb4a67875e49f1711c7b7624db6fd6ff6ec4684dcc445715ec5208a85da';
 
 interface TestResult {
   endpoint: string;
@@ -78,7 +81,7 @@ async function measureEndpoint(
   }
 
   times.sort((a, b) => a - b);
-  const p = (pct: number) => times[Math.floor(times.length * pct / 100)] || 0;
+  const p = (pct: number) => times[Math.floor((times.length * pct) / 100)] || 0;
 
   return {
     endpoint,
@@ -118,7 +121,7 @@ async function measurePublicEndpoint(
   }
 
   times.sort((a, b) => a - b);
-  const p = (pct: number) => times[Math.floor(times.length * pct / 100)] || 0;
+  const p = (pct: number) => times[Math.floor((times.length * pct) / 100)] || 0;
 
   return {
     endpoint,
@@ -138,28 +141,34 @@ function printResults(results: TestResult[]) {
   console.log('='.repeat(90));
   console.log(
     'Endpoint'.padEnd(35) +
-    'Reqs'.padStart(6) +
-    'Min'.padStart(7) +
-    'Avg'.padStart(7) +
-    'P95'.padStart(7) +
-    'P99'.padStart(7) +
-    'Max'.padStart(7) +
-    'Err'.padStart(5),
+      'Reqs'.padStart(6) +
+      'Min'.padStart(7) +
+      'Avg'.padStart(7) +
+      'P95'.padStart(7) +
+      'P99'.padStart(7) +
+      'Max'.padStart(7) +
+      'Err'.padStart(5),
   );
   console.log('-'.repeat(90));
 
   for (const r of results) {
-    const p95Flag = r.endpoint.includes('dashboard') ? (r.p95 > 500 ? ' ⚠' : ' ✓') : (r.p95 > 200 ? ' ⚠' : ' ✓');
+    const p95Flag = r.endpoint.includes('dashboard')
+      ? r.p95 > 500
+        ? ' ⚠'
+        : ' ✓'
+      : r.p95 > 200
+        ? ' ⚠'
+        : ' ✓';
     console.log(
       r.endpoint.padEnd(35) +
-      String(r.requests).padStart(6) +
-      `${r.min}ms`.padStart(7) +
-      `${r.avg}ms`.padStart(7) +
-      `${r.p95}ms`.padStart(7) +
-      `${r.p99}ms`.padStart(7) +
-      `${r.max}ms`.padStart(7) +
-      String(r.errors).padStart(5) +
-      p95Flag,
+        String(r.requests).padStart(6) +
+        `${r.min}ms`.padStart(7) +
+        `${r.avg}ms`.padStart(7) +
+        `${r.p95}ms`.padStart(7) +
+        `${r.p99}ms`.padStart(7) +
+        `${r.max}ms`.padStart(7) +
+        String(r.errors).padStart(5) +
+        p95Flag,
     );
   }
 
@@ -213,11 +222,13 @@ async function main() {
   printResults(results);
 
   // Check targets
-  const apiEndpoints = results.filter(r => !r.endpoint.includes('dashboard') && !r.endpoint.includes('health'));
-  const dashEndpoints = results.filter(r => r.endpoint.includes('dashboard'));
+  const apiEndpoints = results.filter(
+    (r) => !r.endpoint.includes('dashboard') && !r.endpoint.includes('health'),
+  );
+  const dashEndpoints = results.filter((r) => r.endpoint.includes('dashboard'));
 
-  const apiP95Fail = apiEndpoints.filter(r => r.p95 > 200);
-  const dashP95Fail = dashEndpoints.filter(r => r.p95 > 500);
+  const apiP95Fail = apiEndpoints.filter((r) => r.p95 > 200);
+  const dashP95Fail = dashEndpoints.filter((r) => r.p95 > 500);
 
   if (apiP95Fail.length > 0) {
     console.log(`\n⚠ ${apiP95Fail.length} API endpoints exceed 200ms P95 target`);

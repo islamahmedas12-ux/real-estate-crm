@@ -17,8 +17,11 @@
  */
 
 const API_URL = process.env.TEST_API_URL || 'https://qa-api.realstate-crm.homes/api';
-const AUTH_URL = process.env.TEST_AUTH_URL || 'https://qa-auth.realstate-crm.homes/realms/real-estate-qa';
-const CLIENT_SECRET = process.env.TEST_CLIENT_SECRET || '797e5cb4a67875e49f1711c7b7624db6fd6ff6ec4684dcc445715ec5208a85da';
+const AUTH_URL =
+  process.env.TEST_AUTH_URL || 'https://qa-auth.realstate-crm.homes/realms/real-estate-qa';
+const CLIENT_SECRET =
+  process.env.TEST_CLIENT_SECRET ||
+  '797e5cb4a67875e49f1711c7b7624db6fd6ff6ec4684dcc445715ec5208a85da';
 
 let passed = 0;
 let failed = 0;
@@ -27,8 +30,13 @@ const findings: { severity: string; test: string; detail: string }[] = [];
 
 function log(status: '✅' | '❌' | '⚠️', test: string, detail: string = '') {
   if (status === '✅') passed++;
-  else if (status === '❌') { failed++; findings.push({ severity: 'HIGH', test, detail }); }
-  else { warnings++; findings.push({ severity: 'MEDIUM', test, detail }); }
+  else if (status === '❌') {
+    failed++;
+    findings.push({ severity: 'HIGH', test, detail });
+  } else {
+    warnings++;
+    findings.push({ severity: 'MEDIUM', test, detail });
+  }
   console.log(`  ${status} ${test}${detail ? ` — ${detail}` : ''}`);
 }
 
@@ -42,8 +50,11 @@ async function getToken(role: string = 'admin'): Promise<string> {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
-      grant_type: 'password', client_id: 'crm-backend',
-      client_secret: CLIENT_SECRET, username: c.u, password: c.p,
+      grant_type: 'password',
+      client_id: 'crm-backend',
+      client_secret: CLIENT_SECRET,
+      username: c.u,
+      password: c.p,
     }),
   });
   const data = await res.json();
@@ -56,7 +67,7 @@ async function main() {
   const adminToken = await getToken('admin');
   const agentToken = await getToken('agent');
   const headers = (token: string) => ({
-    'Authorization': `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
   });
 
@@ -102,7 +113,7 @@ async function main() {
   const sqliPayloads = [
     "'; DROP TABLE users; --",
     "1' OR '1'='1",
-    "1; SELECT * FROM users --",
+    '1; SELECT * FROM users --',
     "' UNION SELECT * FROM users --",
   ];
 
@@ -110,7 +121,11 @@ async function main() {
     const res = await fetch(`${API_URL}/clients?search=${encodeURIComponent(payload)}`, {
       headers: headers(adminToken),
     });
-    log(res.status !== 500 ? '✅' : '❌', `SQLi: ${payload.substring(0, 30)}...`, `Status: ${res.status}`);
+    log(
+      res.status !== 500 ? '✅' : '❌',
+      `SQLi: ${payload.substring(0, 30)}...`,
+      `Status: ${res.status}`,
+    );
   }
 
   // SQLi in path parameter
@@ -118,7 +133,11 @@ async function main() {
     const res = await fetch(`${API_URL}/clients/' OR 1=1 --`, {
       headers: headers(adminToken),
     });
-    log([400, 404, 422].includes(res.status) ? '✅' : '❌', 'SQLi in path param', `Status: ${res.status}`);
+    log(
+      [400, 404, 422].includes(res.status) ? '✅' : '❌',
+      'SQLi in path param',
+      `Status: ${res.status}`,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -144,11 +163,19 @@ async function main() {
       }),
     });
     const body = await res.json().catch(() => null);
-    const sanitized = !JSON.stringify(body).includes('<script>') && !JSON.stringify(body).includes('onerror=');
-    log(sanitized ? '✅' : '❌', `XSS: ${payload.substring(0, 30)}...`, sanitized ? 'Sanitized' : 'NOT sanitized!');
+    const sanitized =
+      !JSON.stringify(body).includes('<script>') && !JSON.stringify(body).includes('onerror=');
+    log(
+      sanitized ? '✅' : '❌',
+      `XSS: ${payload.substring(0, 30)}...`,
+      sanitized ? 'Sanitized' : 'NOT sanitized!',
+    );
     // Clean up if created
     if (res.status === 201 && body?.id) {
-      await fetch(`${API_URL}/clients/${body.id}`, { method: 'DELETE', headers: headers(adminToken) });
+      await fetch(`${API_URL}/clients/${body.id}`, {
+        method: 'DELETE',
+        headers: headers(adminToken),
+      });
     }
   }
 
@@ -161,11 +188,31 @@ async function main() {
     const h = Object.fromEntries(res.headers.entries());
 
     log(h['x-frame-options'] ? '✅' : '⚠️', 'X-Frame-Options', h['x-frame-options'] || 'missing');
-    log(h['x-content-type-options'] ? '✅' : '⚠️', 'X-Content-Type-Options', h['x-content-type-options'] || 'missing');
-    log(h['content-security-policy'] ? '✅' : '⚠️', 'Content-Security-Policy', h['content-security-policy'] ? 'present' : 'missing');
-    log(h['strict-transport-security'] ? '✅' : '⚠️', 'Strict-Transport-Security', h['strict-transport-security'] || 'missing');
-    log(!h['x-powered-by'] ? '✅' : '⚠️', 'X-Powered-By hidden', h['x-powered-by'] || 'not exposed');
-    log(!h['server']?.includes('.') ? '✅' : '⚠️', 'Server version hidden', h['server'] || 'not exposed');
+    log(
+      h['x-content-type-options'] ? '✅' : '⚠️',
+      'X-Content-Type-Options',
+      h['x-content-type-options'] || 'missing',
+    );
+    log(
+      h['content-security-policy'] ? '✅' : '⚠️',
+      'Content-Security-Policy',
+      h['content-security-policy'] ? 'present' : 'missing',
+    );
+    log(
+      h['strict-transport-security'] ? '✅' : '⚠️',
+      'Strict-Transport-Security',
+      h['strict-transport-security'] || 'missing',
+    );
+    log(
+      !h['x-powered-by'] ? '✅' : '⚠️',
+      'X-Powered-By hidden',
+      h['x-powered-by'] || 'not exposed',
+    );
+    log(
+      !h['server']?.includes('.') ? '✅' : '⚠️',
+      'Server version hidden',
+      h['server'] || 'not exposed',
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -187,7 +234,11 @@ async function main() {
       headers: { Origin: 'https://evil-site.com' },
     });
     const acao = res.headers.get('access-control-allow-origin');
-    log(!acao || acao !== 'https://evil-site.com' ? '✅' : '❌', 'CORS: blocks evil origin', acao || 'no ACAO');
+    log(
+      !acao || acao !== 'https://evil-site.com' ? '✅' : '❌',
+      'CORS: blocks evil origin',
+      acao || 'no ACAO',
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -217,7 +268,11 @@ async function main() {
     const res = await fetch(`${API_URL}/dashboard/admin/overview`, {
       headers: headers(agentToken),
     });
-    log(res.status === 403 ? '✅' : '❌', 'Agent cannot access admin dashboard', `Got ${res.status}`);
+    log(
+      res.status === 403 ? '✅' : '❌',
+      'Agent cannot access admin dashboard',
+      `Got ${res.status}`,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -231,15 +286,24 @@ async function main() {
     });
     const body = await res.text();
     const leaksStack = body.includes('at ') && body.includes('.ts:');
-    log(!leaksStack ? '✅' : '❌', 'Error response hides stack trace', leaksStack ? 'LEAKS STACK TRACE!' : 'clean');
+    log(
+      !leaksStack ? '✅' : '❌',
+      'Error response hides stack trace',
+      leaksStack ? 'LEAKS STACK TRACE!' : 'clean',
+    );
   }
 
   // Check that passwords/secrets don't appear in responses
   {
     const res = await fetch(`${API_URL}/health`);
     const body = await res.text();
-    const leaksSecrets = body.includes('password') || body.includes('secret') || body.includes('DATABASE_URL');
-    log(!leaksSecrets ? '✅' : '❌', 'Health endpoint hides secrets', leaksSecrets ? 'LEAKS SECRETS!' : 'clean');
+    const leaksSecrets =
+      body.includes('password') || body.includes('secret') || body.includes('DATABASE_URL');
+    log(
+      !leaksSecrets ? '✅' : '❌',
+      'Health endpoint hides secrets',
+      leaksSecrets ? 'LEAKS SECRETS!' : 'clean',
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -252,7 +316,12 @@ async function main() {
     const res = await fetch(`${API_URL}/clients`, {
       method: 'POST',
       headers: headers(adminToken),
-      body: JSON.stringify({ firstName: bigString, lastName: 'Test', phone: '+201099999999', type: 'BUYER' }),
+      body: JSON.stringify({
+        firstName: bigString,
+        lastName: 'Test',
+        phone: '+201099999999',
+        type: 'BUYER',
+      }),
     });
     log(res.status !== 500 ? '✅' : '❌', 'Oversized payload handled', `Status: ${res.status}`);
   }

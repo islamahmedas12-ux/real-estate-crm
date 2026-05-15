@@ -11,10 +11,7 @@ describe('IdempotencyService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        IdempotencyService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [IdempotencyService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
 
     service = module.get<IdempotencyService>(IdempotencyService);

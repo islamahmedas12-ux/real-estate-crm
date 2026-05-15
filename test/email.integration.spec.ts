@@ -12,12 +12,19 @@
  *  - Auth & role-based access
  */
 
-import { createApiClient, ApiClient, trackEntity, cleanupAll } from './helpers/api-client.js';
+import {
+  createApiClient,
+  ApiClient,
+  trackEntity,
+  cleanupAll,
+  resetTracking,
+} from './helpers/api-client.js';
 
 let api: ApiClient;
 let createdEmailLogId: string;
 
 beforeAll(async () => {
+  resetTracking();
   api = createApiClient();
 });
 

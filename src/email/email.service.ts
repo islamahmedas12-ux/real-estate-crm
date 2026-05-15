@@ -72,7 +72,9 @@ export class EmailService implements OnModuleInit {
           pass: this.config.get<string>('SMTP_PASS', ''),
         },
       });
-      this.logger.log(`Email mode: live (SMTP: ${this.config.get('SMTP_HOST')}) — real emails will be sent`);
+      this.logger.log(
+        `Email mode: live (SMTP: ${this.config.get('SMTP_HOST')}) — real emails will be sent`,
+      );
     }
   }
 
@@ -139,7 +141,7 @@ export class EmailService implements OnModuleInit {
         to,
         subject,
         template,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
         context: (context as any) ?? Prisma.DbNull,
         status: EmailStatus.QUEUED,
       },
@@ -184,7 +186,9 @@ export class EmailService implements OnModuleInit {
       const from = this.config.get<string>('EMAIL_FROM', 'noreply@realestate-crm.com');
 
       if (this.testMode === 'log') {
-        this.logger.log(`[EMAIL TEST MODE — not sent] From: ${from} | To: ${to} | Subject: ${subject}`);
+        this.logger.log(
+          `[EMAIL TEST MODE — not sent] From: ${from} | To: ${to} | Subject: ${subject}`,
+        );
         this.logger.debug(`[EMAIL TEST MODE] Body:\n${html}`);
         await this.prisma.emailLog.update({
           where: { id: emailLogId },

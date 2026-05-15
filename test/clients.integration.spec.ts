@@ -18,13 +18,20 @@
  *  - Error handling (404, 400, 401, 409)
  */
 
-import { createApiClient, ApiClient, trackEntity, cleanupAll } from './helpers/api-client.js';
+import {
+  createApiClient,
+  ApiClient,
+  trackEntity,
+  cleanupAll,
+  resetTracking,
+} from './helpers/api-client.js';
 
 let api: ApiClient;
 let createdClientId: string;
 let validAgentId: string;
 
 beforeAll(async () => {
+  resetTracking();
   api = createApiClient();
 });
 

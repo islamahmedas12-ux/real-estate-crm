@@ -160,9 +160,7 @@ export class ClientsService {
 
     return {
       total,
-      byType: Object.fromEntries(
-        byType.map((g) => [g.type, g._count]),
-      ),
+      byType: Object.fromEntries(byType.map((g) => [g.type, g._count])),
       bySource: bySource.map((g) => ({ source: g.source, count: g._count })),
       recentCount,
     };

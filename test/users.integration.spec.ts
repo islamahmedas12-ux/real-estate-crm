@@ -9,11 +9,12 @@
  *  - Auth & role-based access
  */
 
-import { createApiClient, ApiClient, cleanupAll } from './helpers/api-client.js';
+import { createApiClient, ApiClient, cleanupAll, resetTracking } from './helpers/api-client.js';
 
 let api: ApiClient;
 
 beforeAll(async () => {
+  resetTracking();
   api = createApiClient();
 });
 
