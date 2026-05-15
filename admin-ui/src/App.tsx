@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient } from '@tanstack/react-query'
 import { lazy, Suspense, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ThemeProvider } from './context/ThemeContext'
@@ -33,29 +33,19 @@ const AgentsListPage = lazy(() => import('./pages/agents/AgentsListPage'))
 const AgentDetailPage = lazy(() => import('./pages/agents/AgentDetailPage'))
 const SettingsPage = lazy(() => import('./pages/settings/SettingsPage'))
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2,
-      refetchOnWindowFocus: false,
-    },
-  },
-})
-
 const PageLoader = () => (
   <div className="flex items-center justify-center h-full">
     <LoadingSpinner message="Loading..." />
   </div>
 )
 
-export default function App() {
+export default function App({ queryClient }: { queryClient: QueryClient }) {
   const { i18n } = useTranslation()
   useEffect(() => {
     document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr'
   }, [i18n.language])
 
   return (
-    <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <BrowserRouter>
           <AuthProvider queryClient={queryClient}>
@@ -123,6 +113,5 @@ export default function App() {
           </AuthProvider>
         </BrowserRouter>
       </ThemeProvider>
-    </QueryClientProvider>
   )
 }
