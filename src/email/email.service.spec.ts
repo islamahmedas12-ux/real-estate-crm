@@ -215,7 +215,7 @@ describe('EmailService', () => {
       mockPrisma.emailLog.create.mockResolvedValue(emailLog);
       mockQueue.add.mockResolvedValue({});
 
-      await service.sendFollowUpReminderEmail('agent@test.com', 'Agent Smith', [
+      await service.sendFollowUpReminderEmail('agent@test.com', 'Agent Smith', 'user-1', [
         { clientName: 'John', priority: 'HIGH' },
         { clientName: 'Jane', priority: 'MEDIUM' },
       ]);
@@ -246,6 +246,7 @@ describe('EmailService', () => {
       await service.sendInvoiceReminderEmail(
         'client@test.com',
         'John Doe',
+        'user-1',
         {
           invoiceNumber: 'INV-001',
           amount: '5000',
