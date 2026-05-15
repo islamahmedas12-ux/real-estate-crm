@@ -55,7 +55,7 @@ export function TopBar({ children }: { children?: React.ReactNode }) {
             <ChevronDown size={14} className={cn('text-gray-400 transition-transform', langDropdownOpen && 'rotate-180')} />
           </button>
           {langDropdownOpen && (
-            <div className="absolute right-0 mt-1 w-36 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+            <div className="absolute end-0 mt-1 w-36 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
               <button
                 onClick={() => switchLanguage('en')}
                 className={cn(
@@ -100,7 +100,7 @@ export function TopBar({ children }: { children?: React.ReactNode }) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((o) => !o)}
-            className="flex items-center gap-2 pl-2 pr-2.5 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-2 ps-2 pe-2.5 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             <div className="flex items-center justify-center w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-semibold shrink-0">
               {user ? getInitials(user.name) : <User size={14} />}
@@ -115,7 +115,7 @@ export function TopBar({ children }: { children?: React.ReactNode }) {
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-1 w-52 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+            <div className="absolute end-0 mt-1 w-52 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
               <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                   {user?.name}

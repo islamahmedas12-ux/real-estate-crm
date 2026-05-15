@@ -195,7 +195,7 @@ function InfoSection({ icon: Icon, title, children }: { icon: React.ComponentTyp
         <Icon size={14} className="text-gray-400" />
         {title}
       </h3>
-      <div className="pl-5">{children}</div>
+      <div className="ps-5">{children}</div>
     </div>
   )
 }

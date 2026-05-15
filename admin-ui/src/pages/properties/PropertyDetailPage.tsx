@@ -115,19 +115,19 @@ export default function PropertyDetailPage() {
                   <>
                     <button
                       onClick={() => setActiveImage((i) => (i === 0 ? images.length - 1 : i - 1))}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white hover:bg-black/60 transition-colors"
+                      className="absolute start-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white hover:bg-black/60 transition-colors"
                     >
                       <ChevronLeft size={20} />
                     </button>
                     <button
                       onClick={() => setActiveImage((i) => (i === images.length - 1 ? 0 : i + 1))}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white hover:bg-black/60 transition-colors"
+                      className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white hover:bg-black/60 transition-colors"
                     >
                       <ChevronRight size={20} />
                     </button>
                   </>
                 )}
-                <span className="absolute bottom-2 right-2 rounded-full bg-black/50 px-2.5 py-0.5 text-xs text-white">
+                <span className="absolute bottom-2 end-2 rounded-full bg-black/50 px-2.5 py-0.5 text-xs text-white">
                   {activeImage + 1} / {images.length}
                 </span>
               </div>
@@ -238,7 +238,7 @@ export default function PropertyDetailPage() {
                   <div key={contract.id} className="flex items-center justify-between py-2.5 text-sm">
                     <div>
                       <span className="text-gray-800 dark:text-gray-200">{contract.type}</span>
-                      <span className="ml-2 text-xs text-gray-400">{contract.status}</span>
+                      <span className="ms-2 text-xs text-gray-400">{contract.status}</span>
                     </div>
                     <span className="font-medium text-gray-700 dark:text-gray-300">
                       {formatCurrency(Number(contract.totalAmount))}

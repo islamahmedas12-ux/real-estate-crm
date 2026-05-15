@@ -20,7 +20,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             className="text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-red-500 ms-1">*</span>}
           </label>
         )}
         <select
@@ -29,7 +29,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           required={required}
           className={cn(
             'w-full rounded-lg border bg-white text-gray-900 text-sm',
-            'px-3 py-2',
+            'px-3 py-2 pe-9',
             'transition-colors duration-150',
             'focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent',
             'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',

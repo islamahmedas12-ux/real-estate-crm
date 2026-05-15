@@ -68,7 +68,7 @@ export function StatusTimeline({ currentStatus }: Props) {
                   ) : isCurrent ? (
                     <div className="relative">
                       <Circle size={24} className={colors.active} />
-                      <div className={cn('absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full', colors.line)} />
+                      <div className={cn('absolute top-1/2 start-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full', colors.line)} />
                     </div>
                   ) : (
                     <Circle size={24} className="text-gray-300 dark:text-gray-600" />

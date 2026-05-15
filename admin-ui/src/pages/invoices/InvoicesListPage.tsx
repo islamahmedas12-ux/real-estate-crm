@@ -350,7 +350,7 @@ export default function InvoicesListPage() {
           }
           className={filter.overdue === 'true' ? 'ring-2 ring-red-500' : ''}
         >
-          <AlertTriangle size={14} className="mr-1" />
+          <AlertTriangle size={14} className="me-1" />
           Overdue Only
         </Button>
       </div>

@@ -62,7 +62,7 @@ function ActivityItem({ activity }: { activity: Activity }) {
   return (
     <li className="relative flex gap-3 pb-6 last:pb-0 group">
       {/* vertical line */}
-      <div className="absolute left-[17px] top-9 bottom-0 w-px bg-gray-200 dark:bg-gray-700 group-last:hidden" />
+      <div className="absolute start-[17px] top-9 bottom-0 w-px bg-gray-200 dark:bg-gray-700 group-last:hidden" />
 
       {/* icon */}
       <div className={cn('flex items-center justify-center w-9 h-9 rounded-full shrink-0 z-10', colorClass)}>

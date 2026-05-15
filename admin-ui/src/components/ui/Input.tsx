@@ -21,12 +21,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className="text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-red-500 ms-1">*</span>}
           </label>
         )}
         <div className="relative flex items-center">
           {leftAddon && (
-            <div className="absolute left-3 text-gray-400 pointer-events-none">{leftAddon}</div>
+            <div className="absolute start-3 text-gray-400 pointer-events-none">{leftAddon}</div>
           )}
           <input
             ref={ref}
@@ -42,14 +42,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               error
                 ? 'border-red-400 focus:ring-red-400 dark:border-red-500'
                 : 'border-gray-300 dark:border-gray-600',
-              leftAddon && 'pl-9',
-              rightAddon && 'pr-9',
+              leftAddon && 'ps-9',
+              rightAddon && 'pe-9',
               className,
             )}
             {...props}
           />
           {rightAddon && (
-            <div className="absolute right-3 text-gray-400">{rightAddon}</div>
+            <div className="absolute end-3 text-gray-400">{rightAddon}</div>
           )}
         </div>
         {error && <p className="text-xs text-red-500">{error}</p>}

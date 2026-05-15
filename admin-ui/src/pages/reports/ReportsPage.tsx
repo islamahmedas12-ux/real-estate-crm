@@ -395,7 +395,7 @@ export default function ReportsPage() {
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-xs font-medium uppercase text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                      <th className="pb-3 pr-4">Source</th>
+                      <th className="pb-3 pe-4">Source</th>
                       <th className="pb-3 pr-4 text-right">Total Leads</th>
                       <th className="pb-3 pr-4 text-right">Converted</th>
                       <th className="pb-3 text-right">Conversion Rate</th>
@@ -540,7 +540,7 @@ export default function ReportsPage() {
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 text-xs font-medium uppercase text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                      <th className="pb-3 pr-4">Type</th>
+                      <th className="pb-3 pe-4">Type</th>
                       <th className="pb-3 pr-4 text-right">Total</th>
                       <th className="pb-3 pr-4 text-right">Available</th>
                       <th className="pb-3 pr-4 text-right">Sold</th>

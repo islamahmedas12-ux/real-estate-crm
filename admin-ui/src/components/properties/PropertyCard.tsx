@@ -38,7 +38,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         {statusMeta && (
           <span
             className={cn(
-              'absolute right-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-semibold',
+              'absolute end-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-semibold',
               statusMeta.color,
             )}
           >

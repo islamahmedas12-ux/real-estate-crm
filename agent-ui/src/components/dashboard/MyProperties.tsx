@@ -71,7 +71,7 @@ export function MyProperties() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0 ml-3">
+              <div className="flex items-center gap-2 shrink-0 ms-3">
                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                   {formatPrice(prop.price)}
                 </span>

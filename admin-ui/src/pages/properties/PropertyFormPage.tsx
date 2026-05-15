@@ -322,7 +322,7 @@ export default function PropertyFormPage() {
               {form.features.map((f) => (
                 <span
                   key={f}
-                  className="inline-flex items-center gap-1 rounded-full bg-indigo-50 pl-3 pr-1.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                  className="inline-flex items-center gap-1 rounded-full bg-indigo-50 ps-3 pe-1.5 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
                 >
                   {f}
                   <button
