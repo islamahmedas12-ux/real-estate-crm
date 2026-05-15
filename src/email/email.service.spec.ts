@@ -177,7 +177,7 @@ describe('EmailService', () => {
       mockPrisma.emailLog.create.mockResolvedValue(emailLog);
       mockQueue.add.mockResolvedValue({});
 
-      await service.sendLeadAssignmentEmail('agent@test.com', 'Agent Smith', {
+      await service.sendLeadAssignmentEmail('agent@test.com', 'Agent Smith', 'user-1', {
         clientName: 'John Doe',
         clientPhone: '+123456789',
         status: 'NEW',

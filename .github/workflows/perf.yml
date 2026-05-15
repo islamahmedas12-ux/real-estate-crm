@@ -1,10 +1,10 @@
 name: Performance
 
 on:
-  pull_request:
-    branches: [dev, qa, uat, prod]
-  push:
-    branches: [dev]
+  # Performance tests run against a deployed environment (QA), not per-commit.
+  # They require a reachable API + configured secrets, so they only run on a
+  # nightly schedule (when QA is deployed) or on-demand.
+  workflow_dispatch:
   schedule:
     # Run nightly at 3am UTC
     - cron: '0 3 * * *'

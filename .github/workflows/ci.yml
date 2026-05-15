@@ -64,8 +64,7 @@ jobs:
         run: npx prisma migrate deploy
 
       - name: Unit tests
-        run: npm run test -- --ci --coverage || true
-        # TODO: Fix unit test mocks (Prisma mock setup incomplete in specs)
+        run: npm run test -- --ci --coverage
 
       - name: Build
         run: npm run build
