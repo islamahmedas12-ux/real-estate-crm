@@ -53,6 +53,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # ── Preflight: is an auto-deploy target configured? ────────────────────
+  preflight:
+    name: Check deploy config
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          SSH_KEY: ${{ secrets.UAT_SERVER_SSH_KEY }}
+        run: |
+          if [ -n "$SSH_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::UAT_SERVER_SSH_KEY not configured — skipping migrate/deploy. Build & push still runs."
+          fi
+
   # ── Build Frontend SPAs with UAT env vars ──────────────────────────────
   build-frontends:
     name: Build UAT Frontends
@@ -66,31 +84,30 @@ jobs:
           node-version: "22"
           cache: npm
 
+      - name: Install dependencies (workspaces)
+        run: npm ci
+
       - name: Build Admin UI (UAT)
-        working-directory: admin-ui
         run: |
-          npm ci
-          cat > .env.uat <<ENVEOF
+          cat > admin-ui/.env.uat <<ENVEOF
           VITE_API_URL=https://uat-api.realstate-crm.homes
           VITE_AUTHME_URL=https://uat-auth.realstate-crm.homes
           VITE_AUTHME_REALM=real-estate-uat
           VITE_AUTHME_CLIENT_ID=admin-portal
           VITE_AUTHME_REDIRECT_URI=https://uat-admin.realstate-crm.homes/callback
           ENVEOF
-          npm run build -- --mode uat
+          npm run build --workspace admin-ui -- --mode uat
 
       - name: Build Agent UI (UAT)
-        working-directory: agent-ui
         run: |
-          npm ci
-          cat > .env.uat <<ENVEOF
+          cat > agent-ui/.env.uat <<ENVEOF
           VITE_API_URL=https://uat-api.realstate-crm.homes
           VITE_AUTHME_URL=https://uat-auth.realstate-crm.homes
           VITE_AUTHME_REALM=real-estate-uat
           VITE_AUTHME_CLIENT_ID=agent-portal
           VITE_AUTHME_REDIRECT_URI=https://uat-agent.realstate-crm.homes/callback
           ENVEOF
-          npm run build -- --mode uat
+          npm run build --workspace agent-ui -- --mode uat
 
       - name: Upload Admin UI build
         uses: actions/upload-artifact@v4
@@ -108,7 +125,8 @@ jobs:
   migrate:
     name: Database Migration (UAT)
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [build-and-push, preflight]
+    if: needs.preflight.outputs.deploy_enabled == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -118,19 +136,15 @@ jobs:
           SSH_KEY: ${{ secrets.UAT_SERVER_SSH_KEY }}
           SSH_HOST: ${{ secrets.UAT_SERVER_HOST }}
           SSH_USER: islam
+          UAT_DATABASE_URL: ${{ secrets.UAT_DATABASE_URL }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
 
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'SSHEOF'
-          cd /apps/real-estate-crm
-          git fetch origin uat && git checkout uat && git pull origin uat
-          npm ci
-          export DATABASE_URL="postgresql://crm_user:real-estate-uat-password-123@localhost:5434/real_estate_crm_uat"
-          npx prisma migrate deploy
-          SSHEOF
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST \
+            "cd /apps/real-estate-crm && git fetch origin uat && git checkout uat && git pull origin uat && npm ci && DATABASE_URL='$UAT_DATABASE_URL' npx prisma migrate deploy"
 
           rm ~/.ssh/deploy_key
 
@@ -138,7 +152,8 @@ jobs:
   deploy:
     name: Deploy to UAT
     runs-on: ubuntu-latest
-    needs: [build-and-push, migrate, build-frontends]
+    needs: [build-and-push, migrate, build-frontends, preflight]
+    if: needs.preflight.outputs.deploy_enabled == 'true'
 
     steps:
       - name: Download Admin UI build

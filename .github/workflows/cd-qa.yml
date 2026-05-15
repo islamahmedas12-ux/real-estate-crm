@@ -53,6 +53,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  # ── Preflight: is an auto-deploy target configured? ────────────────────
+  preflight:
+    name: Check deploy config
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          SSH_KEY: ${{ secrets.QA_SERVER_SSH_KEY }}
+        run: |
+          if [ -n "$SSH_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::QA_SERVER_SSH_KEY not configured — skipping migrate/deploy. Build & push still runs."
+          fi
+
   # ── Build Frontend SPAs with QA env vars ───────────────────────────────
   build-frontends:
     name: Build QA Frontends
@@ -66,31 +84,30 @@ jobs:
           node-version: "22"
           cache: npm
 
+      - name: Install dependencies (workspaces)
+        run: npm ci
+
       - name: Build Admin UI (QA)
-        working-directory: admin-ui
         run: |
-          npm ci
-          cat > .env.qa <<ENVEOF
+          cat > admin-ui/.env.qa <<ENVEOF
           VITE_API_URL=https://qa-api.realstate-crm.homes
           VITE_AUTHME_URL=https://qa-auth.realstate-crm.homes
           VITE_AUTHME_REALM=real-estate-qa
           VITE_AUTHME_CLIENT_ID=admin-portal
           VITE_AUTHME_REDIRECT_URI=https://qa-admin.realstate-crm.homes/callback
           ENVEOF
-          npm run build -- --mode qa
+          npm run build --workspace admin-ui -- --mode qa
 
       - name: Build Agent UI (QA)
-        working-directory: agent-ui
         run: |
-          npm ci
-          cat > .env.qa <<ENVEOF
+          cat > agent-ui/.env.qa <<ENVEOF
           VITE_API_URL=https://qa-api.realstate-crm.homes
           VITE_AUTHME_URL=https://qa-auth.realstate-crm.homes
           VITE_AUTHME_REALM=real-estate-qa
           VITE_AUTHME_CLIENT_ID=agent-portal
           VITE_AUTHME_REDIRECT_URI=https://qa-agent.realstate-crm.homes/callback
           ENVEOF
-          npm run build -- --mode qa
+          npm run build --workspace agent-ui -- --mode qa
 
       - name: Upload Admin UI build
         uses: actions/upload-artifact@v4
@@ -108,7 +125,8 @@ jobs:
   migrate:
     name: Database Migration (QA)
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [build-and-push, preflight]
+    if: needs.preflight.outputs.deploy_enabled == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -118,19 +136,15 @@ jobs:
           SSH_KEY: ${{ secrets.QA_SERVER_SSH_KEY }}
           SSH_HOST: ${{ secrets.QA_SERVER_HOST }}
           SSH_USER: islam
+          QA_DATABASE_URL: ${{ secrets.QA_DATABASE_URL }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
 
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'SSHEOF'
-          cd /apps/real-estate-crm
-          git fetch origin qa && git checkout qa && git pull origin qa
-          npm ci
-          export DATABASE_URL="postgresql://crm_user:real-estate-qa-password-123@localhost:5433/real_estate_crm_qa"
-          npx prisma migrate deploy
-          SSHEOF
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST \
+            "cd /apps/real-estate-crm && git fetch origin qa && git checkout qa && git pull origin qa && npm ci && DATABASE_URL='$QA_DATABASE_URL' npx prisma migrate deploy"
 
           rm ~/.ssh/deploy_key
 
@@ -138,7 +152,8 @@ jobs:
   deploy:
     name: Deploy to QA
     runs-on: ubuntu-latest
-    needs: [build-and-push, migrate, build-frontends]
+    needs: [build-and-push, migrate, build-frontends, preflight]
+    if: needs.preflight.outputs.deploy_enabled == 'true'
 
     steps:
       - name: Download Admin UI build
