@@ -23,7 +23,7 @@ const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', 'package.json'),
 let Sentry: any = null;
 if (process.env['SENTRY_DSN']) {
   try {
-    const require2 = createRequire(import.meta.url);
+    const require2 = createRequire(__filename);
     Sentry = require2('@sentry/node');
     Sentry.init({
       dsn: process.env['SENTRY_DSN'],

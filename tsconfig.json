@@ -22,5 +22,5 @@
     "strictBindCallApply": true,
     "noFallthroughCasesInSwitch": true
   },
-  "exclude": ["admin-ui", "agent-ui", "mobile", "dist", "e2e", "playwright.config.ts"]
+  "exclude": ["admin-ui", "agent-ui", "mobile", "packages", "dist", "e2e", "playwright.config.ts"]
 }

@@ -340,6 +340,7 @@ model Activity {
   entityId    String
   performedBy String
   performedById String?
+  metadata    Json?
 
   createdAt   DateTime           @default(now())
 

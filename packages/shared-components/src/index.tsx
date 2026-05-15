@@ -192,5 +192,3 @@ export function Badge({ children, variant = 'default', className }: BadgeProps) 
     </span>
   );
 }
-
-export { cn as utilsCn } from 'clsx';
