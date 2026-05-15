@@ -1,6 +1,7 @@
 import { AlertTriangle } from 'lucide-react'
 import { Button } from './Button'
 import { cn } from '../../utils'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -25,6 +26,8 @@ export function ConfirmDialog({
   onCancel,
   loading = false,
 }: ConfirmDialogProps) {
+  const ref = useFocusTrap(isOpen, onCancel);
+
   if (!isOpen) return null
 
   return (
@@ -32,6 +35,7 @@ export function ConfirmDialog({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="confirm-dialog-title"
     >
       {/* Backdrop */}
       <div
@@ -40,6 +44,7 @@ export function ConfirmDialog({
       />
       {/* Panel */}
       <div
+        ref={ref as React.RefObject<HTMLDivElement>}
         className={cn(
           'relative w-full max-w-md rounded-xl bg-white shadow-xl p-6',
           'dark:bg-gray-800 dark:border dark:border-gray-700',
@@ -50,7 +55,7 @@ export function ConfirmDialog({
             <AlertTriangle size={20} className="text-red-600 dark:text-red-400" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
+            <h3 id="confirm-dialog-title" className="text-base font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{message}</p>
           </div>
         </div>
