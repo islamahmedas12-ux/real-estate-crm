@@ -1,0 +1,33 @@
+{
+  "title": "Contracts",
+  "title_one": "Contract",
+  "addContract": "Add Contract",
+  "editContract": "Edit Contract",
+  "contractDetails": "Contract Details",
+  "contractsList": "Contracts",
+  "noContracts": "No contracts found",
+  "fields": {
+    "title": "Title",
+    "type": "Type",
+    "client": "Client",
+    "agent": "Agent",
+    "property": "Property",
+    "value": "Value",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "status": "Status",
+    "notes": "Notes"
+  },
+  "types": {
+    "sale": "Sale",
+    "rental": "Rental",
+    "lease": "Lease"
+  },
+  "status": {
+    "draft": "Draft",
+    "pending": "Pending",
+    "active": "Active",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  }
+}

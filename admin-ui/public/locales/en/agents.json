@@ -1,0 +1,25 @@
+{
+  "title": "Agents",
+  "title_one": "Agent",
+  "addAgent": "Add Agent",
+  "editAgent": "Edit Agent",
+  "agentDetails": "Agent Details",
+  "agentsList": "Agents",
+  "noAgents": "No agents found",
+  "performance": "Performance",
+  "fields": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "role": "Role",
+    "status": "Status",
+    "joinedAt": "Joined",
+    "deals": "Deals",
+    "revenue": "Revenue"
+  },
+  "roles": {
+    "admin": "Admin",
+    "manager": "Manager",
+    "agent": "Agent"
+  }
+}

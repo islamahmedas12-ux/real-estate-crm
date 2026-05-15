@@ -1,0 +1,68 @@
+{
+  "app": {
+    "name": "Real Estate CRM"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "properties": "Properties",
+    "clients": "Clients",
+    "leads": "Leads",
+    "contracts": "Contracts",
+    "invoices": "Invoices",
+    "reports": "Reports",
+    "agents": "Agents",
+    "settings": "Settings"
+  },
+  "common": {
+    "search": "Search anything…",
+    "signOut": "Sign out",
+    "profile": "Profile",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "view": "View",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading…",
+    "noData": "No data available",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "actions": "Actions",
+    "status": "Status",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "createdAt": "Created",
+    "updatedAt": "Updated",
+    "active": "Active",
+    "inactive": "Inactive",
+    "all": "All",
+    "filter": "Filter",
+    "export": "Export",
+    "refresh": "Refresh"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "loggingIn": "Signing in…"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "minLength": "Must be at least {{count}} characters",
+    "maxLength": "Must be at most {{count}} characters"
+  },
+  "notifications": {
+    "saved": "Saved successfully",
+    "deleted": "Deleted successfully",
+    "error": "An error occurred",
+    "copied": "Copied to clipboard"
+  }
+}

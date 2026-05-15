@@ -1,0 +1,38 @@
+{
+  "title": "العقارات",
+  "title_one": "العقار",
+  "addProperty": "إضافة عقار",
+  "editProperty": "تعديل العقار",
+  "propertyDetails": "تفاصيل العقار",
+  "propertyList": "العقارات",
+  "noProperties": "لا توجد عقارات",
+  "fields": {
+    "title": "العنوان",
+    "description": "الوصف",
+    "price": "السعر",
+    "area": "المساحة",
+    "location": "الموقع",
+    "city": "المدينة",
+    "district": "الحي",
+    "type": "النوع",
+    "status": "الحالة",
+    "bedrooms": "غرف النوم",
+    "bathrooms": "الحمامات",
+    "garage": "الجراج",
+    "pool": "المسبح",
+    "furnished": "مفروش"
+  },
+  "types": {
+    "apartment": "شقة",
+    "villa": "فيلا",
+    "land": "أرض",
+    "commercial": "تجاري",
+    "estate": "عقار"
+  },
+  "status": {
+    "available": "متاح",
+    "sold": "تم البيع",
+    "reserved": "محجوز",
+    "rented": "مؤجر"
+  }
+}

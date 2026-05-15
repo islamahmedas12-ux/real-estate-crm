@@ -1,0 +1,28 @@
+{
+  "title": "الفواتير",
+  "title_one": "فاتورة",
+  "addInvoice": "إضافة فاتورة",
+  "editInvoice": "تعديل الفاتورة",
+  "invoiceDetails": "تفاصيل الفاتورة",
+  "invoicesList": "الفواتير",
+  "noInvoices": "لا توجد فواتير",
+  "recordPayment": "تسجيل الدفع",
+  "fields": {
+    "number": "رقم الفاتورة",
+    "client": "العميل",
+    "contract": "العقد",
+    "amount": "المبلغ",
+    "dueDate": "تاريخ الاستحقاق",
+    "paidDate": "تاريخ الدفع",
+    "status": "الحالة",
+    "items": "البنود",
+    "notes": "ملاحظات"
+  },
+  "status": {
+    "draft": "مسودة",
+    "sent": "مرسلة",
+    "paid": "مدفوعة",
+    "overdue": "متأخرة",
+    "cancelled": "ملغاة"
+  }
+}

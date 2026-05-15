@@ -1,0 +1,11 @@
+{
+  "title": "Reports",
+  "generate": "Generate Report",
+  "dateRange": "Date Range",
+  "exportPdf": "Export PDF",
+  "exportCsv": "Export CSV",
+  "revenue": "Revenue",
+  "performance": "Performance",
+  "pipeline": "Pipeline",
+  "noReports": "No reports available"
+}

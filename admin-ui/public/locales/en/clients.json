@@ -1,0 +1,35 @@
+{
+  "title": "Clients",
+  "title_one": "Client",
+  "addClient": "Add Client",
+  "editClient": "Edit Client",
+  "clientDetails": "Client Details",
+  "clientsList": "Clients",
+  "noClients": "No clients found",
+  "fields": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "phoneAlt": "Alternative Phone",
+    "type": "Type",
+    "nationality": "Nationality",
+    "budget": "Budget",
+    "notes": "Notes",
+    "preferredContact": "Preferred Contact",
+    "source": "Source"
+  },
+  "types": {
+    "buyer": "Buyer",
+    "seller": "Seller",
+    "renter": "Renter",
+    "tenant": "Tenant",
+    "both": "Buyer & Seller"
+  },
+  "sources": {
+    "website": "Website",
+    "referral": "Referral",
+    "social": "Social Media",
+    "advertisement": "Advertisement",
+    "walkIn": "Walk-in"
+  }
+}
