@@ -1,0 +1,22 @@
+# Code owners — automated review assignment
+# Order matters: later entries are fallback for unmatched paths
+
+# Backend
+/src/           @islamahmedas12-ux
+/prisma/        @islamahmedas12-ux
+
+# Frontend
+/admin-ui/      @islamahmedas12-ux
+/agent-ui/      @islamahmedas12-ux
+
+# Mobile
+/mobile/        @islamahmedas12-ux
+
+# Infrastructure
+/docker-compose*   @islamahmedas12-ux
+/nginx/             @islamahmedas12-ux
+/.github/           @islamahmedas12-ux
+
+# Docs
+/docs/          @islamahmedas12-ux
+*.md            @islamahmedas12-ux
